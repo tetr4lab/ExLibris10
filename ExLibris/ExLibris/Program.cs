@@ -1,12 +1,18 @@
+using MySql.Data.MySqlClient;
+using System.Data;
 using ExLibris.Client.Pages;
 using ExLibris.Components;
 
 var builder = WebApplication.CreateBuilder (args);
+var connectionString = $"Database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}";
 
 // Add services to the container.
 builder.Services.AddRazorComponents ()
     .AddInteractiveServerComponents ()
     .AddInteractiveWebAssemblyComponents ();
+
+// MySqlConnector
+builder.Services.AddTransient<IDbConnection> (db => new MySqlConnection (connectionString));
 
 var app = builder.Build ();
 
