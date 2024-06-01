@@ -5,23 +5,65 @@
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
-<p>@datetime</p>
+<p>@(StartTime.ToLongTimeString ()) ~ @(EndTime.ToLongTimeString ()) @(EndTime - StartTime)</p>
 <p>Welcome to your new app.</p>
 
-@if (Authors != null) {
-    <p>@Authors.Count</p>
-    @foreach (var author in Authors) {
-        <table>
+@if (dataSet.Books != null) {
+    <div class="card hstack p-2"><div>書籍</div><div class="ms-auto">@($"{dataSet.Books.Count:#,#}")冊</div></div>
+    <table class="table">
+        <thead>
             <tr>
-                <td>@author.Id</td>
-                <td>@author.Name</td>
-                <td>@author.AdditionalName</td>
-                <td>@author.Description</td>
+                <th>Id</th>
+                <th>Title</th>
+                <th>Authors</th>
+                <th>PublishDate</th>
+                <th>Publisher</th>
+                <th>Series</th>
+                <th>Price</th>
+                <th>Description</th>
             </tr>
-        </table>
-    }
+        </thead>
+        <tbody>
+            @foreach (var book in dataSet.Books) {
+                <tr>
+                    <td class="text-end">@book.Id</td>
+                    <td>@book.Title</td>
+                    <td>@(string.Join (", ", book.Authors.ConvertAll (i => i.Name)))</td>
+                    <td>@(book.PublishDate?.ToShortDateString ())</td>
+                    <td>@book.Publisher</td>
+                    <td>@book.Series</td>
+                    <td class="text-end">¥@($"{book.Price:#,#}")</td>
+                    <td>@book.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
-
+@if (dataSet.Authors != null) {
+    <div class="card hstack p-2"><div>著者</div><div class="ms-auto">@($"{dataSet.Authors.Count:#,#}")人</div></div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>-</th>
+                <th>Books</th>
+                <th>Descripthion</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var author in dataSet.Authors) {
+                <tr>
+                    <td class="text-end">@author.Id</td>
+                    <td>@author.Name</td>
+                    <td>@author.AdditionalName</td>
+                    <td>@(string.Join (", ", author.Books.ConvertAll (i => i.Title)))</td>
+                    <td>@author.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
 
@@ -32,16 +74,47 @@
         public int Version { get; set; }
         public string Name { get; set; } = "";
         public string AdditionalName { get; set; } = "";
-        public string? Description { get; set; } = null;
-        public List<int> BooksId { get; set; } = new ();
+        public string? Description { get; set; } = default;
+        public string? _relatedIds { get; set; } = default;
+        public List<Book> Books => (_relatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Books.Find (item => item.Id == int.Parse (id)) ?? new ());
+        public DataSet DataSet { get; set; } = default!;
     }
 
-    protected List<Author>? Authors { get; set; } = default;
+    public class Book {
+        public int Id { get; set; }
+        public int Version { get; set; }
+        public string Title { get; set; } = "";
+        public string? Description { get; set; } = default;
+        public DateTime? PublishDate { get; set; }
+        public string Publisher { get; set; } = "";
+        public string Series { get; set; } = "";
+        public decimal Price { get; set; }
+        public string? _relatedIds { get; set; } = default;
+        public List<Author> Authors => (_relatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Authors.Find (item => item.Id == int.Parse (id)) ?? new ());
+        public DataSet DataSet { get; set; } = default!;
+    }
 
-    protected DateTime datetime { get; set; }
+    public class DataSet {
+        public List<Author> Authors {
+            get => _authors;
+            set => (_authors = value).ForEach (author => author.DataSet = this);
+        }
+        private List<Author> _authors = new ();
+        public List<Book> Books {
+            get => _books;
+            set => (_books = value).ForEach (book => book.DataSet = this);
+        }
+        private List<Book> _books = new ();
+    }
+
+    protected DataSet dataSet { get; set; } = new ();
+
+    protected DateTime StartTime { get; set; }
+    protected DateTime EndTime { get; set; }
 
     protected override async Task OnInitializedAsync () {
         await base.OnInitializedAsync ();
+        StartTime = DateTime.Now;
         connection.Open ();
         // MySQL Connector/NET
         // var cmd = connection.CreateCommand ();
@@ -52,10 +125,18 @@
         //     datetime = reader.GetDateTime (0);
         // }
         db = new Database (connection);
-        datetime = await db.ExecuteScalarAsync<DateTime> ("select now()");
-        Authors = await db.FetchAsync<Author> ("select * from Authors");
-        //Authors = await db.FetchAsync<Author> ("select Authors.*, AuthorBook.BooksId from Authors left join AuthorBook on Authors.Id=AuthorBook.AuthorsId group by Authors.Id");
+        dataSet.Books = await db.FetchAsync<Book> (
+            @"select Books.*, Group_concat(AuthorsId) as _relatedIds
+            from Books
+            left join AuthorBook on Books.Id = AuthorBook.BooksId
+            group by Books.Id;");
+        dataSet.Authors = await db.FetchAsync<Author> (
+            @"select Authors.*, Group_concat(BooksId) as _relatedIds
+            from Authors
+            left join AuthorBook on Authors.Id = AuthorBook.AuthorsId
+            group by Authors.Id;");
         connection.Close ();
+        EndTime = DateTime.Now;
         StateHasChanged ();
     }
 
