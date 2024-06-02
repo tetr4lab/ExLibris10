@@ -27,7 +27,7 @@ public class ExLibrisBaseModel<T1, T2>
 
     /// <summary>関係先インスタンス</summary>
     public List<T2> RelatedItems {
-        get => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.GetAll<T2> ().Find (item => item.Id == int.Parse (id)) ?? new ()));
+        get => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.GetAll<T2> ().Find (item => int.TryParse (id, out var Id) && item.Id == Id) ?? new ()));
         set {
             _relatedIds = string.Join (",", value.ConvertAll (item => item.Id));
             _relatedItems = default;
