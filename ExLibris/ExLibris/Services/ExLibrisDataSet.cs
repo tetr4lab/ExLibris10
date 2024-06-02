@@ -39,16 +39,24 @@ public sealed class ExLibrisDataSet {
             return;
         }
         isLoading = true;
-        Books = await database.FetchAsync<Book>(
-            @"select Books.*, Group_concat(AuthorsId) as _relatedIds
+        await database.BeginTransactionAsync ();
+        try {
+            Books = await database.FetchAsync<Book> (
+                @"select Books.*, Group_concat(AuthorsId) as _relatedIds
                 from Books
                 left join AuthorBook on Books.Id = AuthorBook.BooksId
                 group by Books.Id;");
-        Authors = await database.FetchAsync<Author>(
-            @"select Authors.*, Group_concat(BooksId) as _relatedIds
+            Authors = await database.FetchAsync<Author> (
+                @"select Authors.*, Group_concat(BooksId) as _relatedIds
                 from Authors
                 left join AuthorBook on Authors.Id = AuthorBook.AuthorsId
                 group by Authors.Id;");
+            await database.CompleteTransactionAsync ();
+        }
+        catch {
+            await database.AbortTransactionAsync ();
+            throw;
+        }
         isLoading = false;
     }
     private bool isLoading;
