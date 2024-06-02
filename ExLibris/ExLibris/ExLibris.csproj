@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ExLibris.Client\ExLibris.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.6" />
-    <PackageReference Include="MySql.Data" Version="8.4.0" />
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
     <PackageReference Include="PetaPoco.Compiled" Version="6.0.677" />
   </ItemGroup>
 

@@ -1,18 +1,17 @@
-using MySql.Data.MySqlClient;
-using System.Data;
+using PetaPoco;
 using ExLibris.Client.Pages;
 using ExLibris.Components;
 
 var builder = WebApplication.CreateBuilder (args);
-var connectionString = $"Database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}";
+var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}";
 
 // Add services to the container.
 builder.Services.AddRazorComponents ()
     .AddInteractiveServerComponents ()
     .AddInteractiveWebAssemblyComponents ();
 
-// MySqlConnector
-builder.Services.AddTransient<IDbConnection> (db => new MySqlConnection (connectionString));
+// PetaPoco with MySqlConnector
+builder.Services.AddTransient (_ => new Database (connectionString, "MySqlConnector"));
 
 var app = builder.Build ();
 
@@ -35,4 +34,5 @@ app.MapRazorComponents<App> ()
     .AddInteractiveWebAssemblyRenderMode ()
     .AddAdditionalAssemblies (typeof (ExLibris.Client._Imports).Assembly);
 
+System.Diagnostics.Debug.WriteLine ("Initialized");
 app.Run ();
