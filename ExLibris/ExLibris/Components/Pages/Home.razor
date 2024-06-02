@@ -116,26 +116,30 @@
         await base.OnInitializedAsync ();
         StartTime = DateTime.Now;
         connection.Open ();
-        // MySQL Connector/NET
-        // var cmd = connection.CreateCommand ();
-        // cmd.CommandText = "select now()";
-        // cmd.Connection = connection;
-        // using (var reader = cmd.ExecuteReader ()) {
-        //     reader.Read ();
-        //     datetime = reader.GetDateTime (0);
-        // }
-        db = new Database (connection);
-        dataSet.Books = await db.FetchAsync<Book> (
-            @"select Books.*, Group_concat(AuthorsId) as _relatedIds
-            from Books
-            left join AuthorBook on Books.Id = AuthorBook.BooksId
-            group by Books.Id;");
-        dataSet.Authors = await db.FetchAsync<Author> (
-            @"select Authors.*, Group_concat(BooksId) as _relatedIds
-            from Authors
-            left join AuthorBook on Authors.Id = AuthorBook.AuthorsId
-            group by Authors.Id;");
-        connection.Close ();
+        try {
+            // MySQL Connector/NET
+            // var cmd = connection.CreateCommand ();
+            // cmd.CommandText = "select now()";
+            // cmd.Connection = connection;
+            // using (var reader = cmd.ExecuteReader ()) {
+            //     reader.Read ();
+            //     datetime = reader.GetDateTime (0);
+            // }
+            db = new Database (connection);
+            dataSet.Books = await db.FetchAsync<Book> (
+                @"select Books.*, Group_concat(AuthorsId) as _relatedIds
+                from Books
+                left join AuthorBook on Books.Id = AuthorBook.BooksId
+                group by Books.Id;");
+            dataSet.Authors = await db.FetchAsync<Author> (
+                @"select Authors.*, Group_concat(BooksId) as _relatedIds
+                from Authors
+                left join AuthorBook on Authors.Id = AuthorBook.AuthorsId
+                group by Authors.Id;");
+        }
+        finally {
+            connection.Close ();
+        }
         EndTime = DateTime.Now;
         StateHasChanged ();
     }
