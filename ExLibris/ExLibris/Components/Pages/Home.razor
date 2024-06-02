@@ -5,10 +5,10 @@
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
-<p>@(StartTime.ToLongTimeString ()) ~ @(EndTime.ToLongTimeString ()) @(EndTime - StartTime)</p>
 <p>Welcome to your new app.</p>
 
 @if (DataSet.Initialized) {
+    <div>@(StartTime.ToLongTimeString ()) ~ @(EndTime.ToLongTimeString ()) @(EndTime - StartTime) ±@(ExLibrisDataSet.WaitInterval)msec</div>
     <div class="card hstack p-2"><div>書籍</div><div class="ms-auto">@($"{DataSet.Books.Count:#,#}")冊</div></div>
     <table class="table">
         <thead>
@@ -24,16 +24,16 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var book in DataSet.Books) {
+            @foreach (var item in DataSet.Books) {
                 <tr>
-                    <td class="text-end">@book.Id</td>
-                    <td>@book.Title</td>
-                    <td>@(string.Join (", ", book.Authors.ConvertAll (i => i.Name)))</td>
-                    <td>@(book.PublishDate?.ToShortDateString ())</td>
-                    <td>@book.Publisher</td>
-                    <td>@book.Series</td>
-                    <td class="text-end">¥@($"{book.Price:#,#}")</td>
-                    <td>@book.Description</td>
+                    <td class="text-end">@item.Id</td>
+                    <td>@item.Title</td>
+                    <td>@(string.Join (", ", item.RelatedItems.ConvertAll (i => i.Name)))</td>
+                    <td>@(item.PublishDate?.ToShortDateString ())</td>
+                    <td>@item.Publisher</td>
+                    <td>@item.Series</td>
+                    <td class="text-end">¥@($"{item.Price:#,#}")</td>
+                    <td>@item.Description</td>
                 </tr>
             }
         </tbody>
@@ -50,13 +50,13 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var author in DataSet.Authors) {
+            @foreach (var item in DataSet.Authors) {
                 <tr>
-                    <td class="text-end">@author.Id</td>
-                    <td>@author.Name</td>
-                    <td>@author.AdditionalName</td>
-                    <td>@(string.Join (", ", author.Books.ConvertAll (i => i.Title)))</td>
-                    <td>@author.Description</td>
+                    <td class="text-end">@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.AdditionalName</td>
+                    <td>@(string.Join (", ", item.RelatedItems.ConvertAll (i => i.Title)))</td>
+                    <td>@item.Description</td>
                 </tr>
             }
         </tbody>
@@ -73,15 +73,13 @@
     protected override async Task OnInitializedAsync () {
         await base.OnInitializedAsync ();
         StartTime = DateTime.Now;
-        _ = DataSet.Initialize ();
+        _ = DataSet.InitializeAsync ();
     }
 
     protected override async Task OnAfterRenderAsync (bool firstRender) {
         await base.OnAfterRenderAsync (firstRender);
-        if (firstRender) {
-            while (!DataSet.Initialized) {
-                await Task.Delay (1000 / 60);
-            }
+        if (firstRender && !DataSet.Initialized) {
+            await DataSet.InitializeAsync ();
             EndTime = DateTime.Now;
             StateHasChanged ();
         }
