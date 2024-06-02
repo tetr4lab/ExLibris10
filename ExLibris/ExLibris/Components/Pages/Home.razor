@@ -74,9 +74,17 @@
         public int Version { get; set; }
         public string Name { get; set; } = "";
         public string AdditionalName { get; set; } = "";
-        public string? Description { get; set; } = default;
-        public string? _relatedIds { get; set; } = default;
-        public List<Book> Books => (_relatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Books.Find (item => item.Id == int.Parse (id)) ?? new ());
+        public string? Description { get; set; }
+        public string? RelatedIds {
+            get => _relatedIds;
+            set {
+                _relatedIds = value;
+                _relatedItems = default;
+            }
+        }
+        private string? _relatedIds { get; set; }
+        public List<Book> Books => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Books.Find (item => item.Id == int.Parse (id)) ?? new ()));
+        private List<Book>? _relatedItems { get; set; }
         public DataSet DataSet { get; set; } = default!;
     }
 
@@ -84,13 +92,21 @@
         public int Id { get; set; }
         public int Version { get; set; }
         public string Title { get; set; } = "";
-        public string? Description { get; set; } = default;
+        public string? Description { get; set; }
         public DateTime? PublishDate { get; set; }
         public string Publisher { get; set; } = "";
         public string Series { get; set; } = "";
         public decimal Price { get; set; }
-        public string? _relatedIds { get; set; } = default;
-        public List<Author> Authors => (_relatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Authors.Find (item => item.Id == int.Parse (id)) ?? new ());
+        public string? RelatedIds {
+            get => _relatedIds;
+            set {
+                _relatedIds = value;
+                _relatedItems = default;
+            }
+        }
+        private string? _relatedIds { get; set; }
+        public List<Author> Authors => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Authors.Find (item => item.Id == int.Parse (id)) ?? new ()));
+        private List<Author>? _relatedItems { get; set; }
         public DataSet DataSet { get; set; } = default!;
     }
 
