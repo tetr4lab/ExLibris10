@@ -3,7 +3,7 @@ using PetaPoco;
 
 namespace ExLibris.Data;
 
-[TableName (""), PrimaryKey ("Id"), ExplicitColumns]
+[TableName (""), PrimaryKey ("Id", AutoIncrement = true), ExplicitColumns]
 public class ExLibrisBaseModel<T1, T2>
     where T1 : ExLibrisBaseModel<T1, T2>, new()
     where T2 : ExLibrisBaseModel<T2, T1>, new() {
@@ -25,7 +25,7 @@ public class ExLibrisBaseModel<T1, T2>
         get => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.GetAll<T2> ().Find (item => item.Id == int.Parse (id)) ?? new ()));
         set {
             _relatedIds = string.Join (",", value.ConvertAll (item => item.Id));
-            _relatedIds = default;
+            _relatedItems = default;
         }
     }
     protected List<T2>? _relatedItems { get; set; }
