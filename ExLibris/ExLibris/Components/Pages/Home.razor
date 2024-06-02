@@ -66,15 +66,13 @@
 }
 
 @code {
-
-    //protected Database db { get; set; } = default!;
-
-    public class Author {
-        public int Id { get; set; }
-        public int Version { get; set; }
-        public string Name { get; set; } = "";
-        public string AdditionalName { get; set; } = "";
-        public string? Description { get; set; }
+    [TableName (""), PrimaryKey ("Id"), ExplicitColumns]
+    public class ExLibrisBaseModel<T1, T2>
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        [Column] public int Id { get; set; }
+        [Column] public int Version { get; set; }
+        [Column] public string? _relatedIds { get; set; }
         public string? RelatedIds {
             get => _relatedIds;
             set {
@@ -82,35 +80,41 @@
                 _relatedItems = default;
             }
         }
-        private string? _relatedIds { get; set; }
-        public List<Book> Books => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Books.Find (item => item.Id == int.Parse (id)) ?? new ()));
-        private List<Book>? _relatedItems { get; set; }
+        public List<T2> RelatedItems {
+            get => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.GetAll<T2> ().Find (item => item.Id == int.Parse (id)) ?? new ()));
+            set {
+                _relatedIds = string.Join (",", value.ConvertAll (item => item.Id));
+                _relatedIds = default;
+            }
+        }
+        public List<T2>? _relatedItems { get; set; }
         public DataSet DataSet { get; set; } = default!;
     }
 
-    public class Book {
-        public int Id { get; set; }
-        public int Version { get; set; }
-        public string Title { get; set; } = "";
-        public string? Description { get; set; }
-        public DateTime? PublishDate { get; set; }
-        public string Publisher { get; set; } = "";
-        public string Series { get; set; } = "";
-        public decimal Price { get; set; }
-        public string? RelatedIds {
-            get => _relatedIds;
-            set {
-                _relatedIds = value;
-                _relatedItems = default;
-            }
-        }
-        private string? _relatedIds { get; set; }
-        public List<Author> Authors => (_relatedItems ??= (RelatedIds ?? "").Split (',').ToList ().ConvertAll (id => DataSet.Authors.Find (item => item.Id == int.Parse (id)) ?? new ()));
-        private List<Author>? _relatedItems { get; set; }
-        public DataSet DataSet { get; set; } = default!;
+    [TableName ("Authos"), PrimaryKey ("Id"), ExplicitColumns]
+    public class Author : ExLibrisBaseModel<Author, Book> {
+        [Column] public string Name { get; set; } = "";
+        [Column] public string AdditionalName { get; set; } = "";
+        [Column] public string? Description { get; set; }
+        public List<Book> Books => RelatedItems;
+    }
+
+    [TableName ("Books"), PrimaryKey ("Id"), ExplicitColumns]
+    public class Book : ExLibrisBaseModel<Book, Author> {
+        [Column] public string Title { get; set; } = "";
+        [Column] public string? Description { get; set; }
+        [Column] public DateTime? PublishDate { get; set; }
+        [Column] public string Publisher { get; set; } = "";
+        [Column] public string Series { get; set; } = "";
+        [Column] public decimal Price { get; set; }
+        public List<Author> Authors => RelatedItems;
     }
 
     public class DataSet {
+        public List<T> GetAll<T> () where T : class => (
+                typeof (T) == typeof (Author) ? Authors as List<T> :
+                typeof (T) == typeof (Book) ? Books as List<T> : null
+            ) ?? new ();
         public List<Author> Authors {
             get => _authors;
             set => (_authors = value).ForEach (author => author.DataSet = this);
