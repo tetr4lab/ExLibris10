@@ -3,10 +3,15 @@ using PetaPoco;
 
 namespace ExLibris.Data;
 
-[TableName (""), PrimaryKey ("Id", AutoIncrement = true), ExplicitColumns]
+/// <summary>基底モデル</summary>
+/// <typeparam name="T1">自身</typeparam>
+/// <typeparam name="T2">関係先</typeparam>
+/// <remarks>派生先で必要に応じて`[TableName ("~")]`を加える</remarks>
+[PrimaryKey ("Id", AutoIncrement = true), ExplicitColumns]
 public class ExLibrisBaseModel<T1, T2>
     where T1 : ExLibrisBaseModel<T1, T2>, new()
     where T2 : ExLibrisBaseModel<T2, T1>, new() {
+
     [Column] public int Id { get; set; }
     [Column] public int Version { get; set; }
     [Column] protected string? _relatedIds { get; set; }
