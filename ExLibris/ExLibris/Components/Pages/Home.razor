@@ -1,6 +1,6 @@
 ﻿@page "/"
 
-@inject Database db
+@inject ExLibrisDataSet DataSet
 
 <PageTitle>Home</PageTitle>
 
@@ -8,8 +8,8 @@
 <p>@(StartTime.ToLongTimeString ()) ~ @(EndTime.ToLongTimeString ()) @(EndTime - StartTime)</p>
 <p>Welcome to your new app.</p>
 
-@if (dataSet.Books != null) {
-    <div class="card hstack p-2"><div>書籍</div><div class="ms-auto">@($"{dataSet.Books.Count:#,#}")冊</div></div>
+@if (DataSet.Initialized) {
+    <div class="card hstack p-2"><div>書籍</div><div class="ms-auto">@($"{DataSet.Books.Count:#,#}")冊</div></div>
     <table class="table">
         <thead>
             <tr>
@@ -24,7 +24,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var book in dataSet.Books) {
+            @foreach (var book in DataSet.Books) {
                 <tr>
                     <td class="text-end">@book.Id</td>
                     <td>@book.Title</td>
@@ -38,9 +38,7 @@
             }
         </tbody>
     </table>
-}
-@if (dataSet.Authors != null) {
-    <div class="card hstack p-2"><div>著者</div><div class="ms-auto">@($"{dataSet.Authors.Count:#,#}")人</div></div>
+    <div class="card hstack p-2"><div>著者</div><div class="ms-auto">@($"{DataSet.Authors.Count:#,#}")人</div></div>
     <table class="table">
         <thead>
             <tr>
@@ -52,7 +50,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var author in dataSet.Authors) {
+            @foreach (var author in DataSet.Authors) {
                 <tr>
                     <td class="text-end">@author.Id</td>
                     <td>@author.Name</td>
@@ -63,6 +61,8 @@
             }
         </tbody>
     </table>
+} else {
+    <p>loading...</p>
 }
 
 @code {
@@ -88,7 +88,7 @@
             }
         }
         public List<T2>? _relatedItems { get; set; }
-        public DataSet DataSet { get; set; } = default!;
+        public ExLibrisDataSet DataSet { get; set; } = default!;
     }
 
     [TableName ("Authos"), PrimaryKey ("Id"), ExplicitColumns]
@@ -109,8 +109,33 @@
         [Column] public decimal Price { get; set; }
         public List<Author> Authors => RelatedItems;
     }
-
-    public class DataSet {
+    public sealed class ExLibrisDataSet {
+        [Inject] private Database database { get; set; }
+        public ExLibrisDataSet (Database database) {
+            this.database = database;
+        }
+        public async Task Initialize () {
+            await LoadAsync ();
+        }
+        public bool Initialized { get; private set; }
+        public async Task LoadAsync () {
+            if (isLoading) { return; }
+            isLoading = true;
+            Initialized = false;
+            Books = await database.FetchAsync<Book> (
+                @"select Books.*, Group_concat(AuthorsId) as _relatedIds
+                from Books
+                left join AuthorBook on Books.Id = AuthorBook.BooksId
+                group by Books.Id;");
+            Authors = await database.FetchAsync<Author> (
+                @"select Authors.*, Group_concat(BooksId) as _relatedIds
+                from Authors
+                left join AuthorBook on Authors.Id = AuthorBook.AuthorsId
+                group by Authors.Id;");
+            isLoading = false;
+            Initialized = true;
+        }
+        private bool isLoading;
         public List<T> GetAll<T> () where T : class => (
                 typeof (T) == typeof (Author) ? Authors as List<T> :
                 typeof (T) == typeof (Book) ? Books as List<T> : null
@@ -127,26 +152,24 @@
         private List<Book> _books = new ();
     }
 
-    protected DataSet dataSet { get; set; } = new ();
-
     protected DateTime StartTime { get; set; }
     protected DateTime EndTime { get; set; }
 
     protected override async Task OnInitializedAsync () {
         await base.OnInitializedAsync ();
         StartTime = DateTime.Now;
-        dataSet.Books = await db.FetchAsync<Book> (
-            @"select Books.*, Group_concat(AuthorsId) as _relatedIds
-            from Books
-            left join AuthorBook on Books.Id = AuthorBook.BooksId
-            group by Books.Id;");
-        dataSet.Authors = await db.FetchAsync<Author> (
-            @"select Authors.*, Group_concat(BooksId) as _relatedIds
-            from Authors
-            left join AuthorBook on Authors.Id = AuthorBook.AuthorsId
-            group by Authors.Id;");
-        EndTime = DateTime.Now;
-        StateHasChanged ();
+        _ = DataSet.Initialize ();
+    }
+
+    protected override async Task OnAfterRenderAsync (bool firstRender) {
+        await base.OnAfterRenderAsync (firstRender);
+        if (firstRender) {
+            while (!DataSet.Initialized) {
+                await Task.Delay (1000 / 60);
+            }
+            EndTime = DateTime.Now;
+            StateHasChanged ();
+        }
     }
 
 }
