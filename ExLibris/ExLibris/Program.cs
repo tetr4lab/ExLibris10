@@ -1,7 +1,6 @@
 using PetaPoco;
-using ExLibris.Client.Pages;
 using ExLibris.Components;
-using ExLibris.Components.Pages;
+using ExLibris.Services;
 
 var builder = WebApplication.CreateBuilder (args);
 var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}";
@@ -15,7 +14,7 @@ builder.Services.AddRazorComponents ()
 builder.Services.AddTransient (_ => new Database (connectionString, "MySqlConnector"));
 
 // EXLibrisDataSet
-builder.Services.AddTransient<Home.ExLibrisDataSet> ();
+builder.Services.AddTransient<ExLibrisDataSet> ();
 
 var app = builder.Build ();
 
