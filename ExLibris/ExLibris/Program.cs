@@ -11,7 +11,7 @@ builder.Services.AddRazorComponents ()
     .AddInteractiveWebAssemblyComponents ();
 
 // PetaPoco with MySqlConnector
-builder.Services.AddTransient (_ => new Database (connectionString, "MySqlConnector"));
+builder.Services.AddTransient (_ => (Database) new MySqlDatabase (connectionString, "MySqlConnector"));
 
 // ExLibrisDataSet
 builder.Services.AddTransient<ExLibrisDataSet> ();

@@ -13,7 +13,12 @@
 </head>
 
 <body>
-    <Routes @rendermode="@RenderMode.InteractiveServer" />
+    @*
+        プリレンダリング時に、ネストしたトランザクションでコネクションが失われて例外が生じる
+        System.InvalidOperationException: The transaction associated with this command is not the connection's active transaction; see https://fl.vu/mysql-trans
+    *@
+    <Routes @rendermode="new InteractiveServerRenderMode (prerender: false)" />
+    @* <Routes @rendermode="@RenderMode.InteractiveServer" /> *@
     <script src="_framework/blazor.web.js"></script>
 </body>
 

@@ -2,7 +2,7 @@
 
 namespace ExLibris.Data;
 
-[TableName ("Authos")]
+[TableName ("Authors")]
 public class Author : ExLibrisBaseModel<Author, Book> {
     [Column] public string Name { get; set; } = "";
     [Column] public string AdditionalName { get; set; } = "";
