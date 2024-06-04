@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using Microsoft.AspNetCore.Components;
 using MySqlConnector;
 using PetaPoco;
 using ExLibris.Data;
@@ -20,7 +19,7 @@ public sealed class ExLibrisDataSet {
     private const int RetryInterval = 1000 / 30;
 
     /// <summary>PetaPocoをDI</summary>
-    [Inject] private Database database { get; set; }
+    private Database database { get; set; }
 
     /// <summary>コンストラクタ</summary>
     public ExLibrisDataSet (Database database) {
