@@ -1,6 +1,5 @@
 ﻿using ExLibris.Services;
 using PetaPoco;
-using System.ComponentModel.DataAnnotations;
 
 namespace ExLibris.Data;
 
@@ -16,48 +15,31 @@ public class ExLibrisBaseModel<T1, T2>
     [Column] public int Id { get; set; }
     [Column] public int Version { get; set; }
 
-    ///// <summary>関係先Idリスト</summary>
-    //public List<int>? RelatedIds { get; set; }
-
-    ///// <summary>関係先インスタンス</summary>
-    //public List<T2> RelatedItems {
-    //    // RelatedIdsがnullなら_relatedItemsもnullになって、次回に再度生成を試みる。nullでも空のリストを返す。
-    //    get => (_relatedItems ??= RelatedIds?.ConvertAll (Id => DataSet.GetAll<T2> ().Find (item => item.Id == Id) ?? new ())) ?? new ();
-    //    set {
-    //        RelatedIds = value.ConvertAll (item => item.Id);
-    //        _relatedItems = default;
-    //    }
-    //}
-
     /// <summary>文字列によるIdリスト</summary>
     [Column, VirtualColumn]
     public string? _relatedIds { get; set; }
 
     /// <summary>数値によるIdリスト</summary>
     public List<int>? RelatedIds {
-        get => (_relatedIds ?? "").Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0);
+        get => __relatedIds ??= (_relatedIds ?? "").Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0);
         protected set {
             _relatedIds = value == null ? null : string.Join (",", value);
-            _relatedItems = default;
+            __relatedItems = default;
         }
     }
+    protected List<int>? __relatedIds { get; set; }
 
     /// <summary>関係先インスタンス</summary>
     public List<T2> RelatedItems {
         // RelatedIdsがnullなら_relatedItemsもnullになって、次回に再度生成を試みる。nullでも空のリストを返す。
-        get => (_relatedItems ??= (RelatedIds ?? new ()).ConvertAll (id => DataSet.GetAll<T2> ().Find (item => item.Id == id) ?? new ()));
+        get => (__relatedItems ??= (RelatedIds ?? new ()).ConvertAll (id => DataSet.GetAll<T2> ().Find (item => item.Id == id) ?? new ()));
         set {
             _relatedIds = string.Join (",", value.ConvertAll (item => item.Id));
-            _relatedItems = default;
+            __relatedItems = default;
         }
     }
-    protected List<T2>? _relatedItems { get; set; }
+    protected List<T2>? __relatedItems { get; set; }
 
     /// <summary>所属するデータセット</summary>
     public ExLibrisDataSet DataSet { get; set; } = default!;
-}
-
-/// <summary>関係先Idリストをマップするだけのクラス</summary>
-public class Related {
-    public string? Ids { get; set; }
 }

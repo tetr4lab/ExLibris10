@@ -13,6 +13,12 @@ public sealed class ExLibrisDataSet {
     /// <summary>待機間隔</summary>
     public const int WaitInterval = 1000 / 60;
 
+    /// <summary>ロードでエラーした場合の最大試行回数</summary>
+    private const int MaxRetryCount = 10;
+
+    /// <summary>ロードでエラーした場合のリトライ間隔</summary>
+    private const int RetryInterval = 1000 / 30;
+
     /// <summary>PetaPocoをDI</summary>
     [Inject] private Database database { get; set; }
 
@@ -34,7 +40,7 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>(再)読み込み</summary>
     /// <remarks>既に読み込み中なら単に完了を待って戻る</remarks>
-    public async Task LoadAsync() {
+    public async Task LoadAsync (Database? database = null) {
         if (isLoading) {
             while (isLoading) {
                 await Task.Delay (WaitInterval);
@@ -42,48 +48,14 @@ public sealed class ExLibrisDataSet {
             return;
         }
         isLoading = true;
-        //await database.BeginTransactionAsync ();
-        //try {
-        //    await database.BeginTransactionAsync ();
-        //    try {
-        //        Books = await database.FetchAsync<Book> (
-        //            @"select Books.*, Group_concat(AuthorsId) as _relatedIds
-        //            from Books
-        //            left join AuthorBook on Books.Id = AuthorBook.BooksId
-        //            group by Books.Id
-        //            order by Books.PublishDate desc;");
-        //        await database.CompleteTransactionAsync ();
-        //    }
-        //    catch {
-        //        await database.AbortTransactionAsync ();
-        //        throw;
-        //    }
-        //    await database.BeginTransactionAsync ();
-        //    try {
-        //        Authors = await database.FetchAsync<Author> (
-        //            @"select Authors.*, Group_concat(BooksId) as _relatedIds
-        //            from Authors
-        //            left join AuthorBook on Authors.Id = AuthorBook.AuthorsId
-        //            group by Authors.Id
-        //            order by Authors.Name asc;");
-        //        await database.CompleteTransactionAsync ();
-        //    }
-        //    catch {
-        //        await database.AbortTransactionAsync ();
-        //        throw;
-        //    }
-        //    await database.CompleteTransactionAsync ();
-        //}
-        //catch {
-        //    await database.AbortTransactionAsync ();
-        //    throw;
-        //}
-
-        await QueryAndCommitAsync (async database => {
-            Books = (await GetListAsync<Book, Author> (database)).Value;
-            Authors = (await GetListAsync<Author, Book> (database)).Value;
-            return true;
-        });
+        for (var i = 0; i < MaxRetryCount; i++) {
+            var result = await GetPairAsync<Book, Author> (database);
+            if (result.books.IsSuccess && result.authors.IsSuccess) {
+                (Books, Authors) = (result.books.Value, result.authors.Value);
+                break;
+            }
+            await Task.Delay (RetryInterval);
+        }
         isLoading = false;
     }
     private bool isLoading;
@@ -134,6 +106,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>更新用カラムSQL</summary>
+    /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
     private string GetSettingSql (Type type, bool withId = false) {
         var result = string.Empty;
         if (type.IsClass) {
@@ -150,6 +123,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>追加用カラムSQL</summary>
+    /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
     public string GetValuesSql (Type type, bool withId = false) {
         var result = string.Empty;
         if (type.IsClass) {
@@ -176,32 +150,40 @@ public sealed class ExLibrisDataSet {
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 :  ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName (typeof (T1));
-        return await QueryAndCommitAsync (async database => {
+        return await ProcessAndCommitAsync (async database => {
             return await database.FetchAsync<T1> (
-            //return database.Query<T1, Related, T1> (
-            //    (item, related) => {
-            //        //item._relatedIds = related.Ids;
-            //        item.RelatedIds = related.Ids?.Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0);
-            //        return item;
-            //    },
-            //    $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as Ids
                 $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
                 from {table}
                 left join AuthorBook on {table}.Id = AuthorBook.{table}Id
                 group by {table}.Id
                 {OrderSql (typeof (T1), table)};"
-            //);.ToList ();
             );
         }, database);
     }
 
-    /// <summary>クエリを実行しコミットする、例外またはエラーがあればロールバックする、成功またはエラーの状態を返す</summary>
-    public async Task<Result<T>> QueryAndCommitAsync<T> (Func<Database, Task<T>> query, Database? database = null) {
+    /// <summary>一覧ペアをアトミックに取得</summary>
+    public async Task<(Result<List<T1>> books, Result<List<T2>> authors)> GetPairAsync<T1, T2> (Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var result = await ProcessAndCommitAsync (async database => {
+            var list1 = await GetListAsync<T1, T2> (database);
+            var list2 = await GetListAsync<T2, T1> (database);
+            return (list1, list2);
+        }, database);
+        return result.ValueOrThrow;
+    }
+
+    /// <summary>処理を実行しコミットする、例外またはエラーがあればロールバックする</summary>
+    /// <typeparam name="T">返す値の型</typeparam>
+    /// <param name="process">処理</param>
+    /// <param name="database">PetaPocoインスタンス</param>
+    /// <returns>成功またはエラーの状態と値のセット</returns>
+    public async Task<Result<T>> ProcessAndCommitAsync<T> (Func<Database, Task<T>> process, Database? database = null) {
         var result = default (T)!;
         database ??= this.database;
         await database.BeginTransactionAsync ();
         try {
-            result = await query (database);
+            result = await process (database);
             await database.CompleteTransactionAsync ();
             return new (Status.Success, result);
         }
@@ -267,16 +249,12 @@ public static class ExLibrisDataSetHelper {
         status = Status.Unknown;
         return false;
     }
-
     /// <summary>ステータス名</summary>
     public static string GetName (this Status status) => StatusName [status];
-
     /// <summary>ステータスは致命的である</summary>
     public static bool IsFatal (this Status status) => status == Status.DeadlockFound || status == Status.CommandTimeout;
-
     /// <summary>例外はデッドロックである</summary>
     public static bool IsDeadLock (this Exception ex) => ex is MySqlException && ex.Message.StartsWith ("Deadlock found");
-
     /// <summary>例外はタイムアウトである</summary>
     public static bool IsTimeout (this Exception ex) => ex is MySqlException && ex.Message.StartsWith ("The Command Timeout expired");
 }
@@ -330,14 +308,14 @@ public class Result<T> {
 
 /// <summary>内部で使用する例外</summary>
 [Serializable]
-public class MyDataSetException : Exception {
+internal class MyDataSetException : Exception {
     internal MyDataSetException () : base () { }
     internal MyDataSetException (string message) : base (message) { }
     internal MyDataSetException (string message, Exception innerException) : base (message, innerException) { }
 }
 
 /// <summary>仮想カラム</summary>
-/// <remarks>挿入や更新で出力しない</remarks>
+/// <remarks>計算列から(PetaPocoにマッピングさせて)取り込むが、フィールドが実在しないので書き出さない</remarks>
 [AttributeUsage (AttributeTargets.Property | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 public class VirtualColumnAttribute : Attribute {
     public VirtualColumnAttribute () { }

@@ -1,6 +1,4 @@
-﻿@using System.Reflection
-
-@page "/"
+﻿@page "/"
 
 @inject ExLibrisDataSet DataSet
 
@@ -75,25 +73,17 @@
     protected override async Task OnInitializedAsync () {
         await base.OnInitializedAsync ();
         StartTime = DateTime.Now;
+        // 初期化を開始
         _ = DataSet.InitializeAsync ();
     }
 
     protected override async Task OnAfterRenderAsync (bool firstRender) {
         await base.OnAfterRenderAsync (firstRender);
         if (firstRender) {
+            // 初期化の完了を待つ
             await DataSet.InitializeAsync ();
             EndTime = DateTime.Now;
             StateHasChanged ();
-            // var result = await DataSet.QueryAndCommitAsync (async database => {
-            //     // await database.InsertAsync (new Book { Title = "0000", PublishDate = new DateTime (2024, 6, 3), });
-
-            //     await database.ExecuteAsync (
-            //         $@"insert into Books {DataSet.GetValuesSql (typeof (Book))};select LAST_INSERT_ID ();",
-            //         new Book { Title = "0000", PublishDate = new DateTime (2024, 6, 3), }
-            //     );
-            //     return true;
-            // });
-            // System.Diagnostics.Debug.WriteLine ($"Status={result.Status}");
         }
     }
 
