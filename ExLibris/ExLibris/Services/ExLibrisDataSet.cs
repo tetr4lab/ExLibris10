@@ -291,6 +291,9 @@ public sealed class ExLibrisDataSet {
         )).Single (), database);
     }
 
+}
+
+public static class ExceptionToErrorHelper {
     /// <summary>例外メッセージからエラーへの変換</summary>
     internal static readonly Dictionary<(Type type, string message), Status> ExceptionToErrorDictionary = new () {
         { (typeof (MyDataSetException), "Missing entry"), Status.MissingEntry },
@@ -305,11 +308,7 @@ public sealed class ExLibrisDataSet {
         { (typeof (MySqlException), "Cannot add or update a child row: a foreign key constraint fails"), Status.ForeignKeyConstraintFails },
         { (typeof (MySqlException), "Deadlock found"), Status.DeadlockFound },
     };
-
-}
-
-public static class ExLibrisDataSetHelper {
-    // 例外がエラーか判定して該当するエラー状態を出力する
+    /// <summary>例外がエラーか判定して該当するエラー状態を出力する</summary>
     public static bool TryGetStatus (this Exception ex, out Status status) {
         foreach (var pair in ExceptionToErrorDictionary) {
             if (ex.GetType () == pair.Key.type && ex.Message.StartsWith (pair.Key.message, StringComparison.CurrentCultureIgnoreCase)) {
@@ -320,12 +319,15 @@ public static class ExLibrisDataSetHelper {
         status = Status.Unknown;
         return false;
     }
-    /// <summary>ステータスは致命的である</summary>
-    public static bool IsFatal (this Status status) => status == Status.DeadlockFound || status == Status.CommandTimeout;
     /// <summary>例外はデッドロックである</summary>
     public static bool IsDeadLock (this Exception ex) => ex is MySqlException && ex.Message.StartsWith ("Deadlock found");
-    /// <summary>例外はタイムアウトである</summary>
-    public static bool IsTimeout (this Exception ex) => ex is MySqlException && ex.Message.StartsWith ("The Command Timeout expired");
+    /// <summary>逆引き</summary>
+    public static Exception GetException (this Status status) {
+        if (ExceptionToErrorDictionary.ContainsValue (status)) {
+            return new MyDataSetException (ExceptionToErrorDictionary.First (p => p.Value == status).Key.message);
+        }
+        return new Exception ("Unknown exception");
+    }
 }
 
 public static class StatusHelper {
@@ -387,15 +389,7 @@ public class Result<T> {
     /// <summary>成功なら値、失敗なら例外</summary>
     public T ValueOrThrow => IsSuccess ? Value : throw new NotSupportedException (Status.ToString ());
     /// <summary>逆引き</summary>
-    public Exception Exception {
-        get {
-            if (ExceptionToErrorDictionary.ContainsValue (Status)) {
-                return new MyDataSetException (ExceptionToErrorDictionary.First (p => p.Value == Status).Key.message);
-            } else {
-                return new Exception ("Unknown exception");
-            }
-        }
-    }
+    public Exception Exception => Status.GetException ();
     /// <summary>文字列化</summary>
     public override string ToString () => $"{{{StatusName}: {Value}}}";
 }
@@ -408,7 +402,7 @@ internal class MyDataSetException : Exception {
     internal MyDataSetException (string message, Exception innerException) : base (message, innerException) { }
 }
 
-/// <summary>仮想カラム</summary>
+/// <summary>仮想カラム属性</summary>
 /// <remarks>計算列から(PetaPocoにマッピングさせて)取り込むが、フィールドが実在しないので書き出さない</remarks>
 [AttributeUsage (AttributeTargets.Property | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
 public class VirtualColumnAttribute : Attribute {
