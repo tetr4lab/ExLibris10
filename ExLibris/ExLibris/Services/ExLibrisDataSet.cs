@@ -39,7 +39,7 @@ public sealed class ExLibrisDataSet {
     public bool IsInitialized { get; private set; }
 
     /// <summary>(再)読み込み</summary>
-    /// <remarks>既に読み込み中なら単に完了を待って戻る</remarks>
+    /// <remarks>既に読み込み中なら単に完了を待って戻る、再読み込み中でも以前のデータが有効</remarks>
     public async Task LoadAsync (Database? database = null) {
         if (isLoading) {
             while (isLoading) {
