@@ -291,18 +291,6 @@ public sealed class ExLibrisDataSet {
         )).Single (), database);
     }
 
-    /// <summary>結果の状態の名前</summary>
-    public static readonly Dictionary<Status, string> StatusName = new () {
-        { Status.Success, "成功" },
-        { Status.Unknown, "不詳の失敗" },
-        { Status.MissingEntry, "エントリの消失" },
-        { Status.DuplicateEntry, "エントリの重複" },
-        { Status.CommandTimeout, "タイムアウト" },
-        { Status.VersionMismatch, "バージョンの不整合" },
-        { Status.ForeignKeyConstraintFails, "外部キー制約の違反" },
-        { Status.DeadlockFound, "デッドロック" },
-    };
-
     /// <summary>例外メッセージからエラーへの変換</summary>
     internal static readonly Dictionary<(Type type, string message), Status> ExceptionToErrorDictionary = new () {
         { (typeof (MyDataSetException), "Missing entry"), Status.MissingEntry },
@@ -332,14 +320,35 @@ public static class ExLibrisDataSetHelper {
         status = Status.Unknown;
         return false;
     }
-    /// <summary>ステータス名</summary>
-    public static string GetName (this Status status) => StatusName [status];
     /// <summary>ステータスは致命的である</summary>
     public static bool IsFatal (this Status status) => status == Status.DeadlockFound || status == Status.CommandTimeout;
     /// <summary>例外はデッドロックである</summary>
     public static bool IsDeadLock (this Exception ex) => ex is MySqlException && ex.Message.StartsWith ("Deadlock found");
     /// <summary>例外はタイムアウトである</summary>
     public static bool IsTimeout (this Exception ex) => ex is MySqlException && ex.Message.StartsWith ("The Command Timeout expired");
+}
+
+public static class StatusHelper {
+    /// <summary>結果の状態の名前</summary>
+    private static readonly Dictionary<Status, string> StatusNameDictionary;
+    /// <summary>コンストラクタ</summary>
+    static StatusHelper () {
+        StatusNameDictionary = new () {
+            { Status.Success, "成功" },
+            { Status.Unknown, "不詳の失敗" },
+            { Status.MissingEntry, "エントリの消失" },
+            { Status.DuplicateEntry, "エントリの重複" },
+            { Status.CommandTimeout, "タイムアウト" },
+            { Status.VersionMismatch, "バージョンの不整合" },
+            { Status.ForeignKeyConstraintFails, "外部キー制約の違反" },
+            { Status.DeadlockFound, "デッドロック" },
+        };
+    }
+    /// <summary>結果の状態の名前</summary>
+    public static string GetName (this Status status)
+        => StatusNameDictionary .ContainsKey (status)
+        ? StatusNameDictionary [status]
+        : throw new ArgumentOutOfRangeException ($"Invalid status value {status}.");
 }
 
 /// <summary>結果の状態</summary>
@@ -366,7 +375,7 @@ public enum Status {
 public class Result<T> {
     public Status Status { get; internal set; }
     public T Value { get; init; } = default!;
-    public string StatusName => ExLibrisDataSet.StatusName [Status];
+    public string StatusName => Status.GetName ();
     internal Result () { }
     internal Result (Status status, T value) { Status = status; Value = value; }
     /// <summary>成功である</summary>
