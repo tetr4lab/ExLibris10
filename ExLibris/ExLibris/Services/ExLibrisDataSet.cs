@@ -80,6 +80,52 @@ public sealed class ExLibrisDataSet {
     }
     private List<Book> _books = new();
 
+    /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
+    public T1? GetItemById<T1, T2> (int id)
+        where T1 : ExLibrisBaseModel<T1, T2>, new ()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => GetAll<T1> ()?.Find (i => i.Id == id);
+
+    /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
+    public T1? GetItemById<T1, T2> (T1 item)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => GetAll<T1> ()?.Find (i => i.Id == item.Id);
+
+    /// <summary>読み込み済み総リストから対象と同名のアイテムを得る</summary>
+    public T1? GetItemByName<T1, T2> (T1 item)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => GetAll<T1> ()?.Find (i => i.UniqueKey.ContainsEquals (item.UniqueKey));
+
+    /// <summary>読み込み済み総リストから対象と同名のアイテムを得る</summary>
+    public T1? GetItemByName<T1, T2> (string name)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => GetAll<T1> ()?.Find (i => i.RowLabel == name);
+
+    /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
+    public List<T1?> GetItemsById<T1, T2> (IEnumerable<int> ids)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => ids.ToList ().ConvertAll (GetItemById<T1, T2>);
+
+    /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
+    public List<T1?> GetItemsById<T1, T2> (IEnumerable<T1> items)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => items.ToList ().ConvertAll (GetItemById<T1, T2>);
+
+    /// <summary>指定された型のUniqueKeysSqlを返す</summary>
+    /// <exception cref="InvalidOperationException"></exception>
+    private static string GetUniqueKeysSql<T> (T _) {
+        var property = typeof (T).GetProperty ("UniqueKeysSql", BindingFlags.Static | BindingFlags.Public);
+        if (property == null || property.PropertyType != typeof (string)) {
+            throw new InvalidOperationException ($"No static property 'UniqueKeysSql' of type '{typeof (T)}' found on type '{typeof (T)}'.");
+        }
+        return (string?) property.GetValue (null) ?? "";
+    }
+
     /// <summary>SQLで使用するテーブル名またはカラム名を得る</summary>
     /// <param name="type">クラス型</param>
     /// <param name="name">プロパティ名</param>
@@ -145,34 +191,6 @@ public sealed class ExLibrisDataSet {
         return result;
     }
 
-    /// <summary>一覧を取得</summary>
-    private async Task<Result<List<T1>>> GetListAsync<T1, T2> (Database? database = null)
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 :  ExLibrisBaseModel<T2, T1>, new() {
-        var table = GetSqlName (typeof (T1));
-        return await ProcessAndCommitAsync (async database => {
-            return await database.FetchAsync<T1> (
-                $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
-                from {table}
-                left join AuthorBook on {table}.Id = AuthorBook.{table}Id
-                group by {table}.Id
-                {OrderSql (typeof (T1), table)};"
-            );
-        }, database);
-    }
-
-    /// <summary>一覧ペアをアトミックに取得</summary>
-    public async Task<(Result<List<T1>> books, Result<List<T2>> authors)> GetPairAsync<T1, T2> (Database? database = null)
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        var result = await ProcessAndCommitAsync (async database => {
-            var list1 = await GetListAsync<T1, T2> (database);
-            var list2 = await GetListAsync<T2, T1> (database);
-            return (list1, list2);
-        }, database);
-        return result.ValueOrThrow;
-    }
-
     /// <summary>処理を実行しコミットする、例外またはエラーがあればロールバックする</summary>
     /// <typeparam name="T">返す値の型</typeparam>
     /// <param name="process">処理</param>
@@ -206,6 +224,71 @@ public sealed class ExLibrisDataSet {
             await database.AbortTransactionAsync ();
             throw;
         }
+    }
+
+    /// <summary>一覧を取得</summary>
+    private async Task<Result<List<T1>>> GetListAsync<T1, T2> (Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 :  ExLibrisBaseModel<T2, T1>, new() {
+        var table = GetSqlName (typeof (T1));
+        return await ProcessAndCommitAsync (async database => {
+            return await database.FetchAsync<T1> (
+                $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
+                from {table}
+                left join AuthorBook on {table}.Id = AuthorBook.{table}Id
+                group by {table}.Id
+                {OrderSql (typeof (T1), table)};"
+            );
+        }, database);
+    }
+
+    /// <summary>一覧ペアをアトミックに取得</summary>
+    public async Task<(Result<List<T1>> books, Result<List<T2>> authors)> GetPairAsync<T1, T2> (Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var result = await ProcessAndCommitAsync (async database => {
+            var list1 = await GetListAsync<T1, T2> (database);
+            var list2 = await GetListAsync<T2, T1> (database);
+            return (list1, list2);
+        }, database);
+        return result.ValueOrThrow;
+    }
+
+    /// <summary>単一アイテムを取得 (Idで特定) 【注意】総リストとは別オブジェクトになる</summary>
+    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (int id, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var table = GetSqlName (typeof (T1));
+        return await ProcessAndCommitAsync (async database => (await database.FetchAsync<T1?> (
+            $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
+            from {table}
+            left join AuthorBook on {table}.Id = AuthorBook.{table}Id
+            where {table}.Id = @Id
+            group by {table}.Id;",
+            new { Id = id }
+        )).Single (), database);
+    }
+
+    /// <summary>単一アイテムを取得 (Idで特定) 【注意】総リストとは別オブジェクトになる</summary>
+    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (T1 item, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => await GetItemByIdAsync<T1, T2> (item.Id, database);
+
+    /// <summary>単一アイテムを取得 (ユニークキーで特定) 【注意】総リストとは別オブジェクトになる</summary>
+    public async Task<Result<T1?>> GetItemByNameAsync<T1, T2> (T1 target, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var table = GetSqlName (typeof (T1));
+        var t2Table = GetSqlName (typeof (T2));
+        return await ProcessAndCommitAsync (async database => (await database.FetchAsync<T1?> (
+            $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
+            from {table}
+            left join AuthorBook on {table}.Id = AuthorBook.{table}Id
+            where {GetUniqueKeysSql (target)}
+            group by {table}.Id;",
+            target
+        )).Single (), database);
     }
 
     /// <summary>結果の状態の名前</summary>
@@ -304,6 +387,8 @@ public class Result<T> {
             }
         }
     }
+    /// <summary>文字列化</summary>
+    public override string ToString () => $"{{{StatusName}: {Value}}}";
 }
 
 /// <summary>内部で使用する例外</summary>

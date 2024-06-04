@@ -84,6 +84,10 @@
             await DataSet.InitializeAsync ();
             EndTime = DateTime.Now;
             StateHasChanged ();
+
+            var book = await DataSet.GetItemByNameAsync<Book, Author> (new Book { Title = "0000", PublishDate = new DateTime (2024, 6, 3), });
+            var author = await DataSet.GetItemByIdAsync<Author, Book> (new Author { Id = 2445, });
+            System.Diagnostics.Debug.WriteLine ($"{book}\n{author}");
         }
     }
 
