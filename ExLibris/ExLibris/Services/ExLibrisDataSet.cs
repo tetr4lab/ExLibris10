@@ -29,14 +29,14 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>初期化</summary>
     public async Task InitializeAsync() {
-        if (!Initialized) {
+        if (!IsInitialized) {
             await LoadAsync ();
-            Initialized = true;
+            IsInitialized = true;
         }
     }
 
     /// <summary>初期化済み</summary>
-    public bool Initialized { get; private set; }
+    public bool IsInitialized { get; private set; }
 
     /// <summary>(再)読み込み</summary>
     /// <remarks>既に読み込み中なら単に完了を待って戻る</remarks>
@@ -52,11 +52,12 @@ public sealed class ExLibrisDataSet {
             var result = await GetPairAsync<Book, Author> (database);
             if (result.books.IsSuccess && result.authors.IsSuccess) {
                 (Books, Authors) = (result.books.Value, result.authors.Value);
-                break;
+                isLoading = false;
+                return;
             }
             await Task.Delay (RetryInterval);
         }
-        isLoading = false;
+        throw new TimeoutException ("The maximum number of retries for LoadAsync was exceeded.");
     }
     private bool isLoading;
 
