@@ -88,6 +88,30 @@
             var book = await DataSet.GetItemByNameAsync<Book, Author> (new Book { Title = "0000", PublishDate = new DateTime (2024, 6, 3), });
             var author = await DataSet.GetItemByIdAsync<Author, Book> (new Author { Id = 2445, });
             System.Diagnostics.Debug.WriteLine ($"{book}\n{author}");
+            var result = await DeleteIfExistByName (new Book { Title = "1111", _relatedIds = "2445,2446,2447", PublishDate = new DateTime(2024, 6, 5), });
+            System.Diagnostics.Debug.WriteLine ($"Delete 1111 {result}");
+            result = await DeleteIfExistByName (new Book { Title = "2222", PublishDate = new DateTime (2024, 6, 5), });
+            System.Diagnostics.Debug.WriteLine ($"Delete 2222 {result}");
+            var book2 = await DataSet.AddAsync<Book, Author> (new Book { Title = "1111", _relatedIds = "2445,2446,2447", PublishDate = new DateTime (2024, 6, 5), });
+            System.Diagnostics.Debug.WriteLine ($"Insert 1111 {book2}");
+            var book3 = await DataSet.AddAsync<Book, Author> (new Book { Title = "2222", PublishDate = new DateTime (2024, 6, 5), });
+            System.Diagnostics.Debug.WriteLine ($"Insert 2222 {book3}");
+            if (book3.IsSuccess && book3.Value != null && book2.IsSuccess && book2.Value != null) {
+                result = await DataSet.RemoveRangeAsync<Book, Author> (new List<Book> { book3.Value, book2.Value, });
+                System.Diagnostics.Debug.WriteLine ($"Delete [2] {result}");
+                result = await DataSet.AddRangeAsync<Book, Author> ([book2.Value, book3.Value,]);
+                System.Diagnostics.Debug.WriteLine ($"Insert [2] {result}");
+            }
+            await DataSet.LoadAsync ();
+            StateHasChanged ();
+        }
+
+        async Task<Result<int>> DeleteIfExistByName (Book item) {
+            var exist = await DataSet.GetItemByNameAsync<Book, Author> (item);
+            if (exist.IsSuccess && exist.Value != null) {
+                return await DataSet.RemoveAsync<Book, Author> (exist.Value);
+            }
+            return new (exist.Status, 0);
         }
     }
 
