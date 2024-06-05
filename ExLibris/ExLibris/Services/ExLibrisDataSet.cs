@@ -151,7 +151,7 @@ public sealed class ExLibrisDataSet {
         return string.Empty;
     }
 
-    /// <summary>更新用カラムSQL</summary>
+    /// <summary>更新用カラム&値SQL</summary>
     /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
     private string GetSettingSql<T> (bool withId = false) where T : class {
         var result = string.Empty;
@@ -166,25 +166,57 @@ public sealed class ExLibrisDataSet {
         return result;
     }
 
-    /// <summary>追加用カラムSQL</summary>
+    /// <summary>追加用値SQL</summary>
     /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
-    public string GetColumnsAndValuesSql<T> (bool withId = false) where T : class {
+    public string GetValuesSql<T> (int index = -1, bool withId = false) where T : class {
         var result = string.Empty;
         var properties = typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public);
         if (properties != null) {
-            var columns = string.Join (",", Array.ConvertAll (properties, property => {
+            result = string.Join (",", Array.ConvertAll (properties, property => {
+                var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
+                var attribute = property.GetCustomAttribute<ColumnAttribute> ();
+                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"@{property.Name}{(index >= 0 ? $"_{index}" : "")}" : "";
+            }).ToList ().FindAll (i => i != ""));
+        }
+        return result;
+    }
+
+    /// <summary>追加用カラムSQL</summary>
+    /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
+    public string GetColumnsSql<T> (bool withId = false) where T : class {
+        var result = string.Empty;
+        var properties = typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public);
+        if (properties != null) {
+            result = string.Join (",", Array.ConvertAll (properties, property => {
                 var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
                 var attribute = property.GetCustomAttribute<ColumnAttribute> ();
                 return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? attribute.Name ?? property.Name : "";
             }).ToList ().FindAll (i => i != ""));
-            var values = string.Join (",", Array.ConvertAll (properties, property => {
-                var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
-                var attribute = property.GetCustomAttribute<ColumnAttribute> ();
-                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"@{property.Name}" : "";
-            }).ToList ().FindAll (i => i != ""));
-            result = $"({columns}) values ({values})";
         }
         return result;
+    }
+
+    /// <summary>アイテムリストから辞書型パラメータを生成する</summary>
+    private Dictionary<string, object?> GetParamDictionary<T1, T2> (IEnumerable<T1> values)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var parameters = new Dictionary<string, object?> ();
+        var prpperties = new List<PropertyInfo> ();
+        foreach (var property in typeof (T1).GetProperties (BindingFlags.Instance | BindingFlags.Public) ?? []) {
+            var attribute = property.GetCustomAttribute<ColumnAttribute> ();
+            if (attribute != null && property.GetCustomAttribute<VirtualColumnAttribute> () == null
+                && (attribute.Name ?? property.Name) != "Id") {
+                prpperties.Add (property);
+            }
+        }
+        var i = 0;
+        foreach (var value in values) {
+            foreach (var property in prpperties) {
+                parameters.Add ($"{property.Name}_{i}", property.GetValue (value));
+            }
+            i++;
+        }
+        return parameters;
     }
 
     /// <summary>処理を実行しコミットする、例外またはエラーがあればロールバックする</summary>
@@ -276,14 +308,193 @@ public sealed class ExLibrisDataSet {
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
-        return await ProcessAndCommitAsync (async database => (await database.FetchAsync<T1?> (
-            $@"select {table}.*, Group_concat({GetSqlName<T2> ()}Id) as _relatedIds
-            from {table}
-            left join AuthorBook on {table}.Id = AuthorBook.{table}Id
-            where {GetUniqueKeysSql<T1> ()}
-            group by {table}.Id;",
-            target
-        )).Single (), database);
+        return await ProcessAndCommitAsync (async database => {
+            var result = await database.FetchAsync<T1?> (
+                $@"select {table}.*, Group_concat({GetSqlName<T2> ()}Id) as _relatedIds
+                from {table}
+                left join AuthorBook on {table}.Id = AuthorBook.{table}Id
+                where {GetUniqueKeysSql<T1> ()}
+                group by {table}.Id;",
+                target
+            );
+            if (result.Count == 1) {
+                return result [0];
+            } else if (result.Count <= 0) {
+                throw Status.MissingEntry.GetException ();
+            } else {
+                throw Status.DuplicateEntry.GetException ();
+            }
+        }, database);
+    }
+
+    /// <summary>アイテムの更新サブ処理 トランザクション内専用</summary>
+    private async Task<int> UpdateItemAsync<T1, T2> (T1 item, Database database)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var table = GetSqlName<T1> ();
+        return await database.ExecuteAsync (
+            @$"update {table} set {GetSettingSql<T1> ()} where {table}.Id = @Id",
+            item
+        );
+    }
+
+    /// <summary>関係リンク追加サブ処理 トランザクション内専用</summary>
+    private async Task<int> AddRelationsAsync<T1, T2> (T1 item, Database database)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        if (item.RelatedIds.Count <= 0) { return 0; }
+        var valuesSqls = new List<string> ();
+        var parameters = new Dictionary<string, object> { { "Id1", item.Id } };
+        for (int i = 0; i < item.RelatedIds.Count; i++) {
+            valuesSqls.Add ($"(@Id1, @Id2_{i})");
+            parameters.Add ($"Id2_{i}", item.RelatedIds [i]);
+        }
+        return await database.ExecuteAsync (
+            $"insert into AuthorBook ({GetSqlName<T1> ()}Id, {GetSqlName<T2> ()}Id) values {string.Join(",", valuesSqls)};",
+            parameters
+        );
+    }
+
+    /// <summary>関係リンク削除サブ処理 トランザクション内専用</summary>
+    private async Task<int> RemoveRelationsAsync<T1, T2> (T1 item, Database database)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        return await database.ExecuteAsync (
+            $"delete from AuthorBook where {GetSqlName<T1> ()}Id = @Id",
+            item
+        );
+    }
+
+    /// <summary>アイテムの更新</summary>
+    public async Task<Result<int>> UpdateAsync<T1, T2> (T1 item, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var topLevel = database == null;
+        var result = await ProcessAndCommitAsync (async database => {
+            await RemoveRelationsAsync<T1, T2> (item, database);
+            await AddRelationsAsync<T1, T2> (item, database);
+            item.Version++;
+            return await UpdateItemAsync<T1, T2> (item, database);
+        }, database);
+        if (result.IsSuccess && result.Value <= 0) {
+            result.Status = Status.MissingEntry;
+        }
+        return result;
+    }
+
+    /// <summary>単一アイテムの追加</summary>
+    public async Task<Result<T1>> AddAsync<T1, T2> (T1 item, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var result = await ProcessAndCommitAsync (async database => {
+            item.Id = await database.ExecuteScalarAsync<int> (
+                @$"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values ({GetValuesSql<T1> ()});
+                select LAST_INSERT_ID ();",
+                item
+            );
+            if (item.Id > 0) {
+                await AddRelationsAsync<T1, T2> (item, database);
+                return 1;
+            }
+            return 0;
+        }, database);
+        if (result.IsSuccess && result.Value <= 0) {
+            result.Status = Status.MissingEntry;
+        }
+        if (result.IsFailure) {
+            item.Id = default;
+        }
+        return new (result.Status, item);
+    }
+
+    /// <summary>一括アイテムの追加</summary>
+    public async Task<Result<int>> AddRangeAsync<T1, T2> (IEnumerable<T1> items, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        return await ProcessAndCommitAsync (async database => {
+            var valuesSqls = new List<string> ();
+            for (int i = 0; i < items.Count (); i++) {
+                valuesSqls.Add ($"({GetValuesSql<T1> (i)})");
+            }
+            return await database.ExecuteAsync (
+                $"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values {string.Join (",", valuesSqls)};",
+                GetParamDictionary<T1, T2> (items)
+            );
+        }, database);
+    }
+
+    /// <summary>単一アイテムの削除</summary>
+    public async Task<Result<int>> RemoveAsync<T1, T2> (T1 item, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var result = await ProcessAndCommitAsync (async database => {
+            var original = await GetItemByIdAsync<T1, T2> (item, database);
+            if (original.IsSuccess && original.Value != null) {
+                if (item.Version == original.Value.Version) {
+                    // 関係先は制約によって自動的に削除される
+                    return await database.ExecuteAsync (
+                        $"delete from {GetSqlName<T1> ()} where Id = @Id",
+                        item
+                    );
+                } else {
+                    throw new MyDataSetException ($"Version mismatch between {item.Version} and {original.Value.Version}");
+                }
+            }
+            return 0;
+        }, database);
+        if (result.IsSuccess && result.Value <= 0) {
+            result.Status = Status.MissingEntry;
+        }
+        return result;
+    }
+
+    /// <summary>バージョン照合を行うためのモデル</summary>
+    private class IdVersion {
+        public int Id { get; set; }
+        public int Version { get; set; }
+    }
+
+    /// <summary>一括アイテムの削除</summary>
+    public async Task<Result<int>> RemoveRangeAsync<T1, T2> (IEnumerable<T1> items, Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var table = GetSqlName<T1> ();
+        var status = Status.Unknown;
+        var result = await ProcessAndCommitAsync (async database => {
+            // 要求
+            var list = items.ToList ();
+            // 既存
+            var entries = await database.FetchAsync<IdVersion> (
+                $"select * from {table} where Id in (@Ids)",
+                new { Ids = list.ConvertAll (i => i.Id) });
+            // 一致
+            var targets = entries.FindAll (i => list.Find (j => j.Id == i.Id && j.Version == i.Version) != null).ConvertAll (i => i.Id);
+            // 実行と結果
+            status = targets.Count < entries.Count () ? Status.VersionMismatch : (entries.Count () < list.Count ? Status.MissingEntry : Status.Success);
+            return await database.ExecuteAsync (
+                $"delete from {table} where Id in (@Ids)",
+                new { Ids = targets }
+            );
+        }, database);
+        return new (status, result.Value);
+    }
+
+    /// <summary>テーブルが空であればオートインクリメントを初期化する</summary>
+    public async Task<Result<int>> ResetAutoIncrementAsync<T1, T2> (Database? database = null)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var table1 = GetSqlName<T1> ();
+        return await ProcessAndCommitAsync (async database => {
+            var result = await database.ExecuteScalarAsync<int> (
+                @$"set @empty := (select count(*) = 0 from {table1});
+                set @sql := if(@empty, 'alter table {table1} auto_increment = 1', 'select ""');
+                prepare st from @sql;
+                execute st;
+                deallocate prepare st;
+                select @empty;"
+            );
+            return result;
+        }, database); // `ALTER`を使用するので`SAVEPOINT`は使用不可
     }
 
 }
@@ -389,7 +600,7 @@ public class Result<T> {
     /// <summary>逆引き</summary>
     public Exception Exception => Status.GetException ();
     /// <summary>文字列化</summary>
-    public override string ToString () => $"{{{StatusName}: {Value}}}";
+    public override string ToString () => $"{{{Status}: {Value}}}";
 }
 
 /// <summary>内部で使用する例外</summary>
