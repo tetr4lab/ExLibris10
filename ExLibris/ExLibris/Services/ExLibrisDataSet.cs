@@ -118,7 +118,7 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>指定された型のUniqueKeysSqlを返す</summary>
     /// <exception cref="InvalidOperationException"></exception>
-    private static string GetUniqueKeysSql<T> (T _) {
+    private static string GetUniqueKeysSql<T> () {
         var property = typeof (T).GetProperty ("UniqueKeysSql", BindingFlags.Static | BindingFlags.Public);
         if (property == null || property.PropertyType != typeof (string)) {
             throw new InvalidOperationException ($"No static property 'UniqueKeysSql' of type '{typeof (T)}' found on type '{typeof (T)}'.");
@@ -131,9 +131,8 @@ public sealed class ExLibrisDataSet {
     /// <param name="name">プロパティ名</param>
     /// <returns>テーブル名またはカラム名</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    public static string GetSqlName (Type type, string? name = null) {
-        if (!type.IsClass)
-            throw new ArgumentOutOfRangeException (nameof (type));
+    public static string GetSqlName<T> (string? name = null) where T : class {
+        var type = typeof (T);
         if (name == null) {
             return type.GetCustomAttribute<PetaPoco.TableNameAttribute> ()?.Value ?? type.Name;
         } else {
@@ -142,51 +141,48 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>一覧用並び指定SQL</summary>
-    private string OrderSql (Type type, string table) {
+    private string GetOrderSql<T> () where T : class {
+        var type = typeof (T);
         if (type == typeof (Book)) {
-            return $"order by {GetSqlName (type)}.{GetSqlName (type, "PublishDate")} DESC";
+            return $"order by {GetSqlName<T> ()}.{GetSqlName<T> ("PublishDate")} DESC";
         } else if (type == typeof (Author)) {
-            return $"order by {GetSqlName (type)}.{GetSqlName (type, "Name")} ASC";
+            return $"order by {GetSqlName<T> ()}.{GetSqlName<T> ("Name")} ASC";
         }
         return string.Empty;
     }
 
     /// <summary>更新用カラムSQL</summary>
     /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
-    private string GetSettingSql (Type type, bool withId = false) {
+    private string GetSettingSql<T> (bool withId = false) where T : class {
         var result = string.Empty;
-        if (type.IsClass) {
-            var properties = type.GetProperties (BindingFlags.Instance | BindingFlags.Public);
-            if (properties != null) {
-                result = string.Join (",", Array.ConvertAll (properties, property => {
-                    var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
-                    var attribute = property.GetCustomAttribute<ColumnAttribute> ();
-                    return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"{attribute.Name ?? property.Name}=@{property.Name}" : "";
-                }).ToList ().FindAll (i => i != ""));
-            }
+        var properties = typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public);
+        if (properties != null) {
+            result = string.Join (",", Array.ConvertAll (properties, property => {
+                var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
+                var attribute = property.GetCustomAttribute<ColumnAttribute> ();
+                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"{attribute.Name ?? property.Name}=@{property.Name}" : "";
+            }).ToList ().FindAll (i => i != ""));
         }
         return result;
     }
 
     /// <summary>追加用カラムSQL</summary>
     /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
-    public string GetValuesSql (Type type, bool withId = false) {
+    public string GetColumnsAndValuesSql<T> (bool withId = false) where T : class {
         var result = string.Empty;
-        if (type.IsClass) {
-            var properties = type.GetProperties (BindingFlags.Instance | BindingFlags.Public);
-            if (properties != null) {
-                var columns = string.Join (",", Array.ConvertAll (properties, property => {
-                    var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
-                    var attribute = property.GetCustomAttribute<ColumnAttribute> ();
-                    return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? attribute.Name ?? property.Name : "";
-                }).ToList ().FindAll (i => i != ""));
-                var values = string.Join (",", Array.ConvertAll (properties, property => {
-                    var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
-                    var attribute = property.GetCustomAttribute<ColumnAttribute> ();
-                    return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"@{property.Name}" : "";
-                }).ToList ().FindAll (i => i != ""));
-                result = $"({columns}) values ({values})";
-            }
+        var properties = typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public);
+        if (properties != null) {
+            var columns = string.Join (",", Array.ConvertAll (properties, property => {
+                var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
+                var attribute = property.GetCustomAttribute<ColumnAttribute> ();
+                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? attribute.Name ?? property.Name : "";
+            }).ToList ().FindAll (i => i != ""));
+            var values = string.Join (",", Array.ConvertAll (properties, property => {
+                var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
+                var attribute = property.GetCustomAttribute<ColumnAttribute> ();
+                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"@{property.Name}" : "";
+            }).ToList ().FindAll (i => i != ""));
+            result = $"({columns}) values ({values})";
         }
         return result;
     }
@@ -230,14 +226,14 @@ public sealed class ExLibrisDataSet {
     private async Task<Result<List<T1>>> GetListAsync<T1, T2> (Database? database = null)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 :  ExLibrisBaseModel<T2, T1>, new() {
-        var table = GetSqlName (typeof (T1));
+        var table = GetSqlName<T1> ();
         return await ProcessAndCommitAsync (async database => {
             return await database.FetchAsync<T1> (
-                $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
+                $@"select {table}.*, group_concat({GetSqlName<T2> ()}Id) as _relatedIds
                 from {table}
                 left join AuthorBook on {table}.Id = AuthorBook.{table}Id
                 group by {table}.Id
-                {OrderSql (typeof (T1), table)};"
+                {GetOrderSql<T1> ()};"
             );
         }, database);
     }
@@ -258,9 +254,9 @@ public sealed class ExLibrisDataSet {
     public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (int id, Database? database = null)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        var table = GetSqlName (typeof (T1));
+        var table = GetSqlName<T1> ();
         return await ProcessAndCommitAsync (async database => (await database.FetchAsync<T1?> (
-            $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
+            $@"select {table}.*, Group_concat({GetSqlName<T2> ()}Id) as _relatedIds
             from {table}
             left join AuthorBook on {table}.Id = AuthorBook.{table}Id
             where {table}.Id = @Id
@@ -279,13 +275,12 @@ public sealed class ExLibrisDataSet {
     public async Task<Result<T1?>> GetItemByNameAsync<T1, T2> (T1 target, Database? database = null)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        var table = GetSqlName (typeof (T1));
-        var t2Table = GetSqlName (typeof (T2));
+        var table = GetSqlName<T1> ();
         return await ProcessAndCommitAsync (async database => (await database.FetchAsync<T1?> (
-            $@"select {table}.*, Group_concat({GetSqlName (typeof (T2))}Id) as _relatedIds
+            $@"select {table}.*, Group_concat({GetSqlName<T2> ()}Id) as _relatedIds
             from {table}
             left join AuthorBook on {table}.Id = AuthorBook.{table}Id
-            where {GetUniqueKeysSql (target)}
+            where {GetUniqueKeysSql<T1> ()}
             group by {table}.Id;",
             target
         )).Single (), database);
@@ -351,6 +346,9 @@ public static class StatusHelper {
         => StatusNameDictionary .ContainsKey (status)
         ? StatusNameDictionary [status]
         : throw new ArgumentOutOfRangeException ($"Invalid status value {status}.");
+    /// <summary>結果の一覧から最初に見つかった失敗状態を返す、失敗がなければ成功を返す</summary>
+    public static Status FirstFailedState<T> (this List<Result<T>> results)
+        => results.Find (r => r.IsFatal)?.Status ?? results.Find (r => r.IsFailure)?.Status ?? Status.Success;
 }
 
 /// <summary>結果の状態</summary>

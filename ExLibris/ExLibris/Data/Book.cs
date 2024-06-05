@@ -56,11 +56,11 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     /// <summary>ユニークキー群のSQL表現</summary>
     public static string UniqueKeysSql {
         get {
-            var table = ExLibrisDataSet.GetSqlName (typeof (Book));
-            var title = ExLibrisDataSet.GetSqlName (typeof (Book), "Title");
-            var publisher = ExLibrisDataSet.GetSqlName (typeof (Book), "Publisher");
-            var series = ExLibrisDataSet.GetSqlName (typeof (Book), "Series");
-            var publishdate = ExLibrisDataSet.GetSqlName (typeof (Book), "PublishDate");
+            var table = ExLibrisDataSet.GetSqlName<Book> ();
+            var title = ExLibrisDataSet.GetSqlName<Book> ("Title");
+            var publisher = ExLibrisDataSet.GetSqlName<Book> ("Publisher");
+            var series = ExLibrisDataSet.GetSqlName<Book> ("Series");
+            var publishdate = ExLibrisDataSet.GetSqlName<Book> ("PublishDate");
             return $"{table}.{title}<=>@Title and {table}.{publisher}<=>@Publisher and {table}.{series}<=>@Series and {table}.{publishdate}<=>@PublishDate";
         }
     }

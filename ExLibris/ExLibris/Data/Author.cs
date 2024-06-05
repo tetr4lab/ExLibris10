@@ -45,9 +45,9 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     /// <summary>ユニークキー群のSQL表現</summary>
     public static string UniqueKeysSql {
         get {
-            var table = ExLibrisDataSet.GetSqlName (typeof (Author));
-            var name = ExLibrisDataSet.GetSqlName (typeof (Author), "Name");
-            var additionalName = ExLibrisDataSet.GetSqlName (typeof (Author), "AdditionalName");
+            var table = ExLibrisDataSet.GetSqlName<Author> ();
+            var name = ExLibrisDataSet.GetSqlName<Author> ("Name");
+            var additionalName = ExLibrisDataSet.GetSqlName<Author> ("AdditionalName");
             return $"{table}.{name}<=>@Name and {table}.{additionalName}<=>@AdditionalName";
         }
     }
