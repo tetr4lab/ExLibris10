@@ -50,7 +50,7 @@ public abstract class ExLibrisBaseModel<T1, T2>
 
     /// <summary>数値によるIdリスト</summary>
     public List<int> RelatedIds {
-        get => (__relatedIds ??= (_relatedIds ?? "").Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0)) ?? new ();
+        get => (__relatedIds ??= string.IsNullOrEmpty (_relatedIds)? new () : _relatedIds.Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0)) ?? new ();
         protected set {
             _relatedIds = value == null ? null : string.Join (",", value);
             __relatedItems = default;
