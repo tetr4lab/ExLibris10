@@ -52,13 +52,13 @@ builder.Services.AddAuthorization (options => {
 });
 
 // PetaPoco with MySqlConnector
-builder.Services.AddTransient (_ => (Database) new MySqlDatabase (connectionString, "MySqlConnector"));
+builder.Services.AddScoped (_ => (Database) new MySqlDatabase (connectionString, "MySqlConnector"));
 
 // HTTP Client
 builder.Services.AddHttpClient ();
 
 // ExLibrisDataSet
-builder.Services.AddTransient<ExLibrisDataSet> ();
+builder.Services.AddScoped<ExLibrisDataSet> ();
 
 var app = builder.Build ();
 
