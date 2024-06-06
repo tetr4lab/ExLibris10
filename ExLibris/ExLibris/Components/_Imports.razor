@@ -7,9 +7,19 @@
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
+@using MudBlazor
 @using PetaPoco
+@using Tetr4lab
 @using ExLibris
 @using ExLibris.Client
 @using ExLibris.Components
+@using ExLibris.Components.Pages
+@using ExLibris.Components.Layout
 @using ExLibris.Data
+@using ExLibris.Utilities
 @using ExLibris.Services
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize (Policy = "Users")]

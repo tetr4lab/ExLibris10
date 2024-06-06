@@ -1,0 +1,40 @@
+﻿@typeparam TItems where TItems : ExLibrisBaseModel<TItems, TItem>, IExLibrisModel, new()
+@typeparam TItem where TItem : ExLibrisBaseModel<TItem, TItems>, IExLibrisModel, new()
+
+@*関係先を選択するダイアログ*@
+
+<MudDialog DefaultFocus="DefaultFocus.FirstChild">
+    <DialogContent>
+        <MudStack Spacing="0">
+            <MudAutocomplete @ref="autoComplete"
+                T="TItems"
+                IsOpenChanged="OnOpenChanged"
+                ResetValueOnEmptyText="true"
+                @bind-Value="autoCompleteSelected"
+                Label="@TItem.RelatedListName"
+                AdornmentIcon="@Icons.Material.Filled.Search"
+                Margin="Margin.None"
+                Dense="true"
+                SearchFunc="SearchItems"
+                ToStringFunc="@(i => i?.UniqueKey ?? "")" />
+            <MudSimpleTable Dense="true" Striped="true" Hover="true">
+                <tbody>
+                @foreach (var item in selected) {
+                    <tr>
+                        <th class="align-left">
+                            <MudText>@item.UniqueKey</MudText>
+                        </th>
+                        <th class="align-right">
+                            <MudIconButton OnClick="@(() => OnRemove (item))" Icon="@Icons.Material.Filled.RemoveCircle" Size="Size.Small" />
+                        </th>
+                    </tr>
+                }
+                </tbody>
+            </MudSimpleTable>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large">Cancel</MudButton>
+        <MudButton OnClick="Accept" StartIcon="@Icons.Material.Filled.Save" Size="Size.Large" Color="Color.Success">Ok</MudButton>
+    </DialogActions>
+</MudDialog>

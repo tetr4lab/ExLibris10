@@ -51,7 +51,7 @@ public abstract class ExLibrisBaseModel<T1, T2>
     /// <summary>数値によるIdリスト</summary>
     public List<int> RelatedIds {
         get => (__relatedIds ??= string.IsNullOrEmpty (_relatedIds)? new () : _relatedIds.Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0)) ?? new ();
-        protected set {
+        set {
             _relatedIds = value == null ? null : string.Join (",", value);
             __relatedItems = default;
         }
@@ -71,6 +71,15 @@ public abstract class ExLibrisBaseModel<T1, T2>
 
     /// <summary>所属するデータセット</summary>
     public ExLibrisDataSet DataSet { get; set; } = default!;
+
+    /// <summary>クローン</summary>
+    public abstract T1 Clone ();
+
+    /// <summary>値のコピー</summary>
+    public abstract T1 CopyTo (T1 destination);
+
+    /// <summary>内容の比較</summary>
+    public abstract bool Equals (object? obj, bool includeRelation);
 }
 
 public static class ExLibrisModelHelper {

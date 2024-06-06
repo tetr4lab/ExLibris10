@@ -53,7 +53,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     }
 
     /// <summary>クローン</summary>
-    public Author Clone ()
+    public override Author Clone ()
         => new Author {
             DataSet = DataSet,
             Id = Id,
@@ -66,7 +66,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         };
 
     /// <summary>値のコピー</summary>
-    public Author CopyTo (Author arg) {
+    public override Author CopyTo (Author arg) {
         if (arg is Author destination) {
             destination.DataSet = DataSet;
             destination.Id = Id;
@@ -85,7 +85,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public bool Equals (Author? other) => Equals ((object?) other);
 
     /// <summary>値の等価性</summary>
-    public bool Equals (object? obj, bool includeRelation) => obj is Author other
+    public override bool Equals (object? obj, bool includeRelation) => obj is Author other
         && Id == other.Id
         && Name == other.Name
         && AdditionalName == other.AdditionalName

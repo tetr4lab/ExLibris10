@@ -80,6 +80,12 @@ public sealed class ExLibrisDataSet {
     }
     private List<Book> _books = new();
 
+    /// <summary>有効性の検証</summary>
+    public bool Valid
+        => IsInitialized
+        && _authors != null && !_authors.Exists (i => i.DataSet != this || i.Id <= 0)
+        && _books != null && !_books.Exists (i => i.DataSet != this || i.Id <= 0);
+
     /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
     public T1? GetItemById<T1, T2> (int id)
         where T1 : ExLibrisBaseModel<T1, T2>, new ()

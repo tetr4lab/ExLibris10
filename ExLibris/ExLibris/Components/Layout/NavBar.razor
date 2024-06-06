@@ -1,0 +1,84 @@
+﻿<MudItem>
+    @if (!IsHomePage) {
+        <MudText Class="pr-8" Typo="Typo.h4">ExLibris</MudText>
+    } else {
+        <MudText Class="pb-2" Typo="Typo.h4">Contents</MudText>
+    }
+</MudItem>
+@if (!IsHomePage) {
+    <MudItem>
+        <MudNavLink Href="" Match="NavLinkMatch.All">
+            <MudText Class="d-flex align-center gap-1" Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.Home" />Home
+            </MudText>
+        </MudNavLink>
+    </MudItem>
+}
+<MudItem>
+    <MudNavLink Href="books">
+        <MudText Class="d-flex align-center gap-1" Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.LibraryBooks" />Books
+        </MudText>
+    </MudNavLink>
+</MudItem>
+<MudItem>
+    <MudNavLink Href="authors">
+        <MudText Class="d-flex align-center gap-1" Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.People" />Authors
+        </MudText>
+    </MudNavLink>
+</MudItem>
+@if (!IsHomePage) {
+    <MudSpacer />
+    @if (RevisionInfo.Valid) {
+        <MudItem Class="mr-4 align-self-end">
+            <MudText Typo="Typo.body2" Style="@($"color:{Colors.Grey.Lighten3};")">@($"revision: {RevisionInfo.Branch} - {RevisionInfo.Id}")</MudText>
+        </MudItem>
+    }
+    <MudItem>
+        <MudTextField @bind-Value="_filterText" @ref="searchField"
+            OnKeyUp="OnKeyUp"
+            OnBlur="OnClick"
+            OnAdornmentClick="OnClick" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+            OnClearButtonClick="OnClick" Clearable 
+            Label="Search" Class="white" Margin="Margin.Dense" Variant="Variant.Outlined" DisableUnderLine />
+    </MudItem>
+}
+
+@code {
+    /// <summary>サーチボタンが押されたときの処理</summary>
+    [Parameter] public EventCallback<string?> OnClickSearchButton { get; set; } = EventCallback<string?>.Empty;
+
+    /// <summary>
+    /// ホームページの判定
+    /// サーチボタンのアクションが指定されていればナビゲーションバー
+    /// 指定されなければホームページのコンテンツ
+    /// </summary>
+    private bool IsHomePage => OnClickSearchButton.Equals (EventCallback<string?>.Empty);
+
+    /// <summary>検索フィールドへの参照</summary>
+    private MudTextField<string> searchField { get; set; } = new MudTextField<string>();
+
+    /// <summary>検索文字列</summary>
+    private string _filterText = string.Empty;
+
+    /// <summary>前回の検索文字列</summary>
+    private string _lastFilterText = string.Empty;
+
+    /// <summary>検索フィールドでキーが押された</summary>
+    protected void OnKeyUp (KeyboardEventArgs eventArgs) {
+        if (eventArgs.Key == "Enter") {
+            OnClick();
+        }
+    }
+
+    /// <summary>検索ボタン(またはフィールドクリアボタン)が押された</summary>
+    public void OnClick () {
+        if (_lastFilterText != _filterText) {
+            OnClickSearchButton.InvokeAsync(_filterText);
+            _lastFilterText = _filterText;
+            searchField.BlurAsync();
+        }
+    }
+
+}

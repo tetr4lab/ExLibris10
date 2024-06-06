@@ -1,117 +1,223 @@
-﻿@page "/"
+﻿@using System.Net
+@using ComicsData
+
+@page "/"
+
+@implements IDisposable
 
 @inject ExLibrisDataSet DataSet
+@inject HttpClient HttpClient
+@inject IDialogService DialogService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>ExLibris Home</PageTitle>
 
-<h1>Hello, world!</h1>
-<p>Welcome to your new app.</p>
-
-@if (DataSet.IsInitialized) {
-    <div>@(StartTime.ToLongTimeString ()) ~ @(EndTime.ToLongTimeString ()) @(EndTime - StartTime) ±@(ExLibrisDataSet.WaitInterval)msec</div>
-    <div class="card hstack p-2"><div>書籍</div><div class="ms-auto">@($"{DataSet.Books.Count:#,#}")冊</div></div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Title</th>
-                <th>Authors</th>
-                <th>PublishDate</th>
-                <th>Publisher</th>
-                <th>Series</th>
-                <th>Price</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in DataSet.Books) {
-                <tr>
-                    <td class="text-end">@item.Id</td>
-                    <td>@item.Title</td>
-                    <td>@(string.Join (", ", item.RelatedItems.ConvertAll (i => i.Name)))</td>
-                    <td>@(item.PublishDate?.ToShortDateString ())</td>
-                    <td>@item.Publisher</td>
-                    <td>@item.Series</td>
-                    <td class="text-end">¥@($"{item.Price:#,#}")</td>
-                    <td>@item.Description</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    <div class="card hstack p-2"><div>著者</div><div class="ms-auto">@($"{DataSet.Authors.Count:#,#}")人</div></div>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>-</th>
-                <th>Books</th>
-                <th>Descripthion</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in DataSet.Authors) {
-                <tr>
-                    <td class="text-end">@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.AdditionalName</td>
-                    <td>@(string.Join (", ", item.RelatedItems.ConvertAll (i => i.Title)))</td>
-                    <td>@item.Description</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+@if (!DataSet.IsInitialized) {
+    <MudStack Row Spacing="4">
+        <MudProgressCircular Indeterminate="true" />
+        <MudText Class="d-flex align-center gap-1" Typo="Typo.body1">データの読み込み中です。</MudText>
+    </MudStack>
 } else {
-    <p>loading...</p>
+    <MudNavMenu>
+        <NavBar />
+    </MudNavMenu>
+    <MudPaper Class="px-4 py-3" Elevation="2">
+        <MudStack Row Spacing="4">
+            @if (isDownloading) {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                <MudText Class="d-flex align-center gap-1" Typo="Typo.body2">データを更新中です。アプリを終了しないでください。</MudText>
+            } else {
+                <AuthorizeView Policy="Admin">
+                    <Authorized>
+                        <MudTooltip Text="@(SessionCounter.Count > 1 ? "複数の利用者がいる場合は使用できません。" : "")">
+                            <MudButton Disabled="isDownloading || SessionCounter.Count > 1" OnClick="Update" StartIcon="@Icons.Material.Filled.CloudDownload" Variant="Variant.Outlined" Size="Size.Small">Get New Releases</MudButton>
+                        </MudTooltip>
+                    </Authorized>
+                </AuthorizeView>
+                <MudText Class="d-flex align-center gap-1">
+                    <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Size="Size.Small" />
+                    @(DataSet?.Books?.ConvertAll (book => book.PublishDate).Min ()?.ToShortDateString ()) ~ @(DataSet?.Books?.ConvertAll (book => book.PublishDate).Max ()?.ToShortDateString ())
+                </MudText>
+                <MudText Class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.LibraryBooks" Size="Size.Small" />
+                    @($"{DataSet?.Books?.Count:#,0}")
+                </MudText>
+                <MudText Class="d-flex align-center gap-1">
+                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" />
+                    @($"{DataSet?.Authors?.Count:#,0}")
+                </MudText>
+            }
+        </MudStack>
+    </MudPaper>
 }
+<MudText Class="mt-2" Typo="Typo.body2" Color="Color.Success">@(DataSet.Valid ? "validated" : "")</MudText>
 
 @code {
 
-    protected DateTime StartTime { get; set; }
-    protected DateTime EndTime { get; set; }
+    /// <summary>検索文字列</summary>
+    [CascadingParameter (Name = "Filter")] protected string? Filter { get; set; }
 
-    protected override async Task OnInitializedAsync () {
-        await base.OnInitializedAsync ();
-        StartTime = DateTime.Now;
-        // 初期化を開始
-        _ = DataSet.InitializeAsync ();
+    /// <summary>セクションラベル設定</summary>
+    [CascadingParameter (Name = "Section")] protected EventCallback<string> SetSectionTitle { get; set; }
+
+    /// <summary>更新中の排他制御 兼 外部中断制御</summary>
+    protected bool isDownloading;
+
+    /// <summary>表示の更新と反映待ち</summary>
+    protected async Task StateHasChangedAsync () {
+        StateHasChanged ();
+        await TaskEx.DelayOneFrame;
     }
 
-    protected override async Task OnAfterRenderAsync (bool firstRender) {
-        await base.OnAfterRenderAsync (firstRender);
-        if (firstRender) {
-            // 初期化の完了を待つ
-            await DataSet.InitializeAsync ();
-            EndTime = DateTime.Now;
-            StateHasChanged ();
-
-            var book = await DataSet.GetItemByNameAsync<Book, Author> (new Book { Title = "0000", PublishDate = new DateTime (2024, 6, 3), });
-            var author = await DataSet.GetItemByIdAsync<Author, Book> (new Author { Id = 2445, });
-            System.Diagnostics.Debug.WriteLine ($"{book}\n{author}");
-            var result = await DeleteIfExistByName (new Book { Title = "1111", _relatedIds = "2445,2446,2447", PublishDate = new DateTime(2024, 6, 5), });
-            System.Diagnostics.Debug.WriteLine ($"Delete 1111 {result}");
-            result = await DeleteIfExistByName (new Book { Title = "2222", PublishDate = new DateTime (2024, 6, 5), });
-            System.Diagnostics.Debug.WriteLine ($"Delete 2222 {result}");
-            var book2 = await DataSet.AddAsync<Book, Author> (new Book { Title = "1111", _relatedIds = "2445,2446,2447", PublishDate = new DateTime (2024, 6, 5), });
-            System.Diagnostics.Debug.WriteLine ($"Insert 1111 {book2}");
-            var book3 = await DataSet.AddAsync<Book, Author> (new Book { Title = "2222", PublishDate = new DateTime (2024, 6, 5), });
-            System.Diagnostics.Debug.WriteLine ($"Insert 2222 {book3}");
-            if (book3.IsSuccess && book3.Value != null && book2.IsSuccess && book2.Value != null) {
-                result = await DataSet.RemoveRangeAsync<Book, Author> (new List<Book> { book3.Value, book2.Value, });
-                System.Diagnostics.Debug.WriteLine ($"Delete [2] {result}");
-                result = await DataSet.AddRangeAsync<Book, Author> ([book2.Value, book3.Value,]);
-                System.Diagnostics.Debug.WriteLine ($"Insert [2] {result}");
-            }
-            await DataSet.LoadAsync ();
+    /// <summary>データ更新</summary>
+    protected async void Update () {
+        if (!isDownloading) {
+            isDownloading = true;
+            await StateHasChangedAsync ();
+            await GetMissingsAsync();
+            isDownloading = false;
             StateHasChanged ();
         }
+    }
 
-        async Task<Result<int>> DeleteIfExistByName (Book item) {
-            var exist = await DataSet.GetItemByNameAsync<Book, Author> (item);
-            if (exist.IsSuccess && exist.Value != null) {
-                return await DataSet.RemoveAsync<Book, Author> (exist.Value);
+    /// <summary>不足データの取得</summary>
+    protected async Task GetMissingsAsync () {
+        if (DataSet?.Books == null || DataSet?.Authors == null) { return; }
+        // 不足データの検出
+        var books = DataSet.Books;
+        var nextMonth = new DateTime (DateTime.Now.Year, DateTime.Now.Month + 1, 1);
+        var missings = new List<DateTime> ();
+        for (var d = ComicsData.MostOldPublishDate; isDownloading && d <= nextMonth; d = d.AddMonths (1)) {
+            if (books.Find (book => book.PublishDate?.Year == d.Year && book.PublishDate?.Month == d.Month) == null) {
+                missings.Add (d);
             }
-            return new (exist.Status, 0);
+        }
+        if (!isDownloading) { return; }
+        // 確認
+        var messages = new [] {
+            missings.Count > 0 ? "以下のデータを更新します。" : "データは最新です。",
+            missings.Count > 0 ? string.Join(", ", missings.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}")) : null,
+        };
+        var dialogResult = await DialogService.Confirmation (messages, cancellationLabel: missings.Count > 0 ? "Cancel" : "");
+        if (missings.Count <= 0 || dialogResult.Canceled) { return; }
+        // 取得の開始
+        dialogResult = await DialogService.Progress(async update => {
+            var notFounds = new List<DateTime> ();
+            var errors = new List<Status> ();
+            var count = 0;
+            foreach (var date in missings) {
+                // 取得進行状況表示と中断受付
+                var progressValue = count * 100 / missings.Count;
+                var month = $"\"{date.Date.Year:D4}/{date.Date.Month:D2}\" {count:D4}/{missings.Count:D4}";
+                var cancel = update (progressValue, [$"取得中 双方 {month}"]);
+                if (cancel || !isDownloading) { break; }
+                // 取得
+                using (var data = new ComicsData (HttpClient, date)) {
+                    // 取得完了を待つ
+                    if (!await data.LoadAsync () || data.Count <= 0) {
+                        // データが無いのでスキップ
+                        notFounds.Add (date);
+                        continue;
+                    }
+                    // 生成
+                    // 登録のない著者名を検出して一覧
+                    var names = new List<string> ();
+                    var itemCount = 0;
+                    foreach (Comic comic in data) {
+                        cancel = update (progressValue, [$"検出中 著者 {month} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
+                        if (cancel || !isDownloading) { break; }
+                        var newNames = comic.Authors.FindAll (name => 
+                            !string.IsNullOrEmpty (name)
+                            && !names.Contains (name)
+                            && DataSet.GetItemByName<Author, Book> (name) == null
+                        );
+                        names.AddRange (newNames);
+                        itemCount++;
+                    }
+                    // 著者を一括生成・登録
+                    if (names.Count > 0) {
+                        update (progressValue, [$"保存中 著者 {month}"]);
+                        var authors = names.ConvertAll (name => new Author { DataSet = this.DataSet, Name = name, });
+                        var result = await DataSet.AddRangeAsync<Author, Book> (authors);
+                        if (result.IsFailure) {
+                            if (result.IsFatal) {
+                                update (ProgressDialog.Acceptable, [$"{result.StatusName}が発生しました。時間をおいてやり直してみてください。"]);
+                                break;
+                            } else {
+                                errors.Add (result.Status);
+                            }
+                        }
+                    }
+                    // 登録した著者をリロード
+                    await DataSet.LoadAsync ();
+                    // 書籍を生成
+                    var books = new List<Book> ();
+                    itemCount = 0;
+                    foreach (Comic comic in data) {
+                        cancel = update (progressValue, [$"生成中 書籍 {month} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
+                        if (cancel || !isDownloading) { break; }
+                        if (!string.IsNullOrEmpty (comic.Title)) {
+                            books.Add (new Book {
+                                DataSet = this.DataSet,
+                                Id = comic.Id,
+                                Title = comic.Title,
+                                PublishDate = comic.PublishDate,
+                                Publisher = comic.Publisher,
+                                Series = comic.Series,
+                                Price = comic.Price,
+                                RelatedIds = comic.Authors.ConvertAll (a => DataSet.GetItemByName<Author, Book> (a)?.Id ?? 0).FindAll (i => i > 0),
+                            });
+                        }
+                        itemCount++;
+                    }
+                    // 書籍を一括登録
+                    if (books.Count > 0) {
+                        update (progressValue, [$"保存中 書籍 {month}"]);
+                        var result = await DataSet.AddRangeAsync<Book, Author> (books);
+                        if (result.IsFailure) {
+                            if (result.IsFatal) {
+                                update (ProgressDialog.Acceptable, [$"{result.StatusName}が発生しました。時間をおいてやり直してみてください。"]);
+                                break;
+                            } else {
+                                errors.Add (result.Status);
+                            }
+                        }
+                    }
+                }
+                count++;
+                // 完成した1ヶ月分をリロード
+                await DataSet.LoadAsync ();
+            }
+            update (ProgressDialog.Acceptable, [
+                $"更新を{(count < missings.Count ? "中断" : "完了")}しました。",
+                notFounds.Count > 0 ? $"ただし、「{string.Join (",", notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
+                errors.Count > 0 ? $"以下、{errors.Count}件のエラーがありました。" : null,
+                errors.Count > 0 ? string.Join (",", errors.ConvertAll (s => s.GetName ())) : null,
+            ]);
+        }, title: "更新中", message: "データを更新中です。アプリを終了しないでください。", cancellationLabel: "Stop", maxWidth: MaxWidth.Medium);
+    }
+
+    /// <summary>初期化</summary>
+    protected override async Task OnInitializedAsync () {
+        await base.OnInitializedAsync ();
+        await SetSectionTitle.InvokeAsync ("Home");
+        // セッション数の変化を購読
+        SessionCounter.Subscribe (this, () => InvokeAsync (StateHasChanged));
+    }
+
+    /// <summary>破棄</summary>
+    public void Dispose () {
+        SessionCounter.Unsubscribe (this);
+        // ページ遷移に伴う更新キャンセル
+        isDownloading = false;
+    }
+
+    /// <summary>描画後処理</summary>
+    protected override async void OnAfterRender (bool firstRender) {
+        base.OnAfterRender (firstRender);
+        if (firstRender) {
+            // 遅延読み込み
+            await DataSet.InitializeAsync ();
+            StateHasChanged ();
         }
     }
 

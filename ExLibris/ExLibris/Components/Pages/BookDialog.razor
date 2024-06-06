@@ -1,0 +1,107 @@
+﻿@inherits ItemDialogBase<Book, Author>
+
+<MudDialog>
+    <DialogContent>
+        <MudSimpleTable Dense Striped Breakpoint="Breakpoint.Xs">
+            <tbody>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Id)]:</th>
+                    <td class="align-end">@(Item.Id > 0 ? Item.Id : "新規追加")</td>
+                </tr>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Title)]:</th>
+                    <td>
+                        @if (OnEdit) {
+                            <MudTextField @bind-Value="Item.Title" Label="Title" Variant="Variant.Text" FullWidth Required @ref="FocusTarget" />
+                        } else {
+                            @Item.Title
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Authors)]:</th>
+                    <td>
+                        @if (OnEdit) {
+                            <MudButton OnClick="OnEditRelatedItems" StartIcon="@Icons.Material.Filled.Edit"><MudText Typo="Typo.body1">@(string.Join (", ", Item.Authors.OrderBy (a => a.Id).ToList ().ConvertAll (a => a.Name)))</MudText></MudButton>
+                        } else {
+                            <MudGrid Spacing="0">
+                                @foreach (var author in Item.Authors.OrderBy (b => b.Name).OrderBy (b => b.Id).ToList ()) {
+                                    <MudItem xs="12">
+                                        <MudButton StartIcon="@Icons.Material.Filled.Person" OnClick="() => ChangeDialog (author)" Class="pa-0 ma-0 align-left" Variant="Variant.Text"><MudText Class="ma-0">@author.Name</MudText></MudButton>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Publisher)]:</th>
+                    <td>
+                        @if (OnEdit) {
+                            <MudTextField @bind-Value="Item.Publisher" Label="Publisher" Variant="Variant.Text" FullWidth />
+                        } else {
+                            @Item.Publisher
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Series)]:</th>
+                    <td>
+                        @if (OnEdit) {
+                            <MudTextField @bind-Value="Item.Series" Label="Series" Variant="Variant.Text" FullWidth />
+                        } else {
+                            @Item.Series
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Price)]:</th>
+                    <td class="align-end">
+                        @if (OnEdit) {
+                            <MudNumericField @bind-Value="Item.Price" Min="0" Format="N0" Label="Price" Variant="Variant.Text" FullWidth />
+                        } else {
+                            @($"{Item.Price:#,0}円")
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.PublishDate)]:</th>
+                    <td class="align-end">
+                        @if (OnEdit) {
+                            <MudDatePicker @bind-Date="Item.PublishDate" Clearable Label="Publish Date" DisableToolbar="true" AutoClose />
+                        } else {
+                            @Item.PublishDate?.ToShortDateString()
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Description)]:</th>
+                    <td>
+                        @if (OnEdit) {
+                            <MudTextField @bind-Value="Item.Description" Label="Description" Variant="Variant.Text" FullWidth Lines="5" />
+                        } else {
+                            <MudText Style="white-space: pre-wrap;">@Item.Description</MudText>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+    </DialogContent>
+    <DialogActions>
+        @if (OnEdit) {
+            <MudButton OnClick="CancelEdit" StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large">Cancel</MudButton>
+            <MudButton OnClick="SaveAsync" Disabled="@(!Updated || isSaving)" StartIcon="@Icons.Material.Filled.Save" Size="Size.Large" Color="Color.Success">Save</MudButton>
+        } else {
+            @if (!IsNewItem) {
+                <MudTooltip Text="書籍を削除" Duration="1000">
+                    <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.DeleteForever" OnClick="Delete" />
+                </MudTooltip>
+                <MudDivider Class="mx-5" Vertical FlexItem />
+                <MudSpacer />
+            }
+            <MudTooltip Text="書籍を編集" Duration="1000">
+                <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" OnClick="StartEdit" />
+            </MudTooltip>
+        }
+    </DialogActions>
+</MudDialog>
