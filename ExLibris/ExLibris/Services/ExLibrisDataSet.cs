@@ -425,27 +425,18 @@ public sealed class ExLibrisDataSet {
             var enableAutoSelectBackup = database.EnableAutoSelect;
             database.EnableAutoSelect = false;
             try {
-                // 待避と設定 (情報テーブルの即時更新を設定)
-                var expiryBackup = await database.SingleAsync<Variable> (
-                    $"show session variables where Variable_name='information_schema_stats_expiry';"
-                );
-                await database.ExecuteAsync (
-                    $"set session information_schema_stats_expiry=@Time;",
-                    new { Time = 1, }
-                );
                 try {
-                    // 次の自動更新値の取得
-                    Id = await database.SingleAsync<int> (
-                        $"select AUTO_INCREMENT from information_schema.tables where TABLE_NAME='{GetSqlName<T> ()}';"
-                    );
+                    // 設定 (情報テーブルの即時更新を設定)
+                    await database.ExecuteAsync ("set session information_schema_stats_expiry=1;");
                 }
-                finally {
-                    // 設定の復旧
-                    await database.ExecuteAsync (
-                        $"set session information_schema_stats_expiry=@Time;",
-                        new { Time = expiryBackup.Value, }
-                    );
+                catch (MySqlException ex) when (ex.Message.StartsWith ("Unknown system variable")) {
+                    // MariaDBはこの変数をサポートしていない
+                    System.Diagnostics.Debug.WriteLine ($"Server not supported 'information_schema_stats_expiry'\n{ex}");
                 }
+                // 次の自動更新値の取得
+                Id = await database.SingleAsync<int> (
+                    $"select AUTO_INCREMENT from information_schema.tables where TABLE_NAME='{GetSqlName<T> ()}';"
+                );
             }
             finally {
                 // 設定の復旧
