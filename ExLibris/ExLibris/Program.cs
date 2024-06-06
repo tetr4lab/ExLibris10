@@ -8,7 +8,7 @@ using ExLibris.Components;
 using ExLibris.Services;
 
 var builder = WebApplication.CreateBuilder (args);
-var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}";
+var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}Allow User Variables=true;";
 
 // Add services to the container.
 builder.Services.AddRazorComponents ()

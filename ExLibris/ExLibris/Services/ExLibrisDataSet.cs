@@ -490,12 +490,12 @@ public sealed class ExLibrisDataSet {
         var table1 = GetSqlName<T1> ();
         return await ProcessAndCommitAsync (async () => {
             var result = await database.ExecuteScalarAsync<int> (
-                @$"set @empty := (select count(*) = 0 from {table1});
-                set @sql := if(@empty, 'alter table {table1} auto_increment = 1', 'select ""');
-                prepare st from @sql;
+                @$"set @@empty := (select count(*) = 0 from {table1});
+                set @@sql := if(@@empty, 'alter table {table1} auto_increment = 1', 'select ""');
+                prepare st from @@sql;
                 execute st;
                 deallocate prepare st;
-                select @empty;"
+                select @@empty;"
             );
             return result;
         }); // `ALTER`を使用するので`SAVEPOINT`は使用不可
