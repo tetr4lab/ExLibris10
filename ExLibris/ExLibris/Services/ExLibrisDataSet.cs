@@ -39,7 +39,7 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>(再)読み込み</summary>
     /// <remarks>既に読み込み中なら単に完了を待って戻る、再読み込み中でも以前のデータが有効</remarks>
-    public async Task LoadAsync (Database? database = null) {
+    public async Task LoadAsync () {
         if (isLoading) {
             while (isLoading) {
                 await Task.Delay (WaitInterval);
@@ -48,7 +48,7 @@ public sealed class ExLibrisDataSet {
         }
         isLoading = true;
         for (var i = 0; i < MaxRetryCount; i++) {
-            var result = await GetPairAsync<Book, Author> (database);
+            var result = await GetPairAsync<Book, Author> ();
             if (result.books.IsSuccess && result.authors.IsSuccess) {
                 (Books, Authors) = (result.books.Value, result.authors.Value);
                 isLoading = false;
@@ -230,12 +230,11 @@ public sealed class ExLibrisDataSet {
     /// <param name="process">処理</param>
     /// <param name="database">PetaPocoインスタンス</param>
     /// <returns>成功またはエラーの状態と値のセット</returns>
-    public async Task<Result<T>> ProcessAndCommitAsync<T> (Func<Database, Task<T>> process, Database? database = null) {
+    public async Task<Result<T>> ProcessAndCommitAsync<T> (Func<Task<T>> process) {
         var result = default (T)!;
-        database ??= this.database;
         await database.BeginTransactionAsync ();
         try {
-            result = await process (database);
+            result = await process ();
             await database.CompleteTransactionAsync ();
             return new (Status.Success, result);
         }
@@ -261,11 +260,11 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>一覧を取得</summary>
-    private async Task<Result<List<T1>>> GetListAsync<T1, T2> (Database? database = null)
+    private async Task<Result<List<T1>>> GetListAsync<T1, T2> ()
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 :  ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
-        return await ProcessAndCommitAsync (async database => {
+        return await ProcessAndCommitAsync (async () => {
             return await database.FetchAsync<T1> (
                 $@"select {table}.*, group_concat({GetSqlName<T2> ()}Id) as _relatedIds
                 from {table}
@@ -273,48 +272,48 @@ public sealed class ExLibrisDataSet {
                 group by {table}.Id
                 {GetOrderSql<T1> ()};"
             );
-        }, database);
+        });
     }
 
     /// <summary>一覧ペアをアトミックに取得</summary>
-    public async Task<(Result<List<T1>> books, Result<List<T2>> authors)> GetPairAsync<T1, T2> (Database? database = null)
+    public async Task<(Result<List<T1>> books, Result<List<T2>> authors)> GetPairAsync<T1, T2> ()
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        var result = await ProcessAndCommitAsync (async database => {
-            var list1 = await GetListAsync<T1, T2> (database);
-            var list2 = await GetListAsync<T2, T1> (database);
+        var result = await ProcessAndCommitAsync (async () => {
+            var list1 = await GetListAsync<T1, T2> ();
+            var list2 = await GetListAsync<T2, T1> ();
             return (list1, list2);
-        }, database);
+        });
         return result.ValueOrThrow;
     }
 
     /// <summary>単一アイテムを取得 (Idで特定) 【注意】総リストとは別オブジェクトになる</summary>
-    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (int id, Database? database = null)
+    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (int id)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
-        return await ProcessAndCommitAsync (async database => (await database.FetchAsync<T1?> (
+        return await ProcessAndCommitAsync (async () => (await database.FetchAsync<T1?> (
             $@"select {table}.*, Group_concat({GetSqlName<T2> ()}Id) as _relatedIds
             from {table}
             left join AuthorBook on {table}.Id = AuthorBook.{table}Id
             where {table}.Id = @Id
             group by {table}.Id;",
             new { Id = id }
-        )).Single (), database);
+        )).Single ());
     }
 
     /// <summary>単一アイテムを取得 (Idで特定) 【注意】総リストとは別オブジェクトになる</summary>
-    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (T1 item, Database? database = null)
+    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new()
-        => await GetItemByIdAsync<T1, T2> (item.Id, database);
+        => await GetItemByIdAsync<T1, T2> (item.Id);
 
     /// <summary>単一アイテムを取得 (ユニークキーで特定) 【注意】総リストとは別オブジェクトになる</summary>
-    public async Task<Result<T1?>> GetItemByNameAsync<T1, T2> (T1 target, Database? database = null)
+    public async Task<Result<T1?>> GetItemByNameAsync<T1, T2> (T1 target)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
-        return await ProcessAndCommitAsync (async database => {
+        return await ProcessAndCommitAsync (async () => {
             var result = await database.FetchAsync<T1?> (
                 $@"select {table}.*, Group_concat({GetSqlName<T2> ()}Id) as _relatedIds
                 from {table}
@@ -330,11 +329,11 @@ public sealed class ExLibrisDataSet {
             } else {
                 throw Status.DuplicateEntry.GetException ();
             }
-        }, database);
+        });
     }
 
     /// <summary>アイテムの更新サブ処理 トランザクション内専用</summary>
-    private async Task<int> UpdateItemAsync<T1, T2> (T1 item, Database database)
+    private async Task<int> UpdateItemAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
@@ -345,7 +344,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>関係リンク追加サブ処理 トランザクション内専用</summary>
-    private async Task<int> AddRelationsAsync<T1, T2> (T1 item, Database database)
+    private async Task<int> AddRelationsAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         if (item.RelatedIds.Count <= 0) { return 0; }
@@ -362,7 +361,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>関係リンク削除サブ処理 トランザクション内専用</summary>
-    private async Task<int> RemoveRelationsAsync<T1, T2> (T1 item, Database database)
+    private async Task<int> RemoveRelationsAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         return await database.ExecuteAsync (
@@ -372,16 +371,15 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>アイテムの更新</summary>
-    public async Task<Result<int>> UpdateAsync<T1, T2> (T1 item, Database? database = null)
+    public async Task<Result<int>> UpdateAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        var topLevel = database == null;
-        var result = await ProcessAndCommitAsync (async database => {
-            await RemoveRelationsAsync<T1, T2> (item, database);
-            await AddRelationsAsync<T1, T2> (item, database);
+        var result = await ProcessAndCommitAsync (async () => {
+            await RemoveRelationsAsync<T1, T2> (item);
+            await AddRelationsAsync<T1, T2> (item);
             item.Version++;
-            return await UpdateItemAsync<T1, T2> (item, database);
-        }, database);
+            return await UpdateItemAsync<T1, T2> (item);
+        });
         if (result.IsSuccess && result.Value <= 0) {
             result.Status = Status.MissingEntry;
         }
@@ -389,21 +387,21 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>単一アイテムの追加</summary>
-    public async Task<Result<T1>> AddAsync<T1, T2> (T1 item, Database? database = null)
+    public async Task<Result<T1>> AddAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        var result = await ProcessAndCommitAsync (async database => {
+        var result = await ProcessAndCommitAsync (async () => {
             item.Id = await database.ExecuteScalarAsync<int> (
                 @$"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values ({GetValuesSql<T1> ()});
                 select LAST_INSERT_ID ();",
                 item
             );
             if (item.Id > 0) {
-                await AddRelationsAsync<T1, T2> (item, database);
+                await AddRelationsAsync<T1, T2> (item);
                 return 1;
             }
             return 0;
-        }, database);
+        });
         if (result.IsSuccess && result.Value <= 0) {
             result.Status = Status.MissingEntry;
         }
@@ -414,10 +412,10 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>一括アイテムの追加</summary>
-    public async Task<Result<int>> AddRangeAsync<T1, T2> (IEnumerable<T1> items, Database? database = null)
+    public async Task<Result<int>> AddRangeAsync<T1, T2> (IEnumerable<T1> items)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        return await ProcessAndCommitAsync (async database => {
+        return await ProcessAndCommitAsync (async () => {
             var valuesSqls = new List<string> ();
             for (int i = 0; i < items.Count (); i++) {
                 valuesSqls.Add ($"({GetValuesSql<T1> (i)})");
@@ -426,15 +424,15 @@ public sealed class ExLibrisDataSet {
                 $"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values {string.Join (",", valuesSqls)};",
                 GetParamDictionary<T1, T2> (items)
             );
-        }, database);
+        });
     }
 
     /// <summary>単一アイテムの削除</summary>
-    public async Task<Result<int>> RemoveAsync<T1, T2> (T1 item, Database? database = null)
+    public async Task<Result<int>> RemoveAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
-        var result = await ProcessAndCommitAsync (async database => {
-            var original = await GetItemByIdAsync<T1, T2> (item, database);
+        var result = await ProcessAndCommitAsync (async () => {
+            var original = await GetItemByIdAsync<T1, T2> (item);
             if (original.IsSuccess && original.Value != null) {
                 if (item.Version == original.Value.Version) {
                     // 関係先は制約によって自動的に削除される
@@ -447,7 +445,7 @@ public sealed class ExLibrisDataSet {
                 }
             }
             return 0;
-        }, database);
+        });
         if (result.IsSuccess && result.Value <= 0) {
             result.Status = Status.MissingEntry;
         }
@@ -461,12 +459,12 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>一括アイテムの削除</summary>
-    public async Task<Result<int>> RemoveRangeAsync<T1, T2> (IEnumerable<T1> items, Database? database = null)
+    public async Task<Result<int>> RemoveRangeAsync<T1, T2> (IEnumerable<T1> items)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
         var status = Status.Unknown;
-        var result = await ProcessAndCommitAsync (async database => {
+        var result = await ProcessAndCommitAsync (async () => {
             // 要求
             var list = items.ToList ();
             // 既存
@@ -481,16 +479,16 @@ public sealed class ExLibrisDataSet {
                 $"delete from {table} where Id in (@Ids)",
                 new { Ids = targets }
             );
-        }, database);
+        });
         return new (status, result.Value);
     }
 
     /// <summary>テーブルが空であればオートインクリメントを初期化する</summary>
-    public async Task<Result<int>> ResetAutoIncrementAsync<T1, T2> (Database? database = null)
+    public async Task<Result<int>> ResetAutoIncrementAsync<T1, T2> ()
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table1 = GetSqlName<T1> ();
-        return await ProcessAndCommitAsync (async database => {
+        return await ProcessAndCommitAsync (async () => {
             var result = await database.ExecuteScalarAsync<int> (
                 @$"set @empty := (select count(*) = 0 from {table1});
                 set @sql := if(@empty, 'alter table {table1} auto_increment = 1', 'select ""');
@@ -500,7 +498,7 @@ public sealed class ExLibrisDataSet {
                 select @empty;"
             );
             return result;
-        }, database); // `ALTER`を使用するので`SAVEPOINT`は使用不可
+        }); // `ALTER`を使用するので`SAVEPOINT`は使用不可
     }
 
 }
