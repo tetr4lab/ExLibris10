@@ -53,6 +53,7 @@ public abstract class ExLibrisBaseModel<T1, T2>
         get => (__relatedIds ??= string.IsNullOrEmpty (_relatedIds)? new () : _relatedIds.Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0)) ?? new ();
         set {
             _relatedIds = value == null ? null : string.Join (",", value);
+            __relatedIds = default;
             __relatedItems = default;
         }
     }
@@ -64,6 +65,7 @@ public abstract class ExLibrisBaseModel<T1, T2>
         get => (__relatedItems ??= DataSet == null ? null : RelatedIds.ConvertAll (id => DataSet.GetAll<T2> ().Find (item => item.Id == id) ?? new ())) ?? new ();
         set {
             _relatedIds = string.Join (",", value.ConvertAll (item => item.Id));
+            __relatedIds = default;
             __relatedItems = default;
         }
     }
