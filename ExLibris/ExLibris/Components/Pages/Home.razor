@@ -48,8 +48,9 @@
             }
         </MudStack>
     </MudPaper>
+    <MudText Class="mt-2" Typo="Typo.body2" Color="Color.Success">@(DataSet.Valid ? "validated" : "")</MudText>
+    <MudText Class="mt-2" Typo="Typo.body2">load time: @ElapsedTime ±@(ExLibrisDataSet.WaitInterval)msec</MudText>
 }
-<MudText Class="mt-2" Typo="Typo.body2" Color="Color.Success">@(DataSet.Valid ? "validated" : "")</MudText>
 
 @code {
 
@@ -189,10 +190,10 @@
             }
             update (ProgressDialog.Acceptable, [
                 $"更新を{(count < missings.Count ? "中断" : "完了")}しました。",
-                notFounds.Count > 0 ? $"ただし、「{string.Join (",", notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
-                errors.Count > 0 ? $"以下、{errors.Count}件のエラーがありました。" : null,
-                errors.Count > 0 ? string.Join (",", errors.ConvertAll (s => s.GetName ())) : null,
-            ]);
+            notFounds.Count > 0 ? $"ただし、「{string.Join (",", notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
+            errors.Count > 0 ? $"以下、{errors.Count}件のエラーがありました。" : null,
+            errors.Count > 0 ? string.Join (",", errors.ConvertAll (s => s.GetName ())) : null,
+        ]);
         }, title: "更新中", message: "データを更新中です。アプリを終了しないでください。", cancellationLabel: "Stop", maxWidth: MaxWidth.Medium);
     }
 
@@ -216,9 +217,13 @@
         base.OnAfterRender (firstRender);
         if (firstRender) {
             // 遅延読み込み
+            var startTime = DateTime.Now;
             await DataSet.InitializeAsync ();
+            var endTime = DateTime.Now;
+            ElapsedTime = endTime - startTime;
             StateHasChanged ();
         }
     }
+    protected TimeSpan ElapsedTime { get; set; }
 
 }
