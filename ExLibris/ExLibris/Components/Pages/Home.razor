@@ -103,7 +103,7 @@
         // 取得の開始
         dialogResult = await DialogService.Progress(async update => {
             var notFounds = new List<DateTime> ();
-            var errors = new List<Status> ();
+            var errors = new List<object> ();
             var count = 0;
             foreach (var date in missings) {
                 // 取得進行状況表示と中断受付
@@ -146,6 +146,8 @@
                             } else {
                                 errors.Add (result.Status);
                             }
+                        } else if (result.Value < authors.Count) {
+                            errors.Add ($"登録できない著者({result.Value}/{authors.Count})");
                         }
                     }
                     // 登録した著者をリロード
@@ -181,6 +183,8 @@
                             } else {
                                 errors.Add (result.Status);
                             }
+                        } else if (result.Value < books.Count) {
+                            errors.Add ($"登録できない書籍({result.Value}/{books.Count})");
                         }
                     }
                 }
@@ -190,10 +194,19 @@
             }
             update (ProgressDialog.Acceptable, [
                 $"更新を{(count < missings.Count ? "中断" : "完了")}しました。",
-            notFounds.Count > 0 ? $"ただし、「{string.Join (",", notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
-            errors.Count > 0 ? $"以下、{errors.Count}件のエラーがありました。" : null,
-            errors.Count > 0 ? string.Join (",", errors.ConvertAll (s => s.GetName ())) : null,
-        ]);
+                notFounds.Count > 0 ? $"ただし、「{string.Join (",", notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
+                errors.Count > 0 ? $"以下、{errors.Count}件のエラーがありました。" : null,
+                errors.Count > 0 ? string.Join (",", errors.ConvertAll<string> (s => {
+                    switch (s) {
+                        case Status status:
+                            return status.GetName ();
+                        case string str:
+                            return str;
+                        default:
+                            return s.ToString () ?? "委細不明";
+                    }
+                })) : null,
+           ]);
         }, title: "更新中", message: "データを更新中です。アプリを終了しないでください。", cancellationLabel: "Stop", maxWidth: MaxWidth.Medium);
     }
 
