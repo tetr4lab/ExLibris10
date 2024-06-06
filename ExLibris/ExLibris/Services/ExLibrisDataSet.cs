@@ -2,7 +2,6 @@
 using MySqlConnector;
 using PetaPoco;
 using ExLibris.Data;
-using static ExLibris.Services.ExLibrisDataSet;
 
 namespace ExLibris.Services;
 
@@ -411,19 +410,101 @@ public sealed class ExLibrisDataSet {
         return new (result.Status, item);
     }
 
+    /// <summary>変数値を得るためのモデル</summary>
+    private class Variable {
+        public string? Variable_name { get; set; }
+        public int Value { get; set; }
+    }
+
+    /// <summary>テーブルの次の自動更新値を得る (MySQL/MariaDB依存)</summary>
+    public async Task<int> GetAutoIncremantValueAsync<T> () where T : class {
+        // 開始Idを取得
+        var Id = 0;
+        try {
+            // 待避と設定 (SQLに勝手に'SELECT'を挿入しない)
+            var enableAutoSelectBackup = database.EnableAutoSelect;
+            database.EnableAutoSelect = false;
+            try {
+                // 待避と設定 (情報テーブルの即時更新を設定)
+                var expiryBackup = await database.SingleAsync<Variable> (
+                    $"show session variables where Variable_name='information_schema_stats_expiry';"
+                );
+                await database.ExecuteAsync (
+                    $"set session information_schema_stats_expiry=@Time;",
+                    new { Time = 1, }
+                );
+                try {
+                    // 次の自動更新値の取得
+                    Id = await database.SingleAsync<int> (
+                        $"select AUTO_INCREMENT from information_schema.tables where TABLE_NAME='{GetSqlName<T> ()}';"
+                    );
+                }
+                finally {
+                    // 設定の復旧
+                    await database.ExecuteAsync (
+                        $"set session information_schema_stats_expiry=@Time;",
+                        new { Time = expiryBackup.Value, }
+                    );
+                }
+            }
+            finally {
+                // 設定の復旧
+                database.EnableAutoSelect = enableAutoSelectBackup;
+            }
+        }
+        catch (Exception ex) {
+            System.Diagnostics.Debug.WriteLine ($"Get auto_increment number\n{ex}");
+        }
+        if (Id <= 0) {
+            // 開始Idの取得に失敗
+            throw new NotSupportedException ("Failed to get auto_increment value.");
+        }
+        return Id;
+    }
+
+
     /// <summary>一括アイテムの追加</summary>
     public async Task<Result<int>> AddRangeAsync<T1, T2> (IEnumerable<T1> items)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        if (items.Count () <= 0) { return new Result<int> (Status.MissingEntry, 0); }
         return await ProcessAndCommitAsync (async () => {
+            // 開始Idを取得
+            var Id = await GetAutoIncremantValueAsync<T1> ();
+            if (Id <= 0) {
+                // 開始Idの取得に失敗
+                throw new NotSupportedException ("Failed to get auto_increment value.");
+            }
+            // 主アイテムを挿入
             var valuesSqls = new List<string> ();
             for (int i = 0; i < items.Count (); i++) {
                 valuesSqls.Add ($"({GetValuesSql<T1> (i)})");
             }
-            return await database.ExecuteAsync (
+            var result = await database.ExecuteAsync (
                 $"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values {string.Join (",", valuesSqls)};",
                 GetParamDictionary<T1, T2> (items)
             );
+            // 関係アイテムを挿入
+            valuesSqls = new List<string> ();
+            var parameters = new Dictionary<string, object> ();
+            foreach (var item in items) {
+                item.Id = Id++;
+                parameters.Add ($"Id1_{item.Id}", item.Id);
+                for (int i = 0; i < item.RelatedIds.Count; i++) {
+                    valuesSqls.Add ($"(@Id1_{item.Id}, @Id2_{item.Id}_{i})");
+                    parameters.Add ($"Id2_{item.Id}_{i}", item.RelatedIds [i]);
+                }
+            }
+            if (valuesSqls.Count > 0) {
+                var count = await database.ExecuteAsync (
+                    $"insert into AuthorBook ({GetSqlName<T1> ()}Id, {GetSqlName<T2> ()}Id) values {string.Join (",", valuesSqls)};",
+                    parameters
+                );
+                if (count < valuesSqls.Count) {
+                    System.Diagnostics.Debug.WriteLine ($"AddRangeAsync: ERROR: insert relations ({count}/{valuesSqls.Count})");
+                }
+            }
+            return result;
         });
     }
 
