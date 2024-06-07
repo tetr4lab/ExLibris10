@@ -4,6 +4,7 @@ using System.Data;
 
 namespace ExLibris.Data;
 
+/// <summary>モデルに必要な静的プロパティ</summary>
 public interface IExLibrisModel {
     /// <summary>テーブル名</summary>
     public static abstract string TableLabel { get; }
@@ -15,6 +16,8 @@ public interface IExLibrisModel {
     public static abstract string RelatedListName { get; }
     /// <summary>ユニーク識別子群のSQL表現</summary>
     public static abstract string UniqueKeysSql { get; }
+    /// <summary>一覧の標準並びのSQL表現</summary>
+    public static abstract string OrderSql { get; }
 }
 
 /// <summary>基底モデル</summary>

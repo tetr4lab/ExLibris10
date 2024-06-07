@@ -146,15 +146,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>一覧用並び指定SQL</summary>
-    private string GetOrderSql<T> () where T : class {
-        var type = typeof (T);
-        if (type == typeof (Book)) {
-            return $"order by {GetSqlName<T> ()}.{GetSqlName<T> ("PublishDate")} DESC";
-        } else if (type == typeof (Author)) {
-            return $"order by {GetSqlName<T> ()}.{GetSqlName<T> ("Name")} ASC";
-        }
-        return string.Empty;
-    }
+    private string GetOrderSql<T> () where T : class, IExLibrisModel => T.OrderSql;
 
     /// <summary>更新用カラム&値SQL</summary>
     /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
@@ -260,8 +252,8 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>一覧を取得</summary>
     private async Task<Result<List<T1>>> GetListAsync<T1, T2> ()
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 :  ExLibrisBaseModel<T2, T1>, new() {
+        where T1 : ExLibrisBaseModel<T1, T2>, IExLibrisModel, new()
+        where T2 :  ExLibrisBaseModel<T2, T1>, IExLibrisModel, new() {
         var table = GetSqlName<T1> ();
         return await ProcessAndCommitAsync (async () => {
             return await database.FetchAsync<T1> (
@@ -269,15 +261,15 @@ public sealed class ExLibrisDataSet {
                 from {table}
                 left join AuthorBook on {table}.Id = AuthorBook.{table}Id
                 group by {table}.Id
-                {GetOrderSql<T1> ()};"
+                order by {GetOrderSql<T1> ()};"
             );
         });
     }
 
     /// <summary>一覧ペアをアトミックに取得</summary>
     public async Task<(Result<List<T1>> books, Result<List<T2>> authors)> GetPairAsync<T1, T2> ()
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        where T1 : ExLibrisBaseModel<T1, T2>, IExLibrisModel, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, IExLibrisModel, new() {
         var result = await ProcessAndCommitAsync (async () => {
             var list1 = await GetListAsync<T1, T2> ();
             var list2 = await GetListAsync<T2, T1> ();

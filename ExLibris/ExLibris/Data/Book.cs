@@ -65,6 +65,9 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         }
     }
 
+    /// <summary>一覧の標準並びのSQL表現</summary>
+    public static string OrderSql => $"{ExLibrisDataSet.GetSqlName<Book> ()}.{ExLibrisDataSet.GetSqlName<Book> ("PublishDate")} DESC";
+
     /// <summary>クローン</summary>
     public override Book Clone ()
         => new Book {
