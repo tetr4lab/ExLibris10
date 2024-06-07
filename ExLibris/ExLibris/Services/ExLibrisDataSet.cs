@@ -544,7 +544,7 @@ public sealed class ExLibrisDataSet {
                 $"select * from {table} where Id in (@Ids)",
                 new { Ids = list.ConvertAll (i => i.Id) });
             // 一致
-            var targets = entries.FindAll (i => list.Find (j => j.Id == i.Id && j.Version == i.Version) != null).ConvertAll (i => i.Id);
+            var targets = entries.FindAll (i => list.Exists (j => j.Id == i.Id && j.Version == i.Version)).ConvertAll (i => i.Id);
             // 実行と結果
             status = targets.Count < entries.Count () ? Status.VersionMismatch : (entries.Count () < list.Count ? Status.MissingEntry : Status.Success);
             return await database.ExecuteAsync (

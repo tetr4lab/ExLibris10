@@ -88,7 +88,7 @@
         var nextMonth = new DateTime (DateTime.Now.Year, DateTime.Now.Month + 1, 1);
         var missings = new List<DateTime> ();
         for (var d = ComicsData.MostOldPublishDate; isDownloading && d <= nextMonth; d = d.AddMonths (1)) {
-            if (books.Find (book => book.PublishDate?.Year == d.Year && book.PublishDate?.Month == d.Month) == null) {
+            if (!books.Exists (book => book.PublishDate?.Year == d.Year && book.PublishDate?.Month == d.Month)) {
                 missings.Add (d);
             }
         }
