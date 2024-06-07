@@ -103,13 +103,14 @@
         // 取得の開始
         dialogResult = await DialogService.Progress(async update => {
             var notFounds = new List<DateTime> ();
-            var errors = new List<object> ();
+            var errors = new List<string> ();
             var count = 0;
             foreach (var date in missings) {
+                var month = $"{date.Date.Year:D4}/{date.Date.Month:D2}";
                 // 取得進行状況表示と中断受付
                 var progressValue = count * 100 / missings.Count;
-                var month = $"\"{date.Date.Year:D4}/{date.Date.Month:D2}\" {count:D4}/{missings.Count:D4}";
-                var cancel = update (progressValue, [$"取得中 双方 {month}"]);
+                var progressMessage = $"\"{month}\" {count:D4}/{missings.Count:D4}";
+                var cancel = update (progressValue, [$"取得中 双方 {progressMessage}"]);
                 if (cancel || !isDownloading) { break; }
                 // 取得
                 using (var data = new ComicsData (HttpClient, date)) {
@@ -124,7 +125,7 @@
                     var names = new List<string> ();
                     var itemCount = 0;
                     foreach (Comic comic in data) {
-                        cancel = update (progressValue, [$"検出中 著者 {month} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
+                        cancel = update (progressValue, [$"検出中 著者 {progressMessage} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
                         if (cancel || !isDownloading) { break; }
                         var newNames = comic.Authors.FindAll (name => 
                             !string.IsNullOrEmpty (name)
@@ -136,7 +137,7 @@
                     }
                     // 著者を一括生成・登録
                     if (names.Count > 0) {
-                        update (progressValue, [$"保存中 著者 {month}"]);
+                        update (progressValue, [$"保存中 著者 {progressMessage}"]);
                         var authors = names.ConvertAll (name => new Author { DataSet = this.DataSet, Name = name, });
                         var result = await DataSet.AddRangeAsync<Author, Book> (authors);
                         if (result.IsFailure) {
@@ -144,10 +145,10 @@
                                 update (ProgressDialog.Acceptable, [$"{result.StatusName}が発生しました。時間をおいてやり直してみてください。"]);
                                 break;
                             } else {
-                                errors.Add (result.Status);
+                                errors.Add ($"{month}:{result.StatusName}");
                             }
                         } else if (result.Value < authors.Count) {
-                            errors.Add ($"登録できない著者({result.Value}/{authors.Count})");
+                            errors.Add ($"{month}:登録できない著者({result.Value}/{authors.Count})");
                         }
                     }
                     // 登録した著者をリロード
@@ -156,7 +157,7 @@
                     var books = new List<Book> ();
                     itemCount = 0;
                     foreach (Comic comic in data) {
-                        cancel = update (progressValue, [$"生成中 書籍 {month} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
+                        cancel = update (progressValue, [$"生成中 書籍 {progressMessage} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
                         if (cancel || !isDownloading) { break; }
                         if (!string.IsNullOrEmpty (comic.Title)) {
                             books.Add (new Book {
@@ -174,17 +175,21 @@
                     }
                     // 書籍を一括登録
                     if (books.Count > 0) {
-                        update (progressValue, [$"保存中 書籍 {month}"]);
+                        update (progressValue, [$"保存中 書籍 {progressMessage}"]);
                         var result = await DataSet.AddRangeAsync<Book, Author> (books);
+                        if (result.Status == Status.DuplicateEntry) {
+                            // 個別登録を試行
+                            result = await DataSet.AddAsync<Book, Author> (books);
+                        }
                         if (result.IsFailure) {
                             if (result.IsFatal) {
                                 update (ProgressDialog.Acceptable, [$"{result.StatusName}が発生しました。時間をおいてやり直してみてください。"]);
                                 break;
                             } else {
-                                errors.Add (result.Status);
+                                errors.Add ($"{month}:{result.StatusName}");
                             }
                         } else if (result.Value < books.Count) {
-                            errors.Add ($"登録できない書籍({result.Value}/{books.Count})");
+                            errors.Add ($"{month}:登録できない書籍({result.Value}/{books.Count})");
                         }
                     }
                 }
@@ -196,16 +201,7 @@
                 $"更新を{(count < missings.Count ? "中断" : "完了")}しました。",
                 notFounds.Count > 0 ? $"ただし、「{string.Join (",", notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
                 errors.Count > 0 ? $"以下、{errors.Count}件のエラーがありました。" : null,
-                errors.Count > 0 ? string.Join (",", errors.ConvertAll<string> (s => {
-                    switch (s) {
-                        case Status status:
-                            return status.GetName ();
-                        case string str:
-                            return str;
-                        default:
-                            return s.ToString () ?? "委細不明";
-                    }
-                })) : null,
+                errors.Count > 0 ? string.Join (",", errors) : null,
            ]);
         }, title: "更新中", message: "データを更新中です。アプリを終了しないでください。", cancellationLabel: "Stop", maxWidth: MaxWidth.Medium);
     }
