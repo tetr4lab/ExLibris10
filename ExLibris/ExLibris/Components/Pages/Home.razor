@@ -53,6 +53,8 @@
 }
 
 @code {
+    /// <summary>翌月のデータ取得を解禁する日</summary>
+    protected const int LateMonthDay = 25;
 
     /// <summary>検索文字列</summary>
     [CascadingParameter (Name = "Filter")] protected string? Filter { get; set; }
@@ -85,9 +87,10 @@
         if (DataSet?.Books == null || DataSet?.Authors == null) { return; }
         // 不足データの検出
         var books = DataSet.Books;
-        var nextMonth = new DateTime (DateTime.Now.Year, DateTime.Now.Month + 1, 1);
+        var now = DateTime.Now;
+        var lastMonth = new DateTime (now.Year, now.Month + (now.Day < LateMonthDay ? 0 : 1), 1);
         var missings = new List<DateTime> ();
-        for (var d = ComicsData.MostOldPublishDate; isDownloading && d <= nextMonth; d = d.AddMonths (1)) {
+        for (var d = ComicsData.MostOldPublishDate; isDownloading && d <= lastMonth; d = d.AddMonths (1)) {
             if (!books.Exists (book => book.PublishDate?.Year == d.Year && book.PublishDate?.Month == d.Month)) {
                 missings.Add (d);
             }
