@@ -9,11 +9,12 @@
 } else {
     if (items.Count > 0) {
         <MudTable Items="items" Dense Hover Striped Breakpoint="Breakpoint.Xs" @ref="_table"
-              OnRowClick="EventCallback.Factory.Create<TableRowClickEventArgs<Author>> (this, arg => EditItem (arg.Item))"
-              Filter="new Func<Author, bool>(FilterFunc)"
-              SortLabel="⇅"
-              @bind-SelectedItem="selectedItem"
-              @bind-SelectedItems="selectedItems" MultiSelection="@allowMultiSelection">
+            OnRowClick="EventCallback.Factory.Create<TableRowClickEventArgs<Author>> (this, arg => EditItem (arg.Item))"
+            Filter="new Func<Author, bool>(FilterFunc)"
+            SortLabel="⇅"
+            AllowUnsorted=true
+            @bind-SelectedItem="selectedItem"
+            @bind-SelectedItems="selectedItems" MultiSelection="@allowMultiSelection">
             <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<Author, object>(x=>x.Id)">@Author.Label[nameof(Author.Id)]</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.Name)">@Author.Label[nameof(Author.Name)]</MudTableSortLabel></MudTh>
