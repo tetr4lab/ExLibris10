@@ -122,9 +122,9 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
             var contents = selectedItems.ToList () [..Math.Min (MaxListingNumber, selectedItems.Count)]
                 .ConvertAll (i => $"「{i.Id}: {i.RowLabel}」");
             if (selectedItems.Count > MaxListingNumber) {
-                contents.Add ($"他 {selectedItems.Count - MaxListingNumber}{TItem1.Unit}");
+                contents.Add ($"他 {selectedItems.Count - MaxListingNumber:N0}{TItem1.Unit}");
             }
-            contents.Insert (0, $"以下の{TItem1.TableLabel}({targetCount}{TItem1.Unit})を完全に削除します。");
+            contents.Insert (0, $"以下の{TItem1.TableLabel}({targetCount:N0}{TItem1.Unit})を完全に削除します。");
             var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}一括削除", width: MaxWidth.ExtraLarge, position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error);
             if (!dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
                 var resetAutoIncrement = new Result<int> (Status.Unknown, 0);
@@ -156,7 +156,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
                     StateHasChanged ();
                     // 報告
                     var messages = new [] {
-                        $"{TItem1.TableLabel} {result.Value}/{targetCount}を削除しました。",
+                        $"{TItem1.TableLabel} {result.Value:N0}/{targetCount:N0}を削除しました。",
                         result.Value < targetCount ? "一部または全部が削除できませんでした。" : null,
                         result.Status == Status.CommandTimeout
                           || result.Status == Status.DeadlockFound

@@ -1,7 +1,7 @@
 ﻿@implements IDisposable
 
 <MudText Typo="Typo.h5">
-    @($"{Count} user{(Count > 1 ? "s" : "")}")
+    @($"{Count:N0} user{(Count > 1 ? "s" : "")}")
 </MudText>
 
 @code {

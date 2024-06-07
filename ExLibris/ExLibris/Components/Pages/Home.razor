@@ -148,7 +148,7 @@
                                 errors.Add ($"{month}:{result.StatusName}");
                             }
                         } else if (result.Value < authors.Count) {
-                            errors.Add ($"{month}:登録できない著者({result.Value}/{authors.Count})");
+                            errors.Add ($"{month}:登録できない著者({result.Value:N0}/{authors.Count:N0})");
                         }
                     }
                     // 登録した著者をリロード
@@ -189,7 +189,7 @@
                                 errors.Add ($"{month}:{result.StatusName}");
                             }
                         } else if (result.Value < books.Count) {
-                            errors.Add ($"{month}:登録できない書籍({result.Value}/{books.Count})");
+                            errors.Add ($"{month}:登録できない書籍({result.Value:N0}/{books.Count:N0})");
                         }
                     }
                 }
@@ -200,7 +200,7 @@
             update (ProgressDialog.Acceptable, [
                 $"更新を{(count < missings.Count ? "中断" : "完了")}しました。",
                 notFounds.Count > 0 ? $"ただし、「{string.Join (",", notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
-                errors.Count > 0 ? $"以下、{errors.Count}件のエラーがありました。" : null,
+            errors.Count > 0 ? $"以下、{errors.Count:N0}件のエラーがありました。" : null,
                 errors.Count > 0 ? string.Join (",", errors) : null,
            ]);
         }, title: "更新中", message: "データを更新中です。アプリを終了しないでください。", cancellationLabel: "Stop", maxWidth: MaxWidth.Medium);

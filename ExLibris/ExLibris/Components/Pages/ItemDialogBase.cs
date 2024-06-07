@@ -154,7 +154,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
         var exception = Item.RelatedIds.FindAll (i => DataSet.GetItemById<TItem2, TItem1> (i) == null);
         Item.RelatedIds = Item.RelatedIds.Except (exception).ToList ();
         var messages = new [] {
-            $"{exception.Count}件の{TItem2.TableLabel}{{Id: {string.Join (",", exception)}}}が保存できませんでした。",
+            $"{exception.Count:N0}件の{TItem2.TableLabel}{{Id: {string.Join (",", exception)}}}が保存できませんでした。",
             $"編集中に他所で編集された可能性があります。",
         };
         await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, cancellationLabel: "");
