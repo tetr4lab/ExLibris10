@@ -410,6 +410,21 @@ public sealed class ExLibrisDataSet {
         return new (result.Status, item);
     }
 
+    /// <summary>一括アイテムの追加 (個別エラーを許容)</summary>
+    public async Task<Result<int>> AddAsync<T1, T2> (IEnumerable<T1> items)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        var results = new List<Result<T1>> ();
+        foreach (var item in items) {
+            var result = await AddAsync<T1, T2> (item);
+            results.Add (result);
+            if (result.IsFatal) {
+                throw result.Exception; // タイムアウトしたら以降は中断
+            }
+        }
+        return new (results.FirstFailedState (), results.FindAll (r => r.IsSuccess).Count);
+    }
+
     /// <summary>変数値を得るためのモデル</summary>
     private class Variable {
         public string? Variable_name { get; set; }
@@ -452,7 +467,6 @@ public sealed class ExLibrisDataSet {
         }
         return Id;
     }
-
 
     /// <summary>一括アイテムの追加</summary>
     public async Task<Result<int>> AddRangeAsync<T1, T2> (IEnumerable<T1> items)
