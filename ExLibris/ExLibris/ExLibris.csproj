@@ -8,6 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="revision.info" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="revision.info" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ExLibris.Client\ExLibris.Client.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.6" />
