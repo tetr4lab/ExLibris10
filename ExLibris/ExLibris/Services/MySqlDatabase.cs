@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using PetaPoco.Core;
+using Tetr4lab;
 
 namespace PetaPoco;
 
@@ -12,7 +13,7 @@ public class MySqlDatabase : Database {
     public MySqlDatabase (string connectionString, IProvider provider, IMapper? defaultMapper = null) : base (connectionString, provider, defaultMapper) { }
 
     public override bool OnException (Exception ex) {
-        System.Diagnostics.Debug.WriteLine ($"Database.OnException: {LastCommand}\n{ex}");
+        System.Diagnostics.Debug.WriteLine ($"Database.OnException: {LastCommand.Ellipsis (80)}\n{ex}");
         return base.OnException (ex);
     }
 }
