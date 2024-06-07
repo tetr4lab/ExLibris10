@@ -423,7 +423,8 @@ public sealed class ExLibrisDataSet {
         public int Value { get; set; }
     }
 
-    /// <summary>テーブルの次の自動更新値を得る (MySQL/MariaDB依存)</summary>
+    /// <summary>テーブルの次の自動更新値を得る</summary>
+    /// <remarks>MySQL/MariaDBに依存</remarks>
     public async Task<int> GetAutoIncremantValueAsync<T> () where T : class {
         // 開始Idを取得
         var Id = 0;
