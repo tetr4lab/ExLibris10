@@ -88,16 +88,13 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public bool Equals (Author? other) => Equals ((object?) other);
 
     /// <summary>値の等価性</summary>
-    public override bool Equals (object? obj, bool includeRelation) => obj is Author other
+    public override bool Equals (object? obj) => obj is Author other
         && Id == other.Id
         && Name == other.Name
         && AdditionalName == other.AdditionalName
         && Description == other.Description
-        && (!includeRelation || RelatedIds.ContainsEquals (other.RelatedIds))
+        && RelatedIds.ContainsEquals (other.RelatedIds)
     ;
-
-    /// <summary>値の等価性</summary>
-    public override bool Equals (object? obj) => Equals (obj, true);
 
     /// <summary>ハッシュの等価性</summary>
     public override int GetHashCode () => HashCode.Combine (Id, Name, AdditionalName, Description, _relatedIds);

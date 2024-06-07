@@ -73,7 +73,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     protected bool _wasOnEditThisRanderFrame = false;
 
     /// <summary>編集中で更新がある</summary>
-    protected bool Updated => OnEdit && _backupItem != null && !Item.Equals (_backupItem, includeRelation: true);
+    protected bool Updated => OnEdit && _backupItem != null && !Item.Equals (_backupItem);
 
     /// <summary>関係アイテムの編集</summary>
     protected async void OnEditRelatedItems () {
@@ -293,7 +293,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     /// <summary>原状復帰して編集を終了</summary>
     protected async void CancelEdit () {
         if (_backupItem != null) {
-            if (!Item.Equals (_backupItem, includeRelation: true)) {
+            if (!Item.Equals (_backupItem)) {
                 // 確認
                 var messages = new [] {
                     "編集内容が失われます。",

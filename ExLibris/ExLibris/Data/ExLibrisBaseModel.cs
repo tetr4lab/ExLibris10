@@ -84,7 +84,11 @@ public abstract class ExLibrisBaseModel<T1, T2>
     public abstract T1 CopyTo (T1 destination);
 
     /// <summary>内容の比較</summary>
-    public abstract bool Equals (object? obj, bool includeRelation);
+    public abstract override bool Equals (object? obj);
+
+    /// <summary>ハッシュコードの取得</summary>
+    public abstract override int GetHashCode ();
+
 }
 
 public static class ExLibrisModelHelper {

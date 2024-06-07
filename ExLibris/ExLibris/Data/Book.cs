@@ -107,7 +107,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public bool Equals (Book? other) => Equals ((object?) other);
 
     /// <summary>値の等価性</summary>
-    public override bool Equals (object? obj, bool includeRelation) => obj is Book other
+    public override bool Equals (object? obj) => obj is Book other
         && Id == other.Id
         && Title == other.Title
         && Description == other.Description
@@ -115,11 +115,8 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         && Publisher == other.Publisher
         && Series == other.Series
         && Price == other.Price
-        && (!includeRelation || RelatedIds.ContainsEquals (other.RelatedIds))
+        && RelatedIds.ContainsEquals (other.RelatedIds)
     ;
-
-    /// <summary>値の等価性</summary>
-    public override bool Equals (object? obj) => Equals (obj, true);
 
     /// <summary>ハッシュの等価性</summary>
     public override int GetHashCode () => HashCode.Combine (Id, Title, Description, PublishDate, Publisher, Series, Price, _relatedIds);
