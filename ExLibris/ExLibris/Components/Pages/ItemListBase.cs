@@ -12,6 +12,9 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     where TItem1 : ExLibrisBaseModel<TItem1, TItem2>, IExLibrisModel, new()
     where TItem2 : ExLibrisBaseModel<TItem2, TItem1>, IExLibrisModel, new() {
 
+    /// <summary>列挙する最大数</summary>
+    protected const int MaxListingNumber = 500;
+
     [Inject] protected NavigationManager NavManager { get; set; } = null!;
     [Inject] protected ExLibrisDataSet DataSet { get; set; } = null!;
     [Inject] protected IDialogService DialogService { get; set; } = null!;
@@ -116,7 +119,11 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         if (allowMultiSelection && selectedItems.Count > 0) {
             // 確認ダイアログ
             var targetCount = selectedItems.Count;
-            var contents = selectedItems.ToList ().ConvertAll (i => $"「{i.Id}: {i.RowLabel}」");
+            var contents = selectedItems.ToList () [..Math.Min (MaxListingNumber, selectedItems.Count)]
+                .ConvertAll (i => $"「{i.Id}: {i.RowLabel}」");
+            if (selectedItems.Count > MaxListingNumber) {
+                contents.Add ($"他 {selectedItems.Count - MaxListingNumber}{TItem1.Unit}");
+            }
             contents.Insert (0, $"以下の{TItem1.TableLabel}({targetCount}{TItem1.Unit})を完全に削除します。");
             var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}一括削除", width: MaxWidth.ExtraLarge, position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error);
             if (!dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
@@ -179,7 +186,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     protected bool _inited;
     protected MudTable<TItem1>? _table;
     /// <summary>項目数の選択肢</summary>
-    protected int [] _pageSizeOptions = new [] { 10, 20, 25, 50, 100, 200, 500, };
+    protected int [] _pageSizeOptions = new [] { 10, 20, 25, 50, 100, 200, MaxListingNumber, };
 
     /// <summary>全ての検索語に対して対象列のどれかが真であれば真を返す</summary>
     protected bool FilterFunc (TItem1 item) {
