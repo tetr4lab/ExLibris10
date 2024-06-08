@@ -3,9 +3,9 @@
 namespace Tetr4lab;
 
 /// <summary>リビジョン情報</summary>
-/// <example>
+/// <example><code>
 /// if (RevisionInfo.Valid) Console.WriteLine ($"revision: {RevisionInfo.Branch} {RevisionInfo.Id}");
-/// </example>
+/// </code></example>
 /// <settings>
 /// - プロジェクトのプロパティ > ビルド > イベント > ビルド前のイベント
 ///   git branch --show-current > $(ProjectDir)revision.info
