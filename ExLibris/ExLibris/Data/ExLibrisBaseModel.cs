@@ -63,8 +63,8 @@ public abstract class ExLibrisBaseModel<T1, T2>
     protected List<int>? __relatedIds { get; set; }
 
     /// <summary>関係先インスタンス</summary>
+    /// <remarks>RelatedIdsがnullなら_relatedItemsもnullになって、次回に再度生成を試みる。nullでも空のリストを返す。</remarks>
     public List<T2> RelatedItems {
-        // RelatedIdsがnullなら_relatedItemsもnullになって、次回に再度生成を試みる。nullでも空のリストを返す。
         get => (__relatedItems ??= DataSet == null ? null : RelatedIds.ConvertAll (id => DataSet.GetAll<T2> ().Find (item => item.Id == id) ?? new ())) ?? new ();
         set {
             _relatedIds = string.Join (",", value.ConvertAll (item => item.Id));
@@ -84,7 +84,10 @@ public abstract class ExLibrisBaseModel<T1, T2>
     public abstract T1 CopyTo (T1 destination);
 
     /// <summary>内容の比較</summary>
-    public abstract override bool Equals (object? obj);
+    public abstract bool Equals (T1? other);
+
+    /// <summary>内容の比較</summary>
+    public override bool Equals (object? obj) => Equals (obj as T1);
 
     /// <summary>ハッシュコードの取得</summary>
     public abstract override int GetHashCode ();

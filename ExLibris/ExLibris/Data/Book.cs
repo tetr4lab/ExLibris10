@@ -104,10 +104,8 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     }
 
     /// <summary>値の等価性</summary>
-    public bool Equals (Book? other) => Equals ((object?) other);
-
-    /// <summary>値の等価性</summary>
-    public override bool Equals (object? obj) => obj is Book other
+    public override bool Equals (Book? other) =>
+        other != null
         && Id == other.Id
         && Title == other.Title
         && Description == other.Description
