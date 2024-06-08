@@ -61,7 +61,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     /// <inheritdoc/>
     public override Author CopyTo (Author destination) => CopyDerivedMembers (base.CopyTo (destination));
 
-    /// <summary>独自メンバーだけをコピー</summary>
+    /// <summary>派生メンバーだけをコピー</summary>
     private Author CopyDerivedMembers (Author destination) {
         destination.Name = string.IsNullOrEmpty (Name) ? "" : new (Name);
         destination.AdditionalName = string.IsNullOrEmpty (AdditionalName) ? "" : new (AdditionalName);
