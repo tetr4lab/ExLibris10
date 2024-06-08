@@ -3,7 +3,17 @@
 namespace Tetr4lab;
 
 /// <summary>リビジョン情報</summary>
-/// ref: https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4
+/// <example>
+/// if (RevisionInfo.Valid) Console.WriteLine ($"revision: {RevisionInfo.Branch} {RevisionInfo.Id}");
+/// </example>
+/// <settings>
+/// - プロジェクトのプロパティ > ビルド > イベント > ビルド前のイベント
+///   git branch --show-current > $(ProjectDir)revision.info
+///   git rev-parse --short HEAD >> $(ProjectDir) revision.info
+/// - `$(ProjectDir)revision.info`のプロパティ
+///   ビルドアクションを「埋め込みリソース」に設定
+/// </settings>
+/// <see href="https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4">[.NET/C#] アプリにgitのコミットIDを埋め込む</see>
 public static class RevisionInfo {
 
     /// <summary>有効性</summary>
