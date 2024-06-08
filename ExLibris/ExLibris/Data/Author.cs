@@ -12,13 +12,13 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     /// <summary>著書一覧</summary>
     public List<Book> Books => RelatedItems;
 
-    /// <summary>テーブル名</summary>
+    /// <inheritdoc/>
     public static string TableLabel => "著者";
 
-    /// <summary>単位</summary>
+    /// <inheritdoc/>
     public static string Unit => "名";
 
-    /// <summary>列の名前</summary>
+    /// <inheritdoc/>
     public static Dictionary<string, string> Label { get; } = new Dictionary<string, string> {
         { nameof (Id), "ID" },
         { nameof (Name), "著者名" },
@@ -27,22 +27,22 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         { nameof (Books), "著書" },
     };
 
-    /// <summary>行の名前</summary>
+    /// <inheritdoc/>
     public override string? RowLabel {
         get => Name;
         set => Name = value ?? "";
     }
 
-    /// <summary>検索対象</summary>
+    /// <inheritdoc/>
     public override string? [] SearchTargets => [Id.ToString (), Name, AdditionalName, Description, string.Join (",", _relatedIds),];
 
-    /// <summary>関係リスト名</summary>
+    /// <inheritdoc/>
     public static string RelatedListName => nameof (Books);
 
-    /// <summary>ユニークキー群</summary>
+    /// <inheritdoc/>
     public override string [] UniqueKeys => [Name, AdditionalName,];
 
-    /// <summary>ユニークキー群のSQL表現</summary>
+    /// <inheritdoc/>
     public static string UniqueKeysSql {
         get {
             var table = ExLibrisDataSet.GetSqlName<Author> ();
@@ -52,10 +52,10 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         }
     }
 
-    /// <summary>一覧の標準並びのSQL表現</summary>
+    /// <inheritdoc/>
     public static string OrderSql => $"{ExLibrisDataSet.GetSqlName<Author> ()}.{ExLibrisDataSet.GetSqlName<Author> ("Name")} ASC";
 
-    /// <summary>クローン</summary>
+    /// <inheritdoc/>
     public override Author Clone ()
         => new Author {
             DataSet = DataSet,
@@ -68,7 +68,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
             __relatedItems = default,
         };
 
-    /// <summary>値のコピー</summary>
+    /// <inheritdoc/>
     public override Author CopyTo (Author arg) {
         if (arg is Author destination) {
             destination.DataSet = DataSet;
@@ -84,7 +84,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         throw new ArgumentNullException (nameof (arg));
     }
 
-    /// <summary>値の等価性</summary>
+    /// <inheritdoc/>
     public override bool Equals (Author? other) =>
         other != null
         && Id == other.Id
@@ -94,10 +94,10 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         && RelatedIds.ContainsEquals (other.RelatedIds)
     ;
 
-    /// <summary>ハッシュの等価性</summary>
+    /// <inheritdoc/>
     public override int GetHashCode () => HashCode.Combine (Id, Name, AdditionalName, Description, _relatedIds);
 
-    /// <summary>文字列化</summary>
+    /// <inheritdoc/>
     public override string ToString () => $"{TableLabel} {Id}: {Name}{(string.IsNullOrEmpty (AdditionalName) ? "" : $"-{AdditionalName}")} \"{Description}\" [{RelatedIds.Count}]{{{string.Join (",", RelatedItems.ConvertAll (b => $"{b.Id}:{b.Title}"))}}}";
 
 }
