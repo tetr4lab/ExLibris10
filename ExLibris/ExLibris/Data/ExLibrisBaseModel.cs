@@ -25,7 +25,7 @@ public interface IExLibrisModel {
 /// <typeparam name="T2">関係先</typeparam>
 /// <remarks>派生先で必要に応じて`[TableName ("~")]`を加える</remarks>
 [PrimaryKey ("Id", AutoIncrement = true), ExplicitColumns]
-public abstract class ExLibrisBaseModel<T1, T2>
+public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
     where T1 : ExLibrisBaseModel<T1, T2>, new()
     where T2 : ExLibrisBaseModel<T2, T1>, new() {
 
