@@ -69,38 +69,20 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public static string OrderSql => $"{ExLibrisDataSet.GetSqlName<Book> ()}.{ExLibrisDataSet.GetSqlName<Book> ("PublishDate")} DESC";
 
     /// <inheritdoc/>
-    public override Book Clone ()
-        => new Book {
-            DataSet = DataSet,
-            Id = Id,
-            Title = Title,
-            Description = Description,
-            PublishDate = PublishDate,
-            Publisher = Publisher,
-            Series = Series,
-            Price = Price,
-            _relatedIds = _relatedIds,
-            __relatedIds = default,
-            __relatedItems = default,
-        };
+    public override Book Clone () => CopyDerivedMembers (base.Clone ());
 
     /// <inheritdoc/>
-    public override Book CopyTo (Book arg) {
-        if (arg is Book destination) {
-            destination.DataSet = DataSet;
-            destination.Id = Id;
-            destination.Title = string.IsNullOrEmpty (Title) ? "" : new (Title);
-            destination.Description = string.IsNullOrEmpty (Description) ? null : new (Description);
-            destination.PublishDate = PublishDate;
-            destination.Publisher = string.IsNullOrEmpty (Publisher) ? "" : new (Publisher);
-            destination.Series = string.IsNullOrEmpty (Series) ? "" : new (Series);
-            destination.Price = Price;
-            destination._relatedIds = new (_relatedIds);
-            destination.__relatedIds = default;
-            destination.__relatedItems = default;
-            return destination;
-        }
-        throw new ArgumentNullException (nameof (arg));
+    public override Book CopyTo (Book destination) => CopyDerivedMembers (base.CopyTo (destination));
+
+    /// <summary>独自メンバーだけをコピー</summary>
+    private Book CopyDerivedMembers (Book destination) {
+        destination.Title = string.IsNullOrEmpty (Title) ? "" : new (Title);
+        destination.Description = string.IsNullOrEmpty (Description) ? null : new (Description);
+        destination.PublishDate = PublishDate;
+        destination.Publisher = string.IsNullOrEmpty (Publisher) ? "" : new (Publisher);
+        destination.Series = string.IsNullOrEmpty (Series) ? "" : new (Series);
+        destination.Price = Price;
+        return destination;
     }
 
     /// <inheritdoc/>

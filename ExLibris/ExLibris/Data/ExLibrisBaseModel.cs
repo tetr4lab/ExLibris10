@@ -78,10 +78,26 @@ public abstract class ExLibrisBaseModel<T1, T2>
     public ExLibrisDataSet DataSet { get; set; } = default!;
 
     /// <summary>クローン</summary>
-    public abstract T1 Clone ();
+    public virtual T1 Clone ()
+        => new T1 {
+            DataSet = DataSet,
+            Id = Id,
+            Version = Version,
+            _relatedIds = new (_relatedIds),
+            __relatedIds = default,
+            __relatedItems = default,
+        };
 
     /// <summary>値のコピー</summary>
-    public abstract T1 CopyTo (T1 destination);
+    public virtual T1 CopyTo (T1 destination) {
+        destination.DataSet = DataSet;
+        destination.Id = Id;
+        destination.Version = Version;
+        destination._relatedIds = new (_relatedIds);
+        destination.__relatedIds = default;
+        destination.__relatedItems = default;
+        return destination;
+    }
 
     /// <summary>内容の比較</summary>
     public abstract bool Equals (T1? other);

@@ -56,32 +56,17 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public static string OrderSql => $"{ExLibrisDataSet.GetSqlName<Author> ()}.{ExLibrisDataSet.GetSqlName<Author> ("Name")} ASC";
 
     /// <inheritdoc/>
-    public override Author Clone ()
-        => new Author {
-            DataSet = DataSet,
-            Id = Id,
-            Name = Name,
-            AdditionalName = AdditionalName,
-            Description = Description,
-            _relatedIds = _relatedIds,
-            __relatedIds = default,
-            __relatedItems = default,
-        };
+    public override Author Clone () => CopyDerivedMembers (base.Clone ());
 
     /// <inheritdoc/>
-    public override Author CopyTo (Author arg) {
-        if (arg is Author destination) {
-            destination.DataSet = DataSet;
-            destination.Id = Id;
-            destination.Name = string.IsNullOrEmpty (Name) ? "" : new (Name);
-            destination.AdditionalName = string.IsNullOrEmpty (AdditionalName) ? "" : new (AdditionalName);
-            destination.Description = string.IsNullOrEmpty (Description) ? null : new (Description);
-            destination._relatedIds = new (_relatedIds);
-            destination.__relatedIds = default;
-            destination.__relatedItems = default;
-            return destination;
-        }
-        throw new ArgumentNullException (nameof (arg));
+    public override Author CopyTo (Author destination) => CopyDerivedMembers (base.CopyTo (destination));
+
+    /// <summary>独自メンバーだけをコピー</summary>
+    private Author CopyDerivedMembers (Author destination) {
+        destination.Name = string.IsNullOrEmpty (Name) ? "" : new (Name);
+        destination.AdditionalName = string.IsNullOrEmpty (AdditionalName) ? "" : new (AdditionalName);
+        destination.Description = string.IsNullOrEmpty (Description) ? null : new (Description);
+        return destination;
     }
 
     /// <inheritdoc/>
