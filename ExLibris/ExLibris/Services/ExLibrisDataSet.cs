@@ -132,7 +132,6 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>SQLで使用するテーブル名またはカラム名を得る</summary>
-    /// <param name="type">クラス型</param>
     /// <param name="name">プロパティ名</param>
     /// <returns>テーブル名またはカラム名</returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -219,7 +218,6 @@ public sealed class ExLibrisDataSet {
     /// <summary>処理を実行しコミットする、例外またはエラーがあればロールバックする</summary>
     /// <typeparam name="T">返す値の型</typeparam>
     /// <param name="process">処理</param>
-    /// <param name="database">PetaPocoインスタンス</param>
     /// <returns>成功またはエラーの状態と値のセット</returns>
     public async Task<Result<T>> ProcessAndCommitAsync<T> (Func<Task<T>> process) {
         var result = default (T)!;
