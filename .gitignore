@@ -342,3 +342,6 @@ ASALocalRun/
 
 # revision info
 revision.info
+
+# tool
+*.bat
