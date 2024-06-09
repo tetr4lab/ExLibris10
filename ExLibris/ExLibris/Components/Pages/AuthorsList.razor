@@ -18,8 +18,8 @@
             <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<Author, object>(x=>x.Id)">@Author.Label[nameof(Author.Id)]</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.Name)">@Author.Label[nameof(Author.Name)]</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.AdditionalName)">/</MudTableSortLabel></MudTh>
-            <MudTh>@Author.Label[nameof(Author.Books)]</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.AdditionalName)">/</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="@(new Func<Author, string?>(x=>string.Join(',', x.RelatedIds.ConvertAll(i=>$"{i:D5}"))))">@Author.Label[nameof(Author.Books)]</MudTableSortLabel></MudTh>
             </HeaderContent>
             <RowTemplate>
             <MudTd Class="align-right text-nowrap" DataLabel="@Author.Label[nameof(Author.Id)]">@context.Id</MudTd>
