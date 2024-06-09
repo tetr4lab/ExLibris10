@@ -29,7 +29,7 @@
                 <AuthorizeView Policy="Admin">
                     <Authorized>
                         <MudTooltip Text="@(SessionCounter.Count > 1 ? "複数の利用者がいる場合は使用できません。" : "")">
-                            <MudButton Disabled="isDownloading || SessionCounter.Count > 1" OnClick="Update" StartIcon="@Icons.Material.Filled.CloudDownload" Variant="Variant.Outlined" Size="Size.Small">Get New Releases</MudButton>
+                            <MudButton Disabled="isDownloading || SessionCounter.Count > 1" OnClick="Update" StartIcon="@Icons.Material.Filled.CloudDownload" Variant="Variant.Outlined" Size="Size.Small">Get New Release</MudButton>
                         </MudTooltip>
                     </Authorized>
                 </AuthorizeView>
