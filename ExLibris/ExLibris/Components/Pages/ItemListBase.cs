@@ -30,7 +30,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     [CascadingParameter (Name = "Session")] protected EventCallback<int> UpdateSessionCount { get; set; }
 
     /// <summary>項目一覧</summary>
-    protected List<TItem1>? items => DataSet.GetAll<TItem1> ();
+    protected List<TItem1>? items => DataSet.Valid ? DataSet.GetAll<TItem1> () : null;
 
     /// <summary>選択項目</summary>
     protected TItem1 selectedItem { get; set; } = new TItem1 ();
