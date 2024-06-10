@@ -53,6 +53,10 @@
 }
 
 @code {
+
+    /// <summary>データを取得する際の最低間隔</summary>
+    protected static readonly TimeSpan AccessIntervalTime = new TimeSpan (0, 0, 3);
+
     /// <summary>翌月のデータ取得を解禁する日</summary>
     protected const int LateMonthDay = 25;
 
@@ -105,10 +109,17 @@
         if (missings.Count <= 0 || dialogResult.Canceled) { return; }
         // 取得の開始
         dialogResult = await DialogService.Progress(async update => {
+            var lastTime = DateTime.MinValue;
             var notFounds = new List<DateTime> ();
             var errors = new List<string> ();
             var count = 0;
             foreach (var date in missings) {
+                var now = DateTime.Now;
+                var elapsedTime = now - lastTime;
+                if (elapsedTime < AccessIntervalTime) {
+                    await Task.Delay (AccessIntervalTime - elapsedTime);
+                }
+                lastTime = now;
                 var month = $"{date.Date.Year:D4}/{date.Date.Month:D2}";
                 // 取得進行状況表示と中断受付
                 var progressValue = count * 100 / missings.Count;
