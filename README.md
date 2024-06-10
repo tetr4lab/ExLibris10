@@ -8,13 +8,13 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
 - この記事では、.NET 8.0で、シンプルなBlazor Web Appを作ってみます。
     - PetaPocoとMySqlConnectorを使ってMySQL/MariaDBのデータを扱います。
       - EF Coreは使いません。
+      - SQLビルダーは使わず、直にガリガリ書きます。
     - Microsoft.AspNetCore.Authentication.Googleを使って認証を行います。
         - Microsoft.AspNetCore.Identityは使いません。
     - MudBlazorを使って表示を構成します。
     - 基本的にサーバサイドでレンダリングします。
 - この記事では、以下のような読者像を想定しています。
     - C#と.NETを囓っている
-    - 一般的なMVCを知っている
     - データベースのスキーマとSQLになじみがある
     - MudBlazorを使ったことがある。
     - Blazorのチュートリアルを済ませた
