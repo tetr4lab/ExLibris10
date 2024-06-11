@@ -382,6 +382,10 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
 - 書籍と著者で同様のものを作るので、基底クラス(`ExLibris/Components/Pages/ItemListBase.cs`)を用意します。
   - 派生クラス: `ExLibris/Components/Pages/AuthorsList.razor`, `ExLibris/Components/Pages/BooksList.razor`
 - ページは書籍と著者の一覧だけにして、他はダイアログとして実装します。
+- 一覧は、`MudTable`で実装し、`MudTableSortLabel`を使って、ソートできるようになっています。
+  - 関係先のソートは、タイトルや名前でなくIdで行っています。
+  - 最初のソートの際に関係先のリストが一気に生成されるので少しもたつきます。
+  - タイトルや名前でソートするためには、インスタンス生成が必要になり時間がかかるので、その場合は、読み込みをB-1方式に変更した方が良いかもしれません。
 - 検索フィールドに入力された文字列を空白文字で分割して、検索対象カラムと照合します。
   - 区切られた全ての語が、検索対象のいずれかに含まれると、条件が成立します。
 - 複数項目の選択機能を使うと、一括削除が可能です。
