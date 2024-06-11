@@ -6,23 +6,24 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
 
 ## はじめに
 - この記事では、.NET 8.0で、シンプルなBlazor Web Appを作ってみます。
-    - PetaPocoとMySqlConnectorを使ってMySQL/MariaDBのデータを扱います。
-      - EF Coreは使いません。
-      - SQLビルダーは使わず、直にガリガリ書きます。
-    - Microsoft.AspNetCore.Authentication.Googleを使って認証を行います。
-        - Microsoft.AspNetCore.Identityは使いません。
-    - MudBlazorを使って表示を構成します。
-    - 基本的にサーバサイドでレンダリングします。
+  - PetaPocoとMySqlConnectorを使ってMySQL/MariaDBのデータを扱います。
+    - EF Coreは使いません。
+    - SQLビルダーは使わず、直にガリガリ書きます。
+  - Microsoft.AspNetCore.Authentication.Googleを使って認証を行います。
+    - Microsoft.AspNetCore.Identityは使いません。
+  - MudBlazorを使ってUIを構成します。
+  - 基本的にサーバサイドでレンダリングします。
 - この記事では、以下のような読者像を想定しています。
-    - C#と.NETを囓っている
-    - データベースのスキーマとSQLになじみがある
-    - MudBlazorを使ったことがある。
-    - Blazorのチュートリアルを済ませた
+  - C#と.NETを囓っている
+  - データベースのスキーマとSQLになじみがある
+  - Blazorのチュートリアルを済ませた
+  - MudBlazorを使ったことがある。
 - この記事では以下には言及しません。
-    - データベースの設計
-    - MySQL/MariaDBの使い方
-    - PetaPocoの使い方
-    - ツール類の使用方法
+  - データベースの設計
+  - MySQL/MariaDBの使い方
+  - MudBlazorの使い方
+  - PetaPocoの使い方
+  - ツール類の使用方法
 
 ### 環境
 - Windows 11 Pro 22H2
@@ -41,11 +42,10 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
 #### 題材と機能
 - 書籍と著者のテーブルを閲覧、編集、追加、削除可能なアプリを作ります。
     - 書籍と著者は多対多の関係で、中間テーブルを使います。
-- 公開されているコミックス発売日情報(tsv)を取り込めるようにします。
-「[コミックス検索について](https://complex.matrix.jp/comics/)」
+- 公開されているコミックス発売日情報(tsv)を取り込めるようにします。 ([コミックス検索について](https://complex.matrix.jp/comics/))
   - このサイトでは、月毎に発売される予定のコミックスの情報が個別のtsvファイルで公開されています。
   - 情報は「発売予定」なので、委細未定だったり、発売が延期されて再掲載されたり、実際には発売されなかったりしています。
-  - 誤植により、同一の著者が似た複数の名前で登録されていたりします。
+  - 同一の著者が良く似た複数の名前で登録されていたりします。
 
 #### ホスティングモデル
 - Serverをメインとしつつ、一応Hybridですが、MudBlazorの都合上、サーバ側レンダリングのみになります。
@@ -73,21 +73,30 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
     - `Interactive render mode`は`Server`または`Auto(Server and WebAssembly)`にします。
     - `Interactivity location`は`Per page/component`にします。
     - ソリューションをプロジェクトと同じディレクトリに配置しません。
-      - プロジェクト名が同じで異なる名前のソリューションを複数作るためです。
-        - SQLiteのスタンドアローン版、EF Core版、PetaPocoでWebAPI版などを試しました。
+      - 試行錯誤で、プロジェクト名が同じで異なる名前のソリューションを複数作るためです。
 - 以下のNuGetパッケージを導入します。
     - `Microsoft.AspNetCore.Authentication.Google`
     - `PetaPoco`
     - `MySqlConnector`
+      - `MySql.Data`ではありませんが、そちらでも大差なく可能なようです。(未検証)
     - `MudBlazor`
 
 ### ビルド前処理
-- VisualStudioのビルド前イベントで、gitから得たリビジョン情報を格納したテキストファイルをリソースとして埋め込みます。
-    - ランタイムにリソースから情報を抽出して利用しています。
-("ExLibris/Utilities/RevisionInfo.cs")
+- VisualStudioのビルド前イベントで、gitから得たリビジョン情報をテキストファイルに格納します。(`ExLibris/Utilities/RevisionInfo.cs`)
+  - ファイルはビルド時にリソースとして埋め込み、ランタイムにリソースから情報を抽出して利用します。
+
+https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4
 
 ### パブリッシュ後処理
 - `.csproj`に、発行後に(ファイルがあれば)バッチを起動するように仕込み、scpでサーバに転送してデプロイしています。
+
+```xml:ExLibris.csproj
+<Target Name="CustomAfterPublish" AfterTargets="Publish">
+    <Exec Command="$(ProjectDir)deploy.bat" Condition="Exists('$(ProjectDir)deploy.bat')" />
+</Target>
+```
+
+https://learn.microsoft.com/ja-jp/visualstudio/msbuild/how-to-extend-the-visual-studio-build-process
 
 ### 資料
 
@@ -127,31 +136,30 @@ https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4
   - モデル(テーブル)に共通なカラム(プロパティ)と機能(疑似カラム)を実装します。
 - インターフェイス (`ExLibris/Data/IExLibrisModel.cs`)
   - モデルごとに全レコードで共通なフィールド(疑似カラム)を規定します。
-- モデル
-  - 基底クラスを継承し、インターフェイスを実装します。
-  - 著者 (`ExLibris/Components/Data/Author.cs`)
-  - 書籍 (`ExLibris/Components/Data/Book.cs`)
-- 属性
-  - `[Table]`
-    - テーブル名を定めます。
-  - `[Column]`
-    - 取り込みと書き出しで使用するカラムであることを規定します。
-    - プロパティ名と異なるカラム名を規定できます。
-  - `[VirtualColumn]`
-    - `Column`とともに指定して、「取り込むけれど書き出さない」カラムであることを規定します。
 
 #### モデルクラスの作成
 - 主テーブルの分だけモデルクラスを作ります。
-    - 先述の基底クラスを継承しインターフェイスを実装したクラスとして定義します。
+  - 先述の基底クラスを継承しインターフェイスを実装したクラスとして定義します。
+  - 著者 (`ExLibris/Components/Data/Author.cs`)
+  - 書籍 (`ExLibris/Components/Data/Book.cs`)
 - 中間テーブルはモデル化せず、PetaPocoと直接やりとりするサービス内でのみ扱います。
 
-#### データベースのスキーマ
+##### 属性
+  - `[Table]`
+    - クラスに付与して、テーブル名を定めます。
+  - `[Column]`
+    - プロパティに付与して、取り込みと書き出しで使用するカラムであることを示します。
+    - プロパティ名と異なるカラム名を規定できます。
+  - `[VirtualColumn]`
+    - `Column`とともに指定して、「取り込むけれど書き出さない」カラムであることを示します。
+
+### データベースのスキーマ
 - DBへのアクセスを減らすために、DBで処理できることはある程度DBで済ませる方針です。
-  - 必須カラムを`not null`に設定します。
-  - ユニーク制約を設定します。
-  - 外部キー制約で中間テーブルの行が自動的に削除されるように構成します。
-  - トリガーによって、行バージョンの不整合を検出してエラーにします。
-  - collationは、C#での比較に合わせてutf8mb4_binを使います。
+- 必須カラムを`not null`に設定します。
+- ユニーク制約を設定します。
+- 外部キー制約で中間テーブルの行が自動的に削除されるように構成します。
+- トリガーによって、行バージョンの不整合を検出してエラーにします。
+- collationは、C#での比較に合わせてutf8mb4_binを使います。
 - この記事では、DBの設計や操作は扱いません。
 
 ```sql
@@ -235,13 +243,13 @@ builder.Configuration.GetConnectionString ("Account")
 
 - 格納先の他の選択肢と製品用の構成については、以下の記事で触れています。
 
-- https://zenn.dev/tetr4lab/articles/1946ec08aec508
+https://zenn.dev/tetr4lab/articles/1946ec08aec508
 
 ## サービスとしてDB入出力を構成する
 
 ### Databse のラッパー
 - `PetaPoco.Database`クラスのラッパーを用意します。(`ExLibris/Services/MySqlDatabase.cs`)
-- `Database`を直接使用すると、DBプロバイダの例外が表に出てこなくなります。
+- `Database`を直接使用すると、MySqlConnectorの例外が表に出てこなくなります。
 - `DataBase`を継承したクラスを用意して、`OnException`を`override`することで、任意に情報を取り出せるようになります。
 
 ### DB入出力サービスの構成
@@ -249,13 +257,14 @@ builder.Configuration.GetConnectionString ("Account")
     - DBコネクションやSQLをこのサービス内に集約し隠蔽します。
 - PetaPocoは、コネクションを渡すのではなく、接続文字列とともにコネクターを指定する方法で使用します。
 - 外部に提供されるサービスは、トランザクション内で処理され、エラーが生じた場合はロールバックされます。
-  - 内部では、多段のトランザクションを使用できますが、外部には提供されておらず、アプリケーションレベルで複数のサービスを組み合わせてトランザクション化するような使い方はできません。
+  - 内部では、多段のトランザクションを使用できますが、アプリケーションには提供されておらず、複数のサービスを組み合わせてトランザクション化するような使い方はできません。
+    - 必要に応じてサービスのAPIを拡張することになります。
 - このプロジェクトでは、WebAPIは使わず、サービスを直接呼び出します。(サーバ側でのみ使います。)
 - サービスはジェネリックに実装されて、型引数でモデルに振り分けられます。
 - 機能として、一覧、追加、更新、削除などを用意します。
 - 初期化時点で、書籍と著者の全データを読み込んで保持します。
   - オンメモリのデータは読み取り用に使用することを前提にしており、編集しても追跡されません。
-  - 更新などによるリロードは、アプリケーションレベルで制御します。
+  - 更新後などのリロードは、アプリケーション階層で制御します。
 
 #### サービスの登録
 - Program.csでセッション毎に独立したインスタンスが生成されるサービスとして登録します。
@@ -266,33 +275,34 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
 ```
 
 ## ページの構成
-- 全てのページトップに固定された横並びメニューバーを置きます。
+### レイアウト
+- レイアウト(`ExLibris/Components/Layout/MainLayout.razor`)に記述することで、全ページで共有します。
+  - ナビゲーションバーはレイアウトに直接記述せず、コンポーネントにします。
+- ナビゲーションバーの検索文字列、ボタンの押下、ページの見出しなどの情報は、レイアウトで保持して、ページとの間で共有します。
+  - ページへ`@Body`越しに値を渡す際に、カスケーディングパラメータを使います。
+- ナビゲーションバーには、検索文字列を更新するコールバック先をパラメータで渡します。
+- ページには、ページの見出しを更新するコールバック先と検索文字列を渡します。
+  - ページコンテンツのトップに、ページの見出し、セッション数を表示します。
+- ページトップのパディング、タイトル、セッション数といったヘッダ部分はレイアウトに配置されます。
+
+### ナビゲーションバー
+- 全てのページトップに固定された横並びメニューバーを置きます。(`ExLibris/Components/Layout/NavBar.razor`)
     - バーの背後にページコンテンツが隠れないように、ページコンテンツ上部をパディングします。
 - 横幅が狭いときはバーを非表示にして、ドロワーを開くボタンと開いたドロワーを表示します。
     - ボタンとドロワーはページコンテンツを背後に隠します。
 - バーの付属物として、検索フィールドとボタンを表示します。
-- ページコンテンツのトップに、ページの見出し、セッション数を表示します。
-
-### レイアウト
-- レイアウト(`ExLibris/Components/Layout/MainLayout.razor`)に記述することで、全ページで共有します。
-    - ナビゲーションバーはレイアウトに直接記述せず、コンポーネントにします。
-- ナビゲーションバーの検索文字列、ボタンの押下、ページの見出しなどの情報は、レイアウトで保持して、ページとの間で共有します。
-- ナビゲーションバーには、検索文字列を更新するコールバック先をパラメータで渡します。
-- ページには、ページの見出しを更新するコールバック先と検索文字列を渡します。
-    - ページへ`@Body`越しに値を渡す際に、カスケーディングパラメータを使います。
-- ページトップのパディング、タイトル、セッション数といったヘッダ部分はレイアウトに配置されます。
-
-### ナビゲーションバー
-- レイアウトで配置されます。(`ExLibris/Components/Layout/NavBar.razor`)
+- 全てのページトップに固定された横並びメニューバーです。
+- レイアウトで配置されます。
 - 一部内容がホームページの一部コンテンツとして再利用されます。
-    - レイアウトから使われた場合は有効なパラメータが渡されていますが、ページから使われた場合はそれがありません。
+  - レイアウトから使われた場合は有効なパラメータが渡されていますが、ページから使われた場合はそれがありません。
 
 ### ページタイトル
-- タイトルは、レイアウト側で配置しているため、各ページでは、初期化の際にタイトルを親へ通知する必要があります。
+- レイアウト側で、ページの上端に配置される文字列です。
+- 各ページでは、初期化の際にタイトルを親(`MainLayout.razor`)へ通知する必要があります。
 
 ### セッション数
-- レイアウトレベルで、ページ毎に組み込まれるコンポーネントです。(`ExLibris/Components/Pages/SessionCounter.razor`)
-  - 実際には、「セッション数」でなく「インスタンス数」で、自身のインスタンスを活殺に合わせてリストし、その数を表示します。
+- レイアウト側で、ページの上端に配置されるコンポーネントです。(`ExLibris/Components/Pages/SessionCounter.razor`)
+  - 実際には、「セッション数」でなく「インスタンス数」で、自身のインスタンスを活殺に合わせてリストし、その数を表示しています。
     - 全てのページに一つだけ、必ず配置されることが前提になっています。
     - コンポーネントを配置しないページはセッション外と見なされます。
   - 別途、静的メソッドとして、セッション数の更新を通知するサービスを提供します。
@@ -301,11 +311,11 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
   - `IDisposable`を実装することで、破棄される際のトリガーを得ます。
   - 別セッション(スレッド)での更新が他のセッションへ伝達された場合、そのタイミングで直接[`ComponentBase.StateHasChanged()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.statehaschanged?view=aspnetcore-7.0)を呼ぶことができません。
     - エラーして、`The current thread is not associated with the Dispatcher. Use InvokeAsync() to switch execution to the Dispatcher when triggering rendering or component state.`と表示されます。
-    - 書かれている通りに[`ComponentBase.InvokeAsync()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.invokeasync?view=aspnetcore-7.0)を使うことで、同期コンテキスト(該当セッションのBlzaor UIスレッド)で動作させることができます。
+    - 実装の通りに[`ComponentBase.InvokeAsync()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.invokeasync?view=aspnetcore-7.0)を使うことで、同期コンテキスト(該当セッションのBlzaor UIスレッド)で動作させることができます。
 
 ### ホームと更新の取得
 - ホーム画面には、収蔵数の表示や更新などの機能を持たせています。
-- このプロジェクトでは、先述した「月毎のコミックスの発売日情報(tsv)」を取得し、モデルデータに変換した上で、著者と、書籍に分けてバルクインサートを行います。
+- 先述した「月毎のコミックスの発売日情報(tsv)」を取得し、モデルデータに変換した上で、著者と、書籍に分けてバルクインサートを行います。
 - 取得ボタンを押すと不足分が検出されて、確認ダイアログが開きます。
   - 複数のセッションが存在する場合は利用できません。
   - 発売月が該当月の書籍が1件もない場合に未取り込みと判定します。
@@ -321,9 +331,10 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
 - 書籍と著者で同様のものを作るので、基底クラス(`ExLibris/Components/Pages/ItemListBase.cs`)を用意します。
   - 派生クラス: `ExLibris/Components/Pages/AuthorsList.razor`, `ExLibris/Components/Pages/BooksList.razor`
 - ページは書籍と著者の一覧だけにして、他はダイアログとして実装します。
-- MudBlazorでは表のインライン編集も可能ですが、今回は使用しません。
+- 検索フィールドに入力された文字列を空白文字で分割して、検索対象カラムと照合します。
+  - 区切られた全ての語が、検索対象のいずれかに含まれると、条件が成立します。
 - 複数項目の選択機能を使うと、一括削除が可能です。
-  - 複数のセッションが存在する場合は利用できません。
+  - 複数のセッションが存在する場合は安全のため利用できません。
 
 ### アイテムダイアログ
 - 書籍と著者で同様のものを作るので、基底クラス(`ExLibris/Components/Pages/ItemDialogBase.razor`)を用意します。
@@ -333,9 +344,9 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
 - 編集時は、保存とキャンセルができます。
     - 編集開始時と変化がない状態では保存操作はできません。
     - 編集開始時と変化がある状態でキャンセルする際は、編集内容の喪失について確認があります。
-- 書籍と著者がボタンになっています。
+- 書籍や著者がボタンになっています。
   - 閲覧時には、閲覧対象を切り替えます。
-  - 編集時には、検索して絞り込んだ中から選択できます。
+  - 編集時には、入力した文字列で検索して絞り込んだ中から選択できます。
 
 ### 関係先選択ダイアログ
 - `ExLibris/Components/Pages/SelectRelatedItemsDialog.razor`
@@ -350,15 +361,15 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
 - 「Yes/No」や「Ok」の確認ダイアログです。
 
 ## おわりに
-- ORマッパー
-  - EF Core、Dapper、MySqlConnector直接などを試した上で、PetaPocoに落ち着きました。
+- ORマッパーの選定
+  - EF Core、Dapper、MySqlConnectorを直接使うなどを試した上で、PetaPocoに落ち着きました。
   - EF Coreは、高機能で手軽に使えるのですが、重いのと、行儀良く使おうとすると学習コストが高いのがネックです。
   - Dapperは、軽くて学習コストも低いのですが、トランザクションをネストさせようとすると、面倒な上に美しくありません。
     - ここでの学習コストにSQLやサーバ運用は含まれません。
   - PetaPocoは、軽くて学習コストが低く、自前のネスト・トランザクションをサポートしています。このサポートが決め手になりました。
-- UIフレームワーク
+- UIフレームワークの選定
   - いくつか見たのですが、JSに触らずに済ませたい私には、MudBlazor以外にありませんでした。
-  - (RCまで進んだ)Ver.7の破壊的変更に対応しなければならないのが懸念ではあります。
+  - 今後、Ver.7の破壊的変更に対応しなければならないのが面倒ではあります。
 
 ### あとがき
 - 執筆者は、Blazor、ASP.NET、PetaPocoなど諸々において初学者ですので、誤りもあるかと思います。
