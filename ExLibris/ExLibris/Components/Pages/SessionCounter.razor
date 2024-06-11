@@ -5,6 +5,22 @@
 </MudText>
 
 @code {
+    /**
+     * <summary>セッションカウンタを表示するコンポーネントとセッション数の更新通知サービス</summary>
+     * <remark>
+     * セッションカウンタ: ページにコンポーネントを配置する
+     * <example>&lt;SessionCounter /&gt;</example>
+     * 更新通知: 初期化でSubscribeに自身と更新処理を渡す、ページでIDisposableを実装しUnsubscribeを呼ぶ
+     * <example>
+     * override void OnInitialized () {
+     *     SessionCounter.Subscribe (this, () => InvokeAsync (StateHasChanged));
+     * }
+     * void Dispose () {
+     *     SessionCounter.Unsubscribe (this);
+     * }
+     * </example>
+     * </remark>
+     **/
 
     /// <summary>インスタンス数</summary>
     public static int Count => _instances.Count;
