@@ -78,6 +78,14 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
     - `MySqlConnector`
     - `MudBlazor`
 
+### ビルド前処理
+- VisualStudioのビルド前イベントで、gitから得たリビジョン情報を格納したテキストファイルをリソースとして埋め込みます。
+    - ランタイムにリソースから情報を抽出して利用しています。
+("ExLibris/Utilities/RevisionInfo.cs")
+
+### パブリッシュ後処理
+- `.csproj`に、発行後に(ファイルがあれば)バッチを起動するように仕込み、scpでサーバに転送してデプロイしています。
+
 ### 資料
 
 https://github.com/CollaboratingPlatypus/PetaPoco/wiki
@@ -89,6 +97,8 @@ https://mudblazor.com/docs/overview
 https://mariadb.com/docs/
 
 https://dev.mysql.com/doc/
+
+https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4
 
 ## データベースの構成
 ### データベースの基礎設計
@@ -108,49 +118,38 @@ https://dev.mysql.com/doc/
 - テーブル名と列名および単位は全行で共通(`static`)で、他は行毎に個別です。
 
 ### モデル
-#### インターフェイスの作成
-- 一般化した設計に合わせて、モデルのベースとなる基底クラス(ExLibris/Data/ExLibrisBaseModel.cs)とインターフェイス(ExLibris/Data/IExLibrisModel.cs)を書きます。
-
-```csharp:ExLibris/Components/Data/ExLibrisBaseModel.cs
-```
-
-```csharp:ExLibris/Components/Data/IExLibrisModel.cs
-```
-
-https://github.com/tetr4lab/ExLibris/blob/dcf45bd7a45bfd4e318ba6b3e864a75ea8a18e97/ExLibris/ExLibris/Components/Data/IExLibrisModel.cs
-
-[HEAD](https://github.com/tetr4lab/ExLibris/blob/HEAD/ExLibris/ExLibris/Components/Data/IExLibrisModel.cs)
-
-- `IExLibrisModel<T>`は、テーブル群に共通の列と主疑似列と機能を規定します。
-- `IExLibrisRelatedModel<T>`は、関係先テーブルに関する疑似列を規定します。
-- これらが(`<T1, T2>`とまとめずに)二つに分かれているのは、二つの型引数をrazorに導入する際に生じたVisualStudioの問題を回避するためでした。
-    - csで書く分には支障ないのですが、razorでは制約がありました。
-    - 現在は問題なくなったようですが、関係先を使用しない場合に型引数が一つで済むメリットがあるので、そのままになっています。
-        - ただし、型制約(`where`)の記述が煩雑になるのはデメリットです。
-- 列には`[Column]`を付けています。
-    - ここに付けても作用はありませんが、継承先で付ける必要性を実装者に示すものです。
-    - 継承先では、行に`[Table]`を付けるのですが、インターフェイスには付けられません。
+#### 基底クラスとインターフェイスの作成
+- 一般化した設計に合わせて、モデルのベースを用意します。
+- 基底クラス (`ExLibris/Data/ExLibrisBaseModel.cs`)
+  - モデル(テーブル)に共通なカラム(プロパティ)と機能(疑似カラム)を実装します。
+- インターフェイス (`ExLibris/Data/IExLibrisModel.cs`)
+  - モデルごとに全レコードで共通なフィールド(疑似カラム)を規定します。
+- モデル
+  - 基底クラスを継承し、インターフェイスを実装します。
+  - 著者 (`ExLibris/Components/Data/Author.cs`)
+  - 書籍 (`ExLibris/Components/Data/Book.cs`)
+- 属性
+  - `[Table]`
+    - テーブル名を定めます。
+  - `[Column]`
+    - 取り込みと書き出しで使用するカラムであることを規定します。
+    - プロパティ名と異なるカラム名を規定できます。
+  - `[VirtualColumn]`
+    - `Column`とともに指定して、「取り込むけれど書き出さない」カラムであることを規定します。
 
 #### モデルクラスの作成
 - 主テーブルの分だけモデルクラスを作ります。
-    - 先ほど用意したインターフェイスを継承したクラスとして定義します。
+    - 先述の基底クラスを継承しインターフェイスを実装したクラスとして定義します。
 - 中間テーブルはモデル化せず、PetaPocoと直接やりとりするサービス内でのみ扱います。
-- 以下は、書籍(ExLibris/Data/Book.cs)と著者(ExLibris/Data/Author.cs)です。
-
-```csharp:ExLibris/Components/Data/Book.cs
-```
-
-```csharp:ExLibris/Components/Data/Author.cs
-```
 
 #### データベースのスキーマ
-- この記事では、DBの設計や操作は扱いません。
 - DBへのアクセスを減らすために、DBで処理できることはある程度DBで済ませる方針です。
   - 必須カラムを`not null`に設定します。
   - ユニーク制約を設定します。
   - 外部キー制約で中間テーブルの行が自動的に削除されるように構成します。
   - トリガーによって、行バージョンの不整合を検出してエラーにします。
   - collationは、C#での比較に合わせてutf8mb4_binを使います。
+- この記事では、DBの設計や操作は扱いません。
 
 ```bash
 $ sudo mariadb-dump exlibris --no-data
@@ -250,87 +249,73 @@ delimiter ;
 - これらの文字列は、以下のコードで取得されます。
 
 ```csharp:ExLibris/Program.cs
-var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}";
+builder.Configuration.GetConnectionString ("Host")
+builder.Configuration.GetConnectionString ("Account")
 ```
 
-- 他の選択肢と製品用の構成については、以下の記事で触れています。
+- 格納先の他の選択肢と製品用の構成については、以下の記事で触れています。
 
 - https://zenn.dev/tetr4lab/articles/1946ec08aec508
 
 ## サービスとしてDB入出力を構成する
 ### DB入出力サービスの構成
-- PetaPocoのラッパーサービスを構成します。
+- PetaPocoのラッパーサービスを構成します。 (`ExLibris/Services/ExLibrisDataSet.cs`)
     - DBコネクションやSQLをこのサービス内に集約し隠蔽します。
 - PetaPocoは、コネクションを渡すのではなく、接続文字列とともにコネクターを指定する方法で使用します。
-- このプロジェクトでは、WebAPIは使わず、メソッドを直接呼び出します。(サーバ側でのみ使います。)
-- 機能として、一覧、追加、更新、削除を用意します。
+- このプロジェクトでは、WebAPIは使わず、サービスを直接呼び出します。(サーバ側でのみ使います。)
+- 機能として、一覧、追加、更新、削除などを用意します。
+- サービスはジェネリックに実装されていて、型引数でモデルに振り分けられます。
 
-https://github.com/CollaboratingPlatypus/PetaPoco/wiki/Ways-to-instantiate-PetaPoco#public-databasestring-connectionstring-string-providername-imapper-defaultmapper--null
-
-#### サービスの作成
-- このサービスに、DBとの入出力を集約します。
-- 型引数でモデルに振り分けます。
-
-```csharp:ExLibris/Services/ExLibrisDataSet.cs
-```
-
-#### サービスの登録
-- Program.csでスコープ付きサービスとして登録します。
+### サービスの登録
+- Program.csでセッション毎に独立したインスタンスが生成されるサービスとして登録します。
 
 ```csharp:ExLibris/Program.cs
 builder.Services.AddScoped (_ => (Database) new MySqlDatabase (connectionString, "MySqlConnector"));
 builder.Services.AddScoped<ExLibrisDataSet> ();
 ```
 
-## ホームとナビゲーションバー
+## ページの構成
 - 全てのページトップに固定された横並びメニューバーを置きます。
     - バーの背後にページコンテンツが隠れないように、ページコンテンツ上部をパディングします。
 - 横幅が狭いときはバーを非表示にして、ドロワーを開くボタンと開いたドロワーを表示します。
     - ボタンとドロワーはページコンテンツを背後に隠します。
-- バーの付属物として、検索フィールドとボタン、現在のページの見出し、セッション数を表示します。
+- バーの付属物として、検索フィールドとボタンを表示します。
+- ページコンテンツのトップに、ページの見出し、セッション数を表示します。
 
 ### レイアウト
-- レイアウト(`Shared/MainLayout.razor`)に記述することで、全ページで共有します。
+- レイアウト(`ExLibris/Components/Layout/MainLayout.razor`)に記述することで、全ページで共有します。
     - ナビゲーションバーはレイアウトに直接記述せず、コンポーネントにします。
-- ナビゲーションバーの検索文字列、ボタンの押下、ページの見出しは、レイアウトで保持して、ページとの間で共有します。
+- ナビゲーションバーの検索文字列、ボタンの押下、ページの見出しなどの情報は、レイアウトで保持して、ページとの間で共有します。
 - ナビゲーションバーには、検索文字列を更新するコールバック先をパラメータで渡します。
 - ページには、ページの見出しを更新するコールバック先と検索文字列を渡します。
     - ページへ`@Body`越しに値を渡す際に、カスケーディングパラメータを使います。
-- セッション数を表示するコンポーネントはここに貼り付けられます。
-
-```razor:Shared/MainLayout.razor
-```
+- ページトップのパディング、タイトル、セッション数といったヘッダ部分はレイアウトに配置されます。
 
 ### ナビゲーションバー
-- 一部内容がホームページのコンテンツとして再利用されます。
+- レイアウトで配置されます。(`ExLibris/Components/Layout/NavBar.razor`)
+- 一部内容がホームページの一部コンテンツとして再利用されます。
     - レイアウトから使われた場合は有効なパラメータが渡されていますが、ページから使われた場合はそれがありません。
 
-```razor:Shared/NavBar.razor
-```
+### ページタイトル
+- タイトルは、レイアウト側で配置しているため、各ページでは、初期化の際にタイトルを親へ通知する必要があります。
 
 ### セッション数
-- レイアウトレベルで、ページ毎に組み込まれるコンポーネントです。
-    - 自身のインスタンスを活殺に合わせてリストし、その数を表示します。
-
-```razor:Shared/SessionCounter.razor
-```
-
-- 行儀良く書くなら、別クラスのシングルトンサービスとして実装するべき(?)インスタンスの管理機構を、簡易に静的メンバーを使って済ませています。
-- `IDisposable`を実装することで、破棄される際のトリガーを得ています。
-- 別セッション(スレッド)での更新が他のセッションへ伝達された場合、そのタイミングで直接[`ComponentBase.StateHasChanged()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.statehaschanged?view=aspnetcore-7.0)を呼ぶことができません。
+- レイアウトレベルで、ページ毎に組み込まれるコンポーネントです。(`ExLibris/Components/Pages/SessionCounter.razor`)
+  - 実際には、「セッション数」でなく「インスタンス数」で、自身のインスタンスを活殺に合わせてリストし、その数を表示します。
+    - 全てのページに一つだけ、必ず配置されることが前提になっています。
+    - コンポーネントを配置しないページはセッション外と見なされます。
+  - 別途、静的メソッドとして、セッション数の更新を通知するサービスを提供します。
+- 蛇足
+  - 行儀良く書くなら、別クラスのシングルトンサービスとして実装するべき(?)インスタンスの管理機構を、簡易に静的メンバーを使って済ませています。
+  - `IDisposable`を実装することで、破棄される際のトリガーを得ます。
+  - 別セッション(スレッド)での更新が他のセッションへ伝達された場合、そのタイミングで直接[`ComponentBase.StateHasChanged()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.statehaschanged?view=aspnetcore-7.0)を呼ぶことができません。
     - エラーして、`The current thread is not associated with the Dispatcher. Use InvokeAsync() to switch execution to the Dispatcher when triggering rendering or component state.`と表示されます。
     - 書かれている通りに[`ComponentBase.InvokeAsync()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.invokeasync?view=aspnetcore-7.0)を使うことで、同期コンテキスト(該当セッションのBlzaor UIスレッド)で動作させることができます。
-
-### ホームページ
-- ナビゲーションバーの一部内容をホームページのコンテンツとして再利用します。
-
-```razor:Pages/Index.razor
-```
 
 ## 一覧、詳細、編集、追加、削除
 - 書籍と著者で同様のものを作るので、雛形を用意して、それを継承する形でそれぞれを作ります。
 - ページは一覧の一つだけにして、他はダイアログとして実装します。
-    - MudBlazorでは表のインライン編集も可能ですが、今回は使用しません。
+  - MudBlazorでは表のインライン編集も可能ですが、今回は使用しません。
 - 一覧に複数項目の選択機能を付けて、一括削除を可能にします。
 - 詳細ダイアログで閲覧/編集モードを切り替えるようにします。
 
