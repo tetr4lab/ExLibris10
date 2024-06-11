@@ -154,17 +154,7 @@ https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4
   - collationは、C#での比較に合わせてutf8mb4_binを使います。
 - この記事では、DBの設計や操作は扱いません。
 
-```bash
-$ sudo mariadb-dump exlibris --no-data
-# or
-$ sudo mysqldump exlibris -d
-```
-
 ```sql
--- Table structure for table `AuthorBook`
-DROP TABLE IF EXISTS `AuthorBook`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `AuthorBook` (
   `AuthorsId` int(11) NOT NULL,
   `BooksId` int(11) NOT NULL,
@@ -173,12 +163,6 @@ CREATE TABLE `AuthorBook` (
   CONSTRAINT `FK_AuthorBook_Authors_AuthorsId` FOREIGN KEY (`AuthorsId`) REFERENCES `Authors` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `FK_AuthorBook_Books_BooksId` FOREIGN KEY (`BooksId`) REFERENCES `Books` (`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
--- Table structure for table `Authors`
-DROP TABLE IF EXISTS `Authors`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `Authors` (
   `Id` int(11) NOT NULL AUTO_INCREMENT,
   `Version` int(11) NOT NULL DEFAULT 0,
@@ -188,12 +172,6 @@ CREATE TABLE `Authors` (
   PRIMARY KEY (`Id`),
   UNIQUE KEY `IX_Authors_Name_AdditionalName` (`Name`,`AdditionalName`)
 ) ENGINE=InnoDB AUTO_INCREMENT=88754 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
--- Table structure for table `Books`
-DROP TABLE IF EXISTS `Books`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `Books` (
   `Id` int(11) NOT NULL AUTO_INCREMENT,
   `Version` int(11) NOT NULL DEFAULT 0,
@@ -206,7 +184,6 @@ CREATE TABLE `Books` (
   PRIMARY KEY (`Id`)
   UNIQUE KEY `IX_Books_Title_Publisher_Series_PublishDate` (`Title`,`Publisher`,`Series`,`PublishDate`)
 ) ENGINE=InnoDB AUTO_INCREMENT=601181 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-/*!40101 SET character_set_client = @saved_cs_client */;
 ```
 
 #### トリガー
@@ -237,8 +214,8 @@ end;//
 delimiter ;
 ```
 
-### データベースの接続名
-- `secrets.json`に開発用データベースへのパスと接続名などを追加します。
+### データベースの接続文字列
+- `secrets.json`に開発用データベースのアドレスとアカウントを追加します。
 
 ```json:secrets.json
 {
@@ -271,11 +248,16 @@ builder.Configuration.GetConnectionString ("Account")
 - PetaPocoのラッパーサービスを構成します。 (`ExLibris/Services/ExLibrisDataSet.cs`)
     - DBコネクションやSQLをこのサービス内に集約し隠蔽します。
 - PetaPocoは、コネクションを渡すのではなく、接続文字列とともにコネクターを指定する方法で使用します。
+- 外部に提供されるサービスは、トランザクション内で処理され、エラーが生じた場合はロールバックされます。
+  - 内部では、多段のトランザクションを使用できますが、外部には提供されておらず、アプリケーションレベルで複数のサービスを組み合わせてトランザクション化するような使い方はできません。
 - このプロジェクトでは、WebAPIは使わず、サービスを直接呼び出します。(サーバ側でのみ使います。)
+- サービスはジェネリックに実装されて、型引数でモデルに振り分けられます。
 - 機能として、一覧、追加、更新、削除などを用意します。
-- サービスはジェネリックに実装されていて、型引数でモデルに振り分けられます。
+- 初期化時点で、書籍と著者の全データを読み込んで保持します。
+  - オンメモリのデータは読み取り用に使用することを前提にしており、編集しても追跡されません。
+  - 更新などによるリロードは、アプリケーションレベルで制御します。
 
-### サービスの登録
+#### サービスの登録
 - Program.csでセッション毎に独立したインスタンスが生成されるサービスとして登録します。
 
 ```csharp:ExLibris/Program.cs
@@ -321,39 +303,62 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
     - エラーして、`The current thread is not associated with the Dispatcher. Use InvokeAsync() to switch execution to the Dispatcher when triggering rendering or component state.`と表示されます。
     - 書かれている通りに[`ComponentBase.InvokeAsync()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.invokeasync?view=aspnetcore-7.0)を使うことで、同期コンテキスト(該当セッションのBlzaor UIスレッド)で動作させることができます。
 
-
 ### ホームと更新の取得
 - ホーム画面には、収蔵数の表示や更新などの機能を持たせています。
 - このプロジェクトでは、先述した「月毎のコミックスの発売日情報(tsv)」を取得し、モデルデータに変換した上で、著者と、書籍に分けてバルクインサートを行います。
+- 取得ボタンを押すと不足分が検出されて、確認ダイアログが開きます。
+  - 複数のセッションが存在する場合は利用できません。
+  - 発売月が該当月の書籍が1件もない場合に未取り込みと判定します。
+    - 1件でも存在すると取り込み対象にならないので、再取り込みを行う場合は、あらかじめ、書籍を対象月で絞り込んで一括削除を行います。
+- 取得した情報の登録では以下のような処理を行います。
   - 1ヶ月分の新出の著者を一括登録します。
   - 1ヶ月分の書籍と著者との関係を一括登録します。
     - 元データには、このプロジェクトで定めているユニーク制約に違反するデータが存在するので、複数の書籍で重複エラーが生じます。
       - エラーがあると、一括登録全体がロールバックされます。
     - エラーが生じた場合は、1冊毎の登録を行うことで、他のエラーのない書籍を登録します。
-- 発売月が該当月の書籍が1件もない場合に未取り込みと判定します。
-  - 1件でも存在すると取り込み対象にならないので、再取り込みを行う場合は、あらかじめ、書籍を対象月で絞り込んで一括削除を行います。
 
 ### 一覧と一括操作
-- 書籍と著者で同様のものを作るので、雛形を用意して、それを継承する形でそれぞれを作ります。
-- ページは一覧の一つだけにして、他はダイアログとして実装します。
-  - MudBlazorでは表のインライン編集も可能ですが、今回は使用しません。
-- 一覧に複数項目の選択機能を付けて、一括削除を可能にします。
-- 詳細ダイアログで閲覧/編集モードを切り替えるようにします。
-
+- 書籍と著者で同様のものを作るので、基底クラス(`ExLibris/Components/Pages/ItemListBase.cs`)を用意します。
+  - 派生クラス: `ExLibris/Components/Pages/AuthorsList.razor`, `ExLibris/Components/Pages/BooksList.razor`
+- ページは書籍と著者の一覧だけにして、他はダイアログとして実装します。
+- MudBlazorでは表のインライン編集も可能ですが、今回は使用しません。
+- 複数項目の選択機能を使うと、一括削除が可能です。
+  - 複数のセッションが存在する場合は利用できません。
 
 ### アイテムダイアログ
-### 関係先選択ダイアログ
-### プログレスダイアログ
-### 汎用確認ダイアログ
+- 書籍と著者で同様のものを作るので、基底クラス(`ExLibris/Components/Pages/ItemDialogBase.razor`)を用意します。
+  - 派生クラス: `ExLibris/Components/Pages/AuthorDialog.razor`, `ExLibris/Components/Pages/BookDialog.razor`
+- 閲覧/編集モードが切り替わります。
+- 閲覧時は、単体削除と編集モードへの切り替えができます。
+- 編集時は、保存とキャンセルができます。
+    - 編集開始時と変化がない状態では保存操作はできません。
+    - 編集開始時と変化がある状態でキャンセルする際は、編集内容の喪失について確認があります。
+- 書籍と著者がボタンになっています。
+  - 閲覧時には、閲覧対象を切り替えます。
+  - 編集時には、検索して絞り込んだ中から選択できます。
 
-## CRUD
-### 一覧
-### 詳細と編集
-### 追加
-### 削除
-### 一括削除
+### 関係先選択ダイアログ
+- `ExLibris/Components/Pages/SelectRelatedItemsDialog.razor`
+- `MudSelect`のような単純な一覧にすると、探しづらいだけでなく重いため、`MudAutocomplete`を使用しています。
+
+### プログレスダイアログ
+- `ExLibris/Components/Pages/ProgressDialog.razor`
+- プログレスバーや表示内容の更新や操作と外因によるキャンセルの受け付け、完了後の確認などができるようになっています。
+
+### 汎用確認ダイアログ
+- `ExLibris/Components/Pages/ConfirmationDialog.razor`
+- 「Yes/No」や「Ok」の確認ダイアログです。
 
 ## おわりに
+- ORマッパー
+  - EF Core、Dapper、MySqlConnector直接などを試した上で、PetaPocoに落ち着きました。
+  - EF Coreは、高機能で手軽に使えるのですが、重いのと、行儀良く使おうとすると学習コストが高いのがネックです。
+  - Dapperは、軽くて学習コストも低いのですが、トランザクションをネストさせようとすると、面倒な上に美しくありません。
+    - ここでの学習コストにSQLやサーバ運用は含まれません。
+  - PetaPocoは、軽くて学習コストが低く、自前のネスト・トランザクションをサポートしています。このサポートが決め手になりました。
+- UIフレームワーク
+  - いくつか見たのですが、JSに触らずに済ませたい私には、MudBlazor以外にありませんでした。
+  - (RCまで進んだ)Ver.7の破壊的変更に対応しなければならないのが懸念ではあります。
 
 ### あとがき
 - 執筆者は、Blazor、ASP.NET、PetaPocoなど諸々において初学者ですので、誤りもあるかと思います。
