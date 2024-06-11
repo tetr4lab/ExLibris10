@@ -43,6 +43,9 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
     - 書籍と著者は多対多の関係で、中間テーブルを使います。
 - 公開されているコミックス発売日情報(tsv)を取り込めるようにします。
 「[コミックス検索について](https://complex.matrix.jp/comics/)」
+  - このサイトでは、月毎に発売される予定のコミックスの情報が個別のtsvファイルで公開されています。
+  - 情報は「発売予定」なので、委細未定だったり、発売が延期されて再掲載されたり、実際には発売されなかったりしています。
+  - 誤植により、同一の著者が似た複数の名前で登録されていたりします。
 
 #### ホスティングモデル
 - Serverをメインとしつつ、一応Hybridですが、MudBlazorの都合上、サーバ側レンダリングのみになります。
@@ -258,6 +261,12 @@ builder.Configuration.GetConnectionString ("Account")
 - https://zenn.dev/tetr4lab/articles/1946ec08aec508
 
 ## サービスとしてDB入出力を構成する
+
+### Databse のラッパー
+- `PetaPoco.Database`クラスのラッパーを用意します。(`ExLibris/Services/MySqlDatabase.cs`)
+- `Database`を直接使用すると、DBプロバイダの例外が表に出てこなくなります。
+- `DataBase`を継承したクラスを用意して、`OnException`を`override`することで、任意に情報を取り出せるようになります。
+
 ### DB入出力サービスの構成
 - PetaPocoのラッパーサービスを構成します。 (`ExLibris/Services/ExLibrisDataSet.cs`)
     - DBコネクションやSQLをこのサービス内に集約し隠蔽します。
@@ -312,15 +321,32 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
     - エラーして、`The current thread is not associated with the Dispatcher. Use InvokeAsync() to switch execution to the Dispatcher when triggering rendering or component state.`と表示されます。
     - 書かれている通りに[`ComponentBase.InvokeAsync()`](https://learn.microsoft.com/ja-jp/dotnet/api/microsoft.aspnetcore.components.componentbase.invokeasync?view=aspnetcore-7.0)を使うことで、同期コンテキスト(該当セッションのBlzaor UIスレッド)で動作させることができます。
 
-## 一覧、詳細、編集、追加、削除
+
+### ホームと更新の取得
+- ホーム画面には、収蔵数の表示や更新などの機能を持たせています。
+- このプロジェクトでは、先述した「月毎のコミックスの発売日情報(tsv)」を取得し、モデルデータに変換した上で、著者と、書籍に分けてバルクインサートを行います。
+  - 1ヶ月分の新出の著者を一括登録します。
+  - 1ヶ月分の書籍と著者との関係を一括登録します。
+    - 元データには、このプロジェクトで定めているユニーク制約に違反するデータが存在するので、複数の書籍で重複エラーが生じます。
+      - エラーがあると、一括登録全体がロールバックされます。
+    - エラーが生じた場合は、1冊毎の登録を行うことで、他のエラーのない書籍を登録します。
+- 発売月が該当月の書籍が1件もない場合に未取り込みと判定します。
+  - 1件でも存在すると取り込み対象にならないので、再取り込みを行う場合は、あらかじめ、書籍を対象月で絞り込んで一括削除を行います。
+
+### 一覧と一括操作
 - 書籍と著者で同様のものを作るので、雛形を用意して、それを継承する形でそれぞれを作ります。
 - ページは一覧の一つだけにして、他はダイアログとして実装します。
   - MudBlazorでは表のインライン編集も可能ですが、今回は使用しません。
 - 一覧に複数項目の選択機能を付けて、一括削除を可能にします。
 - 詳細ダイアログで閲覧/編集モードを切り替えるようにします。
 
-- 
 
+### アイテムダイアログ
+### 関係先選択ダイアログ
+### プログレスダイアログ
+### 汎用確認ダイアログ
+
+## CRUD
 ### 一覧
 ### 詳細と編集
 ### 追加
@@ -328,10 +354,8 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
 ### 一括削除
 
 ## おわりに
-### 次に向けて
-- (4)では、
 
 ### あとがき
-- 執筆者は、Blazor、ASP.NETともに初学者ですので、誤りもあるかと思います。
+- 執筆者は、Blazor、ASP.NET、PetaPocoなど諸々において初学者ですので、誤りもあるかと思います。
     - お気づきの際は、是非コメントや編集リクエストにてご指摘ください。
     - あるいは、「それでも解らない」、「自分はこう捉えている」などといった、ご意見、ご感想も歓迎いたします。
