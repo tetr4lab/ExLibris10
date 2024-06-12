@@ -2,7 +2,7 @@
 title: .NET 8 / Blazor Web App / PetaPoco+MySqlConnector で MySQL/MariaDB を使う
 tags: Blazor ASP.NET PetaPoco MySQL MariaDB
 ---
-# .NET 8 / Blazor Web App / PetaPoco + MySqlConnector で MySQL(MariaDB) を使う
+# .NET 8 / Blazor Web App / PetaPoco+MySqlConnector で MySQL/MariaDB を使う
 
 ## はじめに
 - この記事では、.NET 8.0で、シンプルなBlazor Web Appを作ってみます。
