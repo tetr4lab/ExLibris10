@@ -164,7 +164,7 @@ https://zenn.dev/tetr4lab/articles/ad947ade600764#%E5%B1%95%E9%96%8B%E3%81%AE%E8
 - collationは、C#での比較に合わせてutf8mb4_binを使います。
 - この記事では、DBの設計や操作は扱いません。
 
-```sql
+```sql:MariaDB
 CREATE TABLE `AuthorBook` (
   `AuthorsId` int(11) NOT NULL,
   `BooksId` int(11) NOT NULL,
@@ -190,7 +190,7 @@ CREATE TABLE `Books` (
   `PublishDate` datetime(6) DEFAULT NULL,
   `Publisher` varchar(255) DEFAULT NULL,
   `Series` varchar(255) DEFAULT NULL,
-  `Price` decimal(65,30) NOT NULL,
+  `Price` int(11) NOT NULL,
   PRIMARY KEY (`Id`)
   UNIQUE KEY `IX_Books_Title_Publisher_Series_PublishDate` (`Title`,`Publisher`,`Series`,`PublishDate`)
 ) ENGINE=InnoDB AUTO_INCREMENT=601181 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -199,7 +199,7 @@ CREATE TABLE `Books` (
 #### トリガー
 - 主テーブルへの更新時に行バージョンの不整合を検出してエラーにするトリガーです。
 
-```sql
+```sql:MariaDB
 delimiter //
 create trigger Version_Check_Before_Update_On_Authors
 before update on Authors
