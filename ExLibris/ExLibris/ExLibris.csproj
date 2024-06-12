@@ -29,7 +29,7 @@
   </Target>
 
     <Target Name="CustomAfterPublish" AfterTargets="Publish">
-        <Exec Command="$(ProjectDir)deploy.bat" Condition="Exists('$(ProjectDir)deploy.bat')" />
+        <Exec Command="powershell -File $(ProjectDir)deploy.ps1" Condition="Exists('$(ProjectDir)deploy.ps1')" />
     </Target>
     
 </Project>

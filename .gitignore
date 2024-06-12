@@ -345,3 +345,4 @@ revision.info
 
 # tool
 *.bat
+*.ps1
