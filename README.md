@@ -27,7 +27,7 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
 
 ### 環境
 - Windows 11 Pro 22H2
-  - VisualStudio 2022 17.9.6
+  - VisualStudio 2022 17.10.2
   - PetaPoco 6.0.677
   - MySqlConnector 2.3.7
   - MudBlazor 6.20.0
