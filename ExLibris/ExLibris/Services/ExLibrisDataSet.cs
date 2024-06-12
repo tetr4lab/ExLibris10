@@ -146,7 +146,9 @@ public sealed class ExLibrisDataSet {
             result = string.Join (",", Array.ConvertAll (properties, property => {
                 var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
                 var attribute = property.GetCustomAttribute<ColumnAttribute> ();
-                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"{attribute.Name ?? property.Name}=@{property.Name}" : "";
+                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id")
+                    ? $"{attribute.Name ?? property.Name}=@{property.Name}"
+                    : "";
             }).ToList ().FindAll (i => i != ""));
         }
         return result;
@@ -161,7 +163,9 @@ public sealed class ExLibrisDataSet {
             result = string.Join (",", Array.ConvertAll (properties, property => {
                 var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
                 var attribute = property.GetCustomAttribute<ColumnAttribute> ();
-                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? $"@{property.Name}{(index >= 0 ? $"_{index}" : "")}" : "";
+                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id")
+                    ? $"@{property.Name}{(index >= 0 ? $"_{index}" : "")}"
+                    : "";
             }).ToList ().FindAll (i => i != ""));
         }
         return result;
@@ -176,7 +180,9 @@ public sealed class ExLibrisDataSet {
             result = string.Join (",", Array.ConvertAll (properties, property => {
                 var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
                 var attribute = property.GetCustomAttribute<ColumnAttribute> ();
-                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id") ? attribute.Name ?? property.Name : "";
+                return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id")
+                    ? attribute.Name ?? property.Name
+                    : "";
             }).ToList ().FindAll (i => i != ""));
         }
         return result;
