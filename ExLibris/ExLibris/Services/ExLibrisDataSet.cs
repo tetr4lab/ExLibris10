@@ -121,16 +121,6 @@ public sealed class ExLibrisDataSet {
         where T2 : ExLibrisBaseModel<T2, T1>, new()
         => items.ToList ().ConvertAll (GetItemById<T1, T2>);
 
-    /// <summary>指定された型のUniqueKeysSqlを返す</summary>
-    /// <exception cref="InvalidOperationException"></exception>
-    private static string GetUniqueKeysSql<T> () {
-        var property = typeof (T).GetProperty ("UniqueKeysSql", BindingFlags.Static | BindingFlags.Public);
-        if (property == null || property.PropertyType != typeof (string)) {
-            throw new InvalidOperationException ($"No static property 'UniqueKeysSql' of type '{typeof (T)}' found on type '{typeof (T)}'.");
-        }
-        return (string?) property.GetValue (null) ?? "";
-    }
-
     /// <summary>SQLで使用するテーブル名またはカラム名を得る</summary>
     /// <param name="name">プロパティ名</param>
     /// <returns>テーブル名またはカラム名</returns>
@@ -299,15 +289,15 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>単一アイテムを取得 (ユニークキーで特定) 【注意】総リストとは別オブジェクトになる</summary>
     public async Task<Result<T1?>> GetItemByNameAsync<T1, T2> (T1 target)
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+        where T1 : ExLibrisBaseModel<T1, T2>, IExLibrisModel, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, IExLibrisModel, new() {
         var table = GetSqlName<T1> ();
         return await ProcessAndCommitAsync (async () => {
             var result = await database.FetchAsync<T1?> (
                 $@"select {table}.*, Group_concat({GetSqlName<T2> ()}Id) as _relatedIds
                 from {table}
                 left join AuthorBook on {table}.Id = AuthorBook.{table}Id
-                where {GetUniqueKeysSql<T1> ()}
+                where {T1.UniqueKeysSql}
                 group by {table}.Id;",
                 target
             );
