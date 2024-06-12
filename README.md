@@ -42,17 +42,38 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
 #### 題材と機能
 - 書籍と著者のテーブルを閲覧、編集、追加、削除可能なアプリを作ります。
     - 書籍と著者は多対多の関係で、中間テーブルを使います。
-- 公開されているコミックス発売日情報(tsv)を取り込めるようにします。 ([コミックス検索について](https://complex.matrix.jp/comics/))
+- 公開されているコミックス発売日情報(tsv)を取り込めるようにします。
   - このサイトでは、月毎に発売される予定のコミックスの情報が個別のtsvファイルで公開されています。
+
+https://complex.matrix.jp/comics/
 
 #### ホスティングモデル
 - Serverをメインとしつつ、一応Hybridですが、MudBlazorの都合上、サーバ側レンダリングのみになります。
 - オンプレミスな ASP.NET Core対応サーバを使います。
-「[Windows から Blazor Web App をデプロイする Debian Server の構成](https://zenn.dev/tetr4lab/articles/ad947ade600764#os%E5%B0%8E%E5%85%A5)」 (Zenn)
+
+https://zenn.dev/tetr4lab/articles/ad947ade600764#os%E5%B0%8E%E5%85%A5
 
 #### UIフレームワーク
 - MudBlazorを使用します。
-「[.NET 8 の Blazor Web App で MudBlazor を使う](https://zenn.dev/tetr4lab/articles/74bd50585434ab)」 (Zenn)
+
+https://mudblazor.com/docs/overview
+
+https://zenn.dev/tetr4lab/articles/74bd50585434ab
+
+#### データベース周り
+- MariaDB/MySQLをサーバに使用します。
+
+https://mariadb.com/docs/
+
+https://dev.mysql.com/doc/
+
+- MySqlConnectorをプロバイダに使用します、
+
+https://mysqlconnector.net/
+
+- PetaPocoをORマッパーに使用します。
+
+https://github.com/CollaboratingPlatypus/PetaPoco/wiki
 
 #### 排他制御
 - 楽観的排他制御のみを行って、競合が生じた場合は操作を断念します。
@@ -60,8 +81,9 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
 #### アカウント管理
 - このプロジェクトではアカウント管理を行いません。
   - 認証としてGoogle OAuthを使用します。
-「[Blazor Web App でOAuth認証を最小規模で使う (ASP.NET Core 8.0)](https://zenn.dev/tetr4lab/articles/1946ec08aec508)」 (Zenn)
 - ローカルネットワーク内で、数人で使うことを想定しています。
+
+https://zenn.dev/tetr4lab/articles/1946ec08aec508
 
 ## プロジェクトの構成
 - VisualStudioで新規「Blazor Web App」プロジェクトを以下の想定で作ります。
@@ -95,18 +117,6 @@ https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4
 ```
 
 https://learn.microsoft.com/ja-jp/visualstudio/msbuild/how-to-extend-the-visual-studio-build-process
-
-### 資料
-
-https://github.com/CollaboratingPlatypus/PetaPoco/wiki
-
-https://mysqlconnector.net/
-
-https://mudblazor.com/docs/overview
-
-https://mariadb.com/docs/
-
-https://dev.mysql.com/doc/
 
 ## データベースの構成
 ### データベースの基礎設計
@@ -330,7 +340,9 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
   - ナビゲーションバーはレイアウトに直接記述せず、独立したコンポーネントにします。
 - ナビゲーションバーの検索文字列、検索ボタンの押下、ページの見出しなどの情報は、レイアウトで保持して、ページとの間で共有します。
   - ページへ`@Body`越しに値を渡す際には、カスケーディングパラメータを使います。
-⇒ [【Blazor Serverアプリ】ページからレイアウトへのイベントコールバック ～ @Bodyを越えて](https://zenn.dev/tetr4lab/articles/fdc11955916064)
+
+https://zenn.dev/tetr4lab/articles/fdc11955916064
+
 - ナビゲーションバーには、検索文字列を更新するコールバック先をパラメータで渡します。
 - ページには、ページの見出しを更新するコールバック先と検索文字列を渡します。
   - ページコンテンツのトップに、ページの見出し、セッション数を表示します。
