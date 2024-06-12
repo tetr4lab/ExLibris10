@@ -108,15 +108,11 @@ https://zenn.dev/tetr4lab/articles/1946ec08aec508
 https://qiita.com/hqf00342/items/b5afa3e6ebc3551884a4
 
 ### パブリッシュ後処理
-- `.csproj`に、発行後に(ファイルがあれば)バッチを起動するように仕込み、scpでサーバに転送してデプロイしています。
-
-```xml:ExLibris.csproj
-<Target Name="CustomAfterPublish" AfterTargets="Publish">
-    <Exec Command="$(ProjectDir)deploy.bat" Condition="Exists('$(ProjectDir)deploy.bat')" />
-</Target>
-```
+- `.csproj`に、発行後に(ファイルがあれば)シェルスクリプトを起動するように仕込み、スクリプト中でscpでサーバに転送してデプロイしています。
 
 https://learn.microsoft.com/ja-jp/visualstudio/msbuild/how-to-extend-the-visual-studio-build-process
+
+https://zenn.dev/tetr4lab/articles/ad947ade600764#%E5%B1%95%E9%96%8B%E3%81%AE%E8%87%AA%E5%8B%95%E5%8C%96
 
 ## データベースの構成
 ### データベースの基礎設計
