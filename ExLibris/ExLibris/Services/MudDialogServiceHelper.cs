@@ -9,7 +9,7 @@ public static class MudDialogServiceHelper {
 
     /// <summary>アイテム用ダイアログを開く</summary>
     public static async Task<IDialogReference> OpenItemDialog<T1, T2> (this IDialogService service, T1 item, Func<T2, Task>? changed = null, Action? updated = null) {
-        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, };
+        var options = new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true, };
         var parameters = new DialogParameters { };
         if (changed?.Target != null) {
             parameters.Add ("OnChangeDialog", EventCallback.Factory.Create (changed.Target, changed));
@@ -32,8 +32,8 @@ public static class MudDialogServiceHelper {
         => await Confirmation (dialogService, message, title: "リロードの確認", acceptionLabel: "Reload", acceptionColor: Color.Success, cancellationLabel: cancellationLabel);
 
     /// <summary>汎用の確認</summary>
-    public static async Task<DialogResult> Confirmation (this IDialogService dialogService, IEnumerable<string?> message, string? title = null, MaxWidth width = MaxWidth.Medium, DialogPosition position = DialogPosition.Center, string acceptionLabel = "Ok", Color acceptionColor = Color.Success, string cancellationLabel = "Cancel", Color cancellationColor = Color.Default) {
-        var options = new DialogOptions { MaxWidth = width, Position = position, DisableBackdropClick = true, };
+    public static async Task<DialogResult> Confirmation (this IDialogService dialogService, IEnumerable<string?> message, string? title = null, MaxWidth width = MaxWidth.Small, DialogPosition position = DialogPosition.Center, string acceptionLabel = "Ok", Color acceptionColor = Color.Success, string cancellationLabel = "Cancel", Color cancellationColor = Color.Default) {
+        var options = new DialogOptions { MaxWidth = width, FullWidth = true, Position = position, DisableBackdropClick = true, };
         var parameters = new DialogParameters {
             ["Contents"] = message,
             ["AcceptionLabel"] = acceptionLabel,

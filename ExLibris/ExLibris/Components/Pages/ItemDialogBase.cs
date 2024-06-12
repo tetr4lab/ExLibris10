@@ -58,9 +58,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
                 MudDialog.Options.CloseOnEscapeKey = !value;
                 MudDialog.Options.DisableBackdropClick = value;
                 MudDialog.SetTitle (value ? editorTitle : originalTitle);
-                MudDialog.Options.FullWidth = value;
                 MudDialog.SetOptions (MudDialog.Options);
-                MudDialog.Options.MaxWidth = MaxWidth.ExtraLarge;
                 _onEdit = value;
                 _wasOnEditThisRanderFrame = value;
                 StateHasChanged ();
@@ -181,7 +179,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     protected async void Delete () {
         // 確認
         var contents = new [] { $"この{TItem1.TableLabel}を完全に削除します。", $"「{Item.Id}: {Item.RowLabel}」" };
-        var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}削除", width: MaxWidth.ExtraLarge, position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error);
+        var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}削除", position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error);
         if (!dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
             // 実際の削除
             var result = await DataSet.RemoveAsync<TItem1, TItem2> (Item);
