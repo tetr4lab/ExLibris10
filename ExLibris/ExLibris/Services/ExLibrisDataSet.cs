@@ -112,18 +112,6 @@ public sealed class ExLibrisDataSet {
         where T2 : ExLibrisBaseModel<T2, T1>, new()
         => GetAll<T1> ()?.Find (i => i.RowLabel == name);
 
-    /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
-    public List<T1?> GetItemsById<T1, T2> (IEnumerable<long> ids)
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 : ExLibrisBaseModel<T2, T1>, new()
-        => ids.ToList ().ConvertAll (GetItemById<T1, T2>);
-
-    /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
-    public List<T1?> GetItemsById<T1, T2> (IEnumerable<T1> items)
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 : ExLibrisBaseModel<T2, T1>, new()
-        => items.ToList ().ConvertAll (GetItemById<T1, T2>);
-
     /// <summary>SQLで使用するテーブル名またはカラム名を得る</summary>
     /// <param name="name">プロパティ名</param>
     /// <returns>テーブル名またはカラム名</returns>
@@ -276,7 +264,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>単一アイテムを取得 (Idで特定) 【注意】総リストとは別オブジェクトになる</summary>
-    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (long id)
+    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (T1 item)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
@@ -286,15 +274,9 @@ public sealed class ExLibrisDataSet {
             left join AuthorBook on {table}.Id = AuthorBook.{table}Id
             where {table}.Id = @Id
             group by {table}.Id;",
-            new { Id = id }
+            item
         )).Single ());
     }
-
-    /// <summary>単一アイテムを取得 (Idで特定) 【注意】総リストとは別オブジェクトになる</summary>
-    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (T1 item)
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 : ExLibrisBaseModel<T2, T1>, new()
-        => await GetItemByIdAsync<T1, T2> (item.Id);
 
     /// <summary>単一アイテムを取得 (ユニークキーで特定) 【注意】総リストとは別オブジェクトになる</summary>
     public async Task<Result<T1?>> GetItemByNameAsync<T1, T2> (T1 target)
