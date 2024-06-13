@@ -1,6 +1,8 @@
 ﻿using ExLibris.Services;
 using PetaPoco;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Reflection;
 
 namespace ExLibris.Data;
 
@@ -76,6 +78,11 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
 
     /// <summary>所属するデータセット</summary>
     public ExLibrisDataSet DataSet { get; set; } = default!;
+
+    /// <summary>カラムの最大文字列長</summary>
+    /// <remarks>設定がなければ0を返す</remarks>
+    public int GetMaxLength (string name)
+        => GetType ().GetProperty (name)?.GetCustomAttribute<StringLengthAttribute> ()?.MaximumLength ?? 0;
 
     /// <summary>クローン</summary>
     public virtual T1 Clone ()

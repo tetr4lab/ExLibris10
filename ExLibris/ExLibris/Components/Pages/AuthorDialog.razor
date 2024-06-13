@@ -14,10 +14,10 @@
                         @if (OnEdit) {
                             <MudGrid Spacing="0">
                                 <MudItem xs="6">
-                                    <MudTextField @bind-Value="Item.Name" Label="Name" Variant="Variant.Text" FullWidth Required @ref="FocusTarget" />
+                                    <MudTextField MaxLength="@(Item.GetMaxLength ("Name"))" @bind-Value="Item.Name" Label="Name" Variant="Variant.Text" FullWidth Required @ref="FocusTarget" />
                                 </MudItem>
                                 <MudItem xs="6">
-                                    <MudTextField @bind-Value="Item.AdditionalName" Label="AdditionalName" Variant="Variant.Text" FullWidth />
+                                    <MudTextField MaxLength="@(Item.GetMaxLength ("AdditionalName"))" @bind-Value="Item.AdditionalName" Label="AdditionalName" Variant="Variant.Text" FullWidth />
                                 </MudItem>
                                 @if (IsError) {
                                     <MudItem xs="12">

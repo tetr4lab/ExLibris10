@@ -590,6 +590,7 @@ public static class ExceptionToErrorHelper {
         { (typeof (MySqlException), "Version mismatch"), Status.VersionMismatch },
         { (typeof (MySqlException), "Cannot add or update a child row: a foreign key constraint fails"), Status.ForeignKeyConstraintFails },
         { (typeof (MySqlException), "Deadlock found"), Status.DeadlockFound },
+        { (typeof (MySqlException), "Data too long for column"), Status.DataTooLong },
     };
     /// <summary>例外がエラーか判定して該当するエラー状態を出力する</summary>
     public static bool TryGetStatus (this Exception ex, out Status status) {
@@ -627,6 +628,7 @@ public static class StatusHelper {
             { Status.VersionMismatch, "バージョンの不整合" },
             { Status.ForeignKeyConstraintFails, "外部キー制約の違反" },
             { Status.DeadlockFound, "デッドロック" },
+            { Status.DataTooLong, "サイズ超過" },
         };
     }
     /// <summary>結果の状態の名前</summary>
@@ -657,6 +659,8 @@ public enum Status {
     ForeignKeyConstraintFails,
     /// <summary>デッドロック</summary>
     DeadlockFound,
+    /// <summary>サイズ超過</summary>
+    DataTooLong,
 }
 
 /// <summary>結果の状態と値</summary>

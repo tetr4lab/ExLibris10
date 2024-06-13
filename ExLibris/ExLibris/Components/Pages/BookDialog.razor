@@ -12,7 +12,7 @@
                     <th class="align-end">@Book.Label[nameof(Item.Title)]:</th>
                     <td>
                         @if (OnEdit) {
-                            <MudTextField @bind-Value="Item.Title" Label="Title" Variant="Variant.Text" FullWidth Required @ref="FocusTarget" />
+                            <MudTextField MaxLength="@(Item.GetMaxLength ("Title"))" @bind-Value="Item.Title" Label="Title" Variant="Variant.Text" FullWidth Required @ref="FocusTarget" />
                         } else {
                             @Item.Title
                         }
@@ -38,7 +38,7 @@
                     <th class="align-end">@Book.Label[nameof(Item.Publisher)]:</th>
                     <td>
                         @if (OnEdit) {
-                            <MudTextField @bind-Value="Item.Publisher" Label="Publisher" Variant="Variant.Text" FullWidth />
+                            <MudTextField MaxLength="@(Item.GetMaxLength ("Publisher"))" @bind-Value="Item.Publisher" Label="Publisher" Variant="Variant.Text" FullWidth />
                         } else {
                             @Item.Publisher
                         }
@@ -48,7 +48,7 @@
                     <th class="align-end">@Book.Label[nameof(Item.Series)]:</th>
                     <td>
                         @if (OnEdit) {
-                            <MudTextField @bind-Value="Item.Series" Label="Series" Variant="Variant.Text" FullWidth />
+                            <MudTextField MaxLength="@(Item.GetMaxLength ("Series"))" @bind-Value="Item.Series" Label="Series" Variant="Variant.Text" FullWidth />
                         } else {
                             @Item.Series
                         }

@@ -1,12 +1,13 @@
 ﻿using ExLibris.Services;
 using PetaPoco;
+using System.ComponentModel.DataAnnotations;
 
 namespace ExLibris.Data;
 
 [TableName ("Authors")]
 public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
-    [Column] public string Name { get; set; } = "";
-    [Column] public string AdditionalName { get; set; } = "";
+    [Column, StringLength (255)] public string Name { get; set; } = "";
+    [Column, StringLength (255)] public string AdditionalName { get; set; } = "";
     [Column] public string? Description { get; set; }
 
     /// <summary>著書一覧</summary>
