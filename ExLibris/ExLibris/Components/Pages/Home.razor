@@ -130,9 +130,9 @@
                 var cancel = update (progressValue, [$"取得中 双方 {progressMessage}"]);
                 if (cancel || !isDownloading) { break; }
                 // 取得
-                using (var data = new ComicsData (HttpClient, date)) {
+                using (var comics = new ComicsData (HttpClient, date)) {
                     // 取得完了を待つ
-                    if (!await data.LoadAsync () || data.Count <= 0) {
+                    if (!await comics.LoadAsync () || comics.Count <= 0) {
                         // データが無いのでスキップ
                         notFounds.Add (date);
                         continue;
@@ -141,8 +141,8 @@
                     // 登録のない著者名を検出して一覧
                     var names = new List<string> ();
                     var itemCount = 0;
-                    foreach (Comic comic in data) {
-                        cancel = update (progressValue, [$"検出中 著者 {progressMessage} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
+                    foreach (Comic comic in comics) {
+                        cancel = update (progressValue, [$"検出中 著者 {progressMessage} : {itemCount:D4}/{comics.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
                         if (cancel || !isDownloading) { break; }
                         var newNames = comic.Authors.FindAll (name => 
                             !string.IsNullOrEmpty (name)
@@ -171,8 +171,8 @@
                     // 書籍を生成
                     var books = new List<Book> ();
                     itemCount = 0;
-                    foreach (Comic comic in data) {
-                        cancel = update (progressValue, [$"生成中 書籍 {progressMessage} : {itemCount:D4}/{data.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
+                    foreach (Comic comic in comics) {
+                        cancel = update (progressValue, [$"生成中 書籍 {progressMessage} : {itemCount:D4}/{comics.Count:D4} {comic.ToString ().Ellipsis (40)}"]);
                         if (cancel || !isDownloading) { break; }
                         if (!string.IsNullOrEmpty (comic.Title)) {
                             books.Add (new Book {
