@@ -16,16 +16,16 @@
             @bind-SelectedItem="selectedItem"
             @bind-SelectedItems="selectedItems" MultiSelection="@allowMultiSelection">
             <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<Author, object>(x=>x.Id)">@Author.Label[nameof(Author.Id)]</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.Name)">@Author.Label[nameof(Author.Name)]</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Author, object>(x=>x.Id)">@(Author.Label[nameof(Author.Id)])</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Author, string?>(x=>x.Name)">@(Author.Label [nameof (Author.Name)])</MudTableSortLabel></MudTh>
             <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.AdditionalName)">/</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="@(new Func<Author, string?>(x=>string.Join(',', x.RelatedIds.ConvertAll(i=>$"{i:D5}"))))">@Author.Label[nameof(Author.Books)]</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="@(new Func<Author, string?>(x=>string.Join(',', x.RelatedIds.ConvertAll(i=>$"{i:D5}"))))">@(Author.Label[nameof(Author.Books)])</MudTableSortLabel></MudTh>
             </HeaderContent>
             <RowTemplate>
-            <MudTd Class="align-right text-nowrap" DataLabel="@Author.Label[nameof(Author.Id)]">@context.Id</MudTd>
-            <MudTd DataLabel="@Author.Label[nameof(Author.Name)]">@context.Name</MudTd>
-            <MudTd DataLabel="@Author.Label[nameof(Author.AdditionalName)]">@context.AdditionalName</MudTd>
-            <MudTd DataLabel="@Author.Label[nameof(Author.Books)]">@(string.Join (", ", context.Books.OrderBy (a => a.Id).ToList ().ConvertAll (a => a.Title)))</MudTd>
+            <MudTd Class="align-right text-nowrap" DataLabel="@(Author.Label[nameof(Author.Id)])">@context.Id</MudTd>
+            <MudTd DataLabel="@(Author.Label[nameof(Author.Name)])">@context.Name</MudTd>
+            <MudTd DataLabel="@(Author.Label[nameof(Author.AdditionalName)])">@context.AdditionalName</MudTd>
+            <MudTd DataLabel="@(Author.Label[nameof(Author.Books)])">@(string.Join (", ", context.Books.OrderBy (a => a.Id).ToList ().ConvertAll (a => a.Title)))</MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager PageSizeOptions="_pageSizeOptions" InfoFormat="{first_item}-{last_item} / {all_items}" RowsPerPageString="行/頁:" />

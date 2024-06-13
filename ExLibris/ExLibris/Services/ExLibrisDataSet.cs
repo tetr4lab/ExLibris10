@@ -137,9 +137,6 @@ public sealed class ExLibrisDataSet {
         }
     }
 
-    /// <summary>一覧用並び指定SQL</summary>
-    private string GetOrderSql<T> () where T : class, IExLibrisModel => T.OrderSql;
-
     /// <summary>更新用カラム&値SQL</summary>
     /// <remarks>ColumnでありかつVirtualColumnでないプロパティだけを対象とする</remarks>
     private string GetSettingSql<T> (bool withId = false) where T : class {
@@ -257,8 +254,7 @@ public sealed class ExLibrisDataSet {
                 $@"select {table}.*, group_concat({GetSqlName<T2> ()}Id) as _relatedIds
                 from {table}
                 left join AuthorBook on {table}.Id = AuthorBook.{table}Id
-                group by {table}.Id
-                order by {GetOrderSql<T1> ()};"
+                group by {table}.Id;"
             );
         });
     }

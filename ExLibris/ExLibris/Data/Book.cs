@@ -67,9 +67,6 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     }
 
     /// <inheritdoc/>
-    public static string OrderSql => $"{ExLibrisDataSet.GetSqlName<Book> ()}.{ExLibrisDataSet.GetSqlName<Book> ("PublishDate")} DESC";
-
-    /// <inheritdoc/>
     public override Book Clone () => CopyDerivedMembers (base.Clone ());
 
     /// <inheritdoc/>
