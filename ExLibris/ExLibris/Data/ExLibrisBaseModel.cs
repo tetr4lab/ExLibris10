@@ -42,7 +42,7 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
     public abstract string [] UniqueKeys { get; }
 
     /// <summary>識別子</summary>
-    [Column] public int Id { get; set; }
+    [Column] public long Id { get; set; }
 
     /// <summary>バージョン</summary>
     [Column] public int Version { get; set; }
@@ -52,15 +52,15 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
     public string? _relatedIds { get; set; }
 
     /// <summary>数値によるIdリスト</summary>
-    public List<int> RelatedIds {
-        get => (__relatedIds ??= string.IsNullOrEmpty (_relatedIds)? new () : _relatedIds.Split (',').ToList ().ConvertAll (id => int.TryParse (id, out var Id) ? Id : 0)) ?? new ();
+    public List<long> RelatedIds {
+        get => (__relatedIds ??= string.IsNullOrEmpty (_relatedIds)? new () : _relatedIds.Split (',').ToList ().ConvertAll (id => long.TryParse (id, out var Id) ? Id : 0)) ?? new ();
         set {
             _relatedIds = value == null ? null : string.Join (",", value);
             __relatedIds = default;
             __relatedItems = default;
         }
     }
-    protected List<int>? __relatedIds { get; set; }
+    protected List<long>? __relatedIds { get; set; }
 
     /// <summary>関係先インスタンス</summary>
     /// <remarks>RelatedIdsがnullなら_relatedItemsもnullになって、次回に再度生成を試みる。nullでも空のリストを返す。</remarks>

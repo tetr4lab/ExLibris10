@@ -86,7 +86,7 @@ public sealed class ExLibrisDataSet {
         && _books != null && !_books.Exists (i => i.DataSet != this || i.Id <= 0);
 
     /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
-    public T1? GetItemById<T1, T2> (int id)
+    public T1? GetItemById<T1, T2> (long id)
         where T1 : ExLibrisBaseModel<T1, T2>, new ()
         where T2 : ExLibrisBaseModel<T2, T1>, new()
         => GetAll<T1> ()?.Find (i => i.Id == id);
@@ -110,7 +110,7 @@ public sealed class ExLibrisDataSet {
         => GetAll<T1> ()?.Find (i => i.RowLabel == name);
 
     /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
-    public List<T1?> GetItemsById<T1, T2> (IEnumerable<int> ids)
+    public List<T1?> GetItemsById<T1, T2> (IEnumerable<long> ids)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new()
         => ids.ToList ().ConvertAll (GetItemById<T1, T2>);
@@ -273,7 +273,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>単一アイテムを取得 (Idで特定) 【注意】総リストとは別オブジェクトになる</summary>
-    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (int id)
+    public async Task<Result<T1?>> GetItemByIdAsync<T1, T2> (long id)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
@@ -419,9 +419,9 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>テーブルの次の自動更新値を得る</summary>
     /// <remarks>MySQL/MariaDBに依存</remarks>
-    public async Task<int> GetAutoIncremantValueAsync<T> () where T : class {
+    public async Task<long> GetAutoIncremantValueAsync<T> () where T : class {
         // 開始Idを取得
-        var Id = 0;
+        var Id = 0L;
         try {
             // 待避と設定 (SQLに勝手に'SELECT'を挿入しない)
             var enableAutoSelectBackup = database.EnableAutoSelect;
@@ -436,7 +436,7 @@ public sealed class ExLibrisDataSet {
                     System.Diagnostics.Debug.WriteLine ($"Server not supported 'information_schema_stats_expiry'\n{ex}");
                 }
                 // 次の自動更新値の取得
-                Id = await database.SingleAsync<int> (
+                Id = await database.SingleAsync<long> (
                     $"select AUTO_INCREMENT from information_schema.tables where TABLE_NAME='{GetSqlName<T> ()}';"
                 );
             }

@@ -166,15 +166,15 @@ https://zenn.dev/tetr4lab/articles/ad947ade600764#%E5%B1%95%E9%96%8B%E3%81%AE%E8
 
 ```sql:MariaDB
 CREATE TABLE `AuthorBook` (
-  `AuthorsId` int(11) NOT NULL,
-  `BooksId` int(11) NOT NULL,
+  `AuthorsId` bigint(20) NOT NULL,
+  `BooksId` bigint(20) NOT NULL,
   PRIMARY KEY (`AuthorsId`,`BooksId`),
   KEY `IX_AuthorBook_BooksId` (`BooksId`),
   CONSTRAINT `FK_AuthorBook_Authors_AuthorsId` FOREIGN KEY (`AuthorsId`) REFERENCES `Authors` (`Id`) ON DELETE CASCADE,
   CONSTRAINT `FK_AuthorBook_Books_BooksId` FOREIGN KEY (`BooksId`) REFERENCES `Books` (`Id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 CREATE TABLE `Authors` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Id` bigint(20) NOT NULL AUTO_INCREMENT,
   `Version` int(11) NOT NULL DEFAULT 0,
   `Name` varchar(255) NOT NULL,
   `AdditionalName` varchar(255) NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE `Authors` (
   UNIQUE KEY `IX_Authors_Name_AdditionalName` (`Name`,`AdditionalName`)
 ) ENGINE=InnoDB AUTO_INCREMENT=88754 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 CREATE TABLE `Books` (
-  `Id` int(11) NOT NULL AUTO_INCREMENT,
+  `Id` bigint(20) NOT NULL AUTO_INCREMENT,
   `Version` int(11) NOT NULL DEFAULT 0,
   `Title` varchar(255) NOT NULL DEFAULT '',
   `Description` longtext DEFAULT NULL,
