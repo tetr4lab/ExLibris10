@@ -92,7 +92,7 @@
     /// <summary>エラー報告</summary>
     protected string ErrorReport {
         get {
-            if (authors.Any (a => a.Id != Item.Id && a.Name == Item.Name && a.AdditionalName == Item.AdditionalName)) {
+            if (DataSet.ExistsByName<Author, Book> (Item)) {
                 return "同じ名前が存在します。";
             } else {
                 return string.Empty;

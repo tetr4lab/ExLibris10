@@ -147,7 +147,7 @@
                         var newNames = comic.Authors.FindAll (name => 
                             !string.IsNullOrEmpty (name)
                             && !names.Contains (name)
-                            && DataSet.GetItemByName<Author, Book> (name) == null
+                            && !DataSet.ExistsByName<Author, Book> (name)
                         );
                         names.AddRange (newNames);
                         itemCount++;

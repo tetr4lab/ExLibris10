@@ -155,8 +155,9 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     private async Task RelatedListUpdateFailed () {
         await DataSet.LoadAsync ();
         // リンク切れの関係先を破棄
-        var exception = Item.RelatedIds.FindAll (i => DataSet.GetItemById<TItem2, TItem1> (i) == null);
-        Item.RelatedIds = Item.RelatedIds.Except (exception).ToList ();
+        var relationIds = Item.RelatedIds;
+        Item.RelatedIds = Item.RelatedIds.FindAll (DataSet.ExistsById<TItem2, TItem1>);
+        var exception = relationIds.Except (Item.RelatedIds).ToList ();
         var messages = new [] {
             $"{exception.Count:N0}件の{TItem2.TableLabel}{{Id: {string.Join (",", exception)}}}が保存できませんでした。",
             $"編集中に他所で編集された可能性があります。",
@@ -171,9 +172,6 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
             OnEdit = false;
             if (close) {
                 MudDialog.Close (DialogResult.Ok (true));
-            } else if (endEdit) {
-                // 着目要素のオブジェクトを更新、編集は終えるがダイアログは閉じない
-                Item = DataSet.GetItemById<TItem1, TItem2> (Item) ?? Item;
             }
         }
         // 表示の更新

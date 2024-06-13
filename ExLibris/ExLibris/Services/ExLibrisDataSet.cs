@@ -88,11 +88,11 @@ public sealed class ExLibrisDataSet {
         && _authors != null && !_authors.Exists (i => i.DataSet != this || i.Id <= 0)
         && _books != null && !_books.Exists (i => i.DataSet != this || i.Id <= 0);
 
-    /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
-    public T1? GetItemById<T1, T2> (long id)
+    /// <summary>読み込み済み総リストから対象Idの存在を確認</summary>
+    public bool ExistsById<T1, T2> (long id)
         where T1 : ExLibrisBaseModel<T1, T2>, new ()
         where T2 : ExLibrisBaseModel<T2, T1>, new()
-        => GetAll<T1> ()?.Find (i => i.Id == id);
+        => GetAll<T1> ()?.Exists (i => i.Id == id) == true;
 
     /// <summary>読み込み済み総リストから対象アイテムを得る</summary>
     public T1? GetItemById<T1, T2> (T1 item)
@@ -111,6 +111,18 @@ public sealed class ExLibrisDataSet {
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new()
         => GetAll<T1> ()?.Find (i => i.RowLabel == name);
+
+    /// <summary>読み込み済み総リストから対象と同名の存在を確認</summary>
+    public bool ExistsByName<T1, T2> (T1 item)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => GetAll<T1> ()?.Exists (i => i.UniqueKey.ContainsEquals (item.UniqueKey)) == true;
+
+    /// <summary>読み込み済み総リストから対象と同名の存在を確認</summary>
+    public bool ExistsByName<T1, T2> (string name)
+        where T1 : ExLibrisBaseModel<T1, T2>, new()
+        where T2 : ExLibrisBaseModel<T2, T1>, new()
+        => GetAll<T1> ()?.Exists (i => i.RowLabel == name) == true;
 
     /// <summary>SQLで使用するテーブル名またはカラム名を得る</summary>
     /// <param name="name">プロパティ名</param>
