@@ -30,7 +30,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     [CascadingParameter (Name = "Session")] protected EventCallback<int> UpdateSessionCount { get; set; }
 
     /// <summary>項目一覧</summary>
-    protected List<TItem1>? items => DataSet.Valid ? DataSet.GetAll<TItem1> () : null;
+    protected List<TItem1>? items => DataSet.IsReady ? DataSet.GetAll<TItem1> () : null;
 
     /// <summary>選択項目</summary>
     protected TItem1 selectedItem { get; set; } = new TItem1 ();
@@ -132,8 +132,6 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
                 dialogResult = await DialogService.Progress (async update => {
                     // 実際の削除
                     var result = await DataSet.RemoveRangeAsync<TItem1, TItem2> (selectedItems);
-                    // リロード
-                    await DataSet.LoadAsync ();
                     // 削除されたものをチェックから除外
                     var items = selectedItems;
                     selectedItems = new HashSet<TItem1> ();
@@ -151,6 +149,10 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
                             // 全て削除されていたらオートインクリメントを初期化
                             resetAutoIncrement = await DataSet.ResetAutoIncrementAsync<TItem1, TItem2> ();
                         }
+                    }
+                    if (result.Value < targetCount) {
+                        // 削除できなかったものがあるならリロード
+                        await DataSet.LoadAsync ();
                     }
                     // 表示に反映
                     StateHasChanged ();

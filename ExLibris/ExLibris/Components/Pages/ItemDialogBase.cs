@@ -87,6 +87,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>タイムアウトなどになった</summary>
     private async Task OperationTimeout (string operation, Status status = Status.CommandTimeout) {
+        await DataSet.LoadAsync ();
         var messages = new [] {
                 $"{status.GetName ()}により{operation}できませんでした。",
                 "時間をおいてやり直してみてください。",
@@ -96,6 +97,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>不明のエラーが生じた</summary>
     private async Task UnknownError () {
+        await DataSet.LoadAsync ();
         var messages = new [] {
                 $"不明のエラーが生じました。",
                 $"エラーに至る詳細な操作を管理者へ連絡してください。",
@@ -106,6 +108,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>対象が消失した</summary>
     private async Task MissingEntry (bool onDelete = false) {
+        await DataSet.LoadAsync ();
         var messages = new [] {
             $"{(onDelete ? "対象を削除" : "編集を保存")}できませんでした。",
             "対象は既に削除されていました。",
@@ -120,6 +123,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>バージョン不整合が生じた</summary>
     private async Task VersionMissmatch (bool onDelete = false) {
+        await DataSet.LoadAsync ();
         var original = DataSet.GetItemById<TItem1, TItem2> (Item);
         var messages = new [] {
             $"{(onDelete ? "対象を削除" : "編集を保存")}できませんでした。",
@@ -136,6 +140,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>エントリが重複した</summary>
     private async Task DuplicateEntry (string operation) {
+        await DataSet.LoadAsync ();
         var existence = DataSet.GetItemByName<TItem1, TItem2> (Item);
         var messages = new [] {
             $"編集を{operation}できませんでした。",
@@ -148,6 +153,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>関係先が保存できなかった</summary>
     private async Task RelatedListUpdateFailed () {
+        await DataSet.LoadAsync ();
         // リンク切れの関係先を破棄
         var exception = Item.RelatedIds.FindAll (i => DataSet.GetItemById<TItem2, TItem1> (i) == null);
         Item.RelatedIds = Item.RelatedIds.Except (exception).ToList ();
@@ -183,7 +189,6 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
         if (!dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
             // 実際の削除
             var result = await DataSet.RemoveAsync<TItem1, TItem2> (Item);
-            await DataSet.LoadAsync ();
             var close = false;
             // 報告
             var title = $"{TItem1.TableLabel}「{Item.Id}: {Item.RowLabel}」";
@@ -226,7 +231,6 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
             // 新規
             // 実際の追加
             var result = await DataSet.AddAsync<TItem1, TItem2> (Item);
-            await DataSet.LoadAsync ();
             switch (result.Status) {
                 case Status.Success:
                     Snackbar.Add ("編集を追加しました。");
@@ -251,7 +255,6 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
             // 更新
             // 実際の更新
             var result = await DataSet.UpdateAsync<TItem1, TItem2> (Item);
-            await DataSet.LoadAsync ();
             switch (result.Status) {
                 case Status.Success:
                     Snackbar.Add ("編集を保存しました。");

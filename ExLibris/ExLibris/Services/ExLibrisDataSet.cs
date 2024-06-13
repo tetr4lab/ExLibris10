@@ -36,6 +36,9 @@ public sealed class ExLibrisDataSet {
     /// <summary>初期化済み</summary>
     public bool IsInitialized { get; private set; }
 
+    /// <summary>初期化が済み、ロード中でない</summary>
+    public bool IsReady => IsInitialized && !isLoading;
+
     /// <summary>(再)読み込み</summary>
     /// <remarks>既に読み込み中なら単に完了を待って戻る、再読み込み中でも以前のデータが有効</remarks>
     public async Task LoadAsync () {
@@ -81,7 +84,7 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>有効性の検証</summary>
     public bool Valid
-        => IsInitialized
+        => IsReady
         && _authors != null && !_authors.Exists (i => i.DataSet != this || i.Id <= 0)
         && _books != null && !_books.Exists (i => i.DataSet != this || i.Id <= 0);
 
@@ -393,6 +396,8 @@ public sealed class ExLibrisDataSet {
         if (result.IsFailure) {
             item.Id = default;
         }
+        // ロード済みに追加
+        GetAll<T1> ().Add (item);
         return new (result.Status, item);
     }
 
@@ -460,7 +465,7 @@ public sealed class ExLibrisDataSet {
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         if (items.Count () <= 0) { return new Result<int> (Status.MissingEntry, 0); }
-        return await ProcessAndCommitAsync (async () => {
+        var result = await ProcessAndCommitAsync (async () => {
             // 開始Idを取得
             var Id = await GetAutoIncremantValueAsync<T1> ();
             if (Id <= 0) {
@@ -498,6 +503,9 @@ public sealed class ExLibrisDataSet {
             }
             return result;
         });
+        // ロード済みに追加
+        GetAll<T1> ().AddRange (items);
+        return result;
     }
 
     /// <summary>単一アイテムの削除</summary>
@@ -522,6 +530,8 @@ public sealed class ExLibrisDataSet {
         if (result.IsSuccess && result.Value <= 0) {
             result.Status = Status.MissingEntry;
         }
+        // ロード済みから除去
+        GetAll<T1> ().Remove (item);
         return result;
     }
 
@@ -553,6 +563,11 @@ public sealed class ExLibrisDataSet {
                 new { Ids = targets }
             );
         });
+        // ロード済みから除去
+        var allItems = GetAll<T1> ();
+        foreach (var item in items) {
+            allItems.Remove (item);
+        }
         return new (status, result.Value);
     }
 
