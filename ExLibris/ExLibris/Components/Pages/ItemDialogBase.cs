@@ -159,7 +159,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
         Item.RelatedIds = Item.RelatedIds.FindAll (DataSet.ExistsById<TItem2, TItem1>);
         var exception = relationIds.Except (Item.RelatedIds).ToList ();
         var messages = new [] {
-            $"{exception.Count:N0}件の{TItem2.TableLabel}{{Id: {string.Join (",", exception)}}}が保存できませんでした。",
+            $"{exception.Count:N0}件の{TItem2.TableLabel}{{Id: {string.Join (',', exception)}}}が保存できませんでした。",
             $"編集中に他所で編集された可能性があります。",
         };
         await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, cancellationLabel: "");

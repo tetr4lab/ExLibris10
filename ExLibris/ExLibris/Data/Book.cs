@@ -100,5 +100,5 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public override int GetHashCode () => HashCode.Combine (Id, Title, Description, PublishDate, Publisher, Series, Price, _relatedIds);
 
     /// <inheritdoc/>
-    public override string ToString () => $"{TableLabel} {Id}: {Title} \"{Description}\" {Publisher} {Series} {PublishDate?.ToShortDateString ()} [{RelatedIds.Count}]{{{string.Join (",", RelatedItems.ConvertAll (a => $"{a.Id}:{a.Name}"))}}}";
+    public override string ToString () => $"{TableLabel} {Id}: {Title} \"{Description}\" {Publisher} {Series} {PublishDate?.ToShortDateString ()} [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (a => $"{a.Id}:{a.Name}"))}}}";
 }

@@ -143,7 +143,7 @@ public sealed class ExLibrisDataSet {
         var result = string.Empty;
         var properties = typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public);
         if (properties != null) {
-            result = string.Join (",", Array.ConvertAll (properties, property => {
+            result = string.Join (',', Array.ConvertAll (properties, property => {
                 var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
                 var attribute = property.GetCustomAttribute<ColumnAttribute> ();
                 return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id")
@@ -160,7 +160,7 @@ public sealed class ExLibrisDataSet {
         var result = string.Empty;
         var properties = typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public);
         if (properties != null) {
-            result = string.Join (",", Array.ConvertAll (properties, property => {
+            result = string.Join (',', Array.ConvertAll (properties, property => {
                 var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
                 var attribute = property.GetCustomAttribute<ColumnAttribute> ();
                 return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id")
@@ -177,7 +177,7 @@ public sealed class ExLibrisDataSet {
         var result = string.Empty;
         var properties = typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public);
         if (properties != null) {
-            result = string.Join (",", Array.ConvertAll (properties, property => {
+            result = string.Join (',', Array.ConvertAll (properties, property => {
                 var @virtual = property.GetCustomAttribute<VirtualColumnAttribute> ();
                 var attribute = property.GetCustomAttribute<ColumnAttribute> ();
                 return @virtual == null && attribute != null && (withId || (attribute.Name ?? property.Name) != "Id")
@@ -331,7 +331,7 @@ public sealed class ExLibrisDataSet {
             parameters.Add ($"Id2_{i}", item.RelatedIds [i]);
         }
         return await database.ExecuteAsync (
-            $"insert into AuthorBook ({GetSqlName<T1> ()}Id, {GetSqlName<T2> ()}Id) values {string.Join(",", valuesSqls)};",
+            $"insert into AuthorBook ({GetSqlName<T1> ()}Id, {GetSqlName<T2> ()}Id) values {string.Join (',', valuesSqls)};",
             parameters
         );
     }
@@ -460,7 +460,7 @@ public sealed class ExLibrisDataSet {
                 valuesSqls.Add ($"({GetValuesSql<T1> (i)})");
             }
             var result = await database.ExecuteAsync (
-                $"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values {string.Join (",", valuesSqls)};",
+                $"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values {string.Join (',', valuesSqls)};",
                 GetParamDictionary (items)
             );
             // 関係アイテムを挿入
@@ -476,7 +476,7 @@ public sealed class ExLibrisDataSet {
             }
             if (valuesSqls.Count > 0) {
                 var count = await database.ExecuteAsync (
-                    $"insert into AuthorBook ({GetSqlName<T1> ()}Id, {GetSqlName<T2> ()}Id) values {string.Join (",", valuesSqls)};",
+                    $"insert into AuthorBook ({GetSqlName<T1> ()}Id, {GetSqlName<T2> ()}Id) values {string.Join (',', valuesSqls)};",
                     parameters
                 );
                 if (count < valuesSqls.Count) {

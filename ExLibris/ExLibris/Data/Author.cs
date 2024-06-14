@@ -81,6 +81,6 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public override int GetHashCode () => HashCode.Combine (Id, Name, AdditionalName, Description, _relatedIds);
 
     /// <inheritdoc/>
-    public override string ToString () => $"{TableLabel} {Id}: {Name}{(string.IsNullOrEmpty (AdditionalName) ? "" : $"-{AdditionalName}")} \"{Description}\" [{RelatedIds.Count}]{{{string.Join (",", RelatedItems.ConvertAll (b => $"{b.Id}:{b.Title}"))}}}";
+    public override string ToString () => $"{TableLabel} {Id}: {Name}{(string.IsNullOrEmpty (AdditionalName) ? "" : $"-{AdditionalName}")} \"{Description}\" [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (b => $"{b.Id}:{b.Title}"))}}}";
 
 }
