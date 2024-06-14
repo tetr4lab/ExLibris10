@@ -527,7 +527,7 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>バージョン照合を行うためのモデル</summary>
     private class IdVersion {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public int Version { get; set; }
     }
 
