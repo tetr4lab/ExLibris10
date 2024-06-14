@@ -189,7 +189,7 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>アイテムリストから辞書型パラメータを生成する</summary>
-    private Dictionary<string, object?> GetParamDictionary<T1, T2> (IEnumerable<T1> values)
+    private Dictionary<string, object?> GetParamDictionary<T1, T2> (IEnumerable<T1> values, bool withId = false)
         where T1 : ExLibrisBaseModel<T1, T2>, new()
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var parameters = new Dictionary<string, object?> ();
@@ -197,7 +197,7 @@ public sealed class ExLibrisDataSet {
         foreach (var property in typeof (T1).GetProperties (BindingFlags.Instance | BindingFlags.Public) ?? []) {
             var attribute = property.GetCustomAttribute<ColumnAttribute> ();
             if (attribute != null && property.GetCustomAttribute<VirtualColumnAttribute> () == null
-                && (attribute.Name ?? property.Name) != "Id") {
+                && (withId || (attribute.Name ?? property.Name) != "Id")) {
                 prpperties.Add (property);
             }
         }
@@ -537,15 +537,26 @@ public sealed class ExLibrisDataSet {
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
         var status = Status.Unknown;
+        var time = new List<DateTime> { DateTime.Now };
         var result = await ProcessAndCommitAsync (async () => {
             // 要求
             var list = items.ToList ();
             // 既存
+            var ivSql = new List<string> ();
+            for (var i = 0; i < list.Count; i++) {
+                ivSql.Add ($"(@Id_{i}, @Version_{i})");
+            }
+            var param = GetParamDictionary<T1, T2> (items, withId: true);
+            var sql = $"select * from {table} where (Id, Version) in ({string.Join (',', ivSql)})";
+            time.Add (DateTime.Now);
             var entries = await database.FetchAsync<IdVersion> (
-                $"select * from {table} where Id in (@Ids)",
-                new { Ids = list.ConvertAll (i => i.Id) });
+                sql,
+                param
+            );
+            time.Add (DateTime.Now);
             // 一致
-            var targets = entries.FindAll (i => list.Exists (j => j.Id == i.Id && j.Version == i.Version)).ConvertAll (i => i.Id);
+            var targets = entries.ConvertAll (i => i.Id);
+            time.Add (DateTime.Now);
             // 実行と結果
             status = targets.Count < entries.Count () ? Status.VersionMismatch : (entries.Count () < list.Count ? Status.MissingEntry : Status.Success);
             return await database.ExecuteAsync (
@@ -553,6 +564,13 @@ public sealed class ExLibrisDataSet {
                 new { Ids = targets }
             );
         });
+        time.Add (DateTime.Now);
+        var lastTime = time [0];
+        System.Diagnostics.Debug.Write ($"{string.Join (',', time.ConvertAll (t => {
+            var result = t - lastTime;
+            lastTime = t;
+            return result;
+        }))}");
         // ロード済みから除去
         var allItems = GetAll<T1> ();
         foreach (var item in items) {
