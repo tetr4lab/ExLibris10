@@ -189,12 +189,10 @@ public sealed class ExLibrisDataSet {
     }
 
     /// <summary>アイテムリストから辞書型パラメータを生成する</summary>
-    private Dictionary<string, object?> GetParamDictionary<T1, T2> (IEnumerable<T1> values, bool withId = false)
-        where T1 : ExLibrisBaseModel<T1, T2>, new()
-        where T2 : ExLibrisBaseModel<T2, T1>, new() {
+    private Dictionary<string, object?> GetParamDictionary<T> (IEnumerable<T> values, bool withId = false) {
         var parameters = new Dictionary<string, object?> ();
         var prpperties = new List<PropertyInfo> ();
-        foreach (var property in typeof (T1).GetProperties (BindingFlags.Instance | BindingFlags.Public) ?? []) {
+        foreach (var property in typeof (T).GetProperties (BindingFlags.Instance | BindingFlags.Public) ?? []) {
             var attribute = property.GetCustomAttribute<ColumnAttribute> ();
             if (attribute != null && property.GetCustomAttribute<VirtualColumnAttribute> () == null
                 && (withId || (attribute.Name ?? property.Name) != "Id")) {
@@ -406,12 +404,6 @@ public sealed class ExLibrisDataSet {
         return new (results.FirstFailedState (), results.FindAll (r => r.IsSuccess).Count);
     }
 
-    /// <summary>変数値を得るためのモデル</summary>
-    private class Variable {
-        public string? Variable_name { get; set; }
-        public int Value { get; set; }
-    }
-
     /// <summary>テーブルの次の自動更新値を得る</summary>
     /// <remarks>MySQL/MariaDBに依存</remarks>
     public async Task<long> GetAutoIncremantValueAsync<T> () where T : class {
@@ -469,7 +461,7 @@ public sealed class ExLibrisDataSet {
             }
             var result = await database.ExecuteAsync (
                 $"insert into {GetSqlName<T1> ()} ({GetColumnsSql<T1> ()}) values {string.Join (",", valuesSqls)};",
-                GetParamDictionary<T1, T2> (items)
+                GetParamDictionary (items)
             );
             // 関係アイテムを挿入
             valuesSqls = new List<string> ();
@@ -527,8 +519,8 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>バージョン照合を行うためのモデル</summary>
     private class IdVersion {
-        public long Id { get; set; }
-        public int Version { get; set; }
+        [Column] public long Id { get; set; }
+        [Column] public int Version { get; set; }
     }
 
     /// <summary>一括アイテムの削除</summary>
@@ -537,26 +529,20 @@ public sealed class ExLibrisDataSet {
         where T2 : ExLibrisBaseModel<T2, T1>, new() {
         var table = GetSqlName<T1> ();
         var status = Status.Unknown;
-        var time = new List<DateTime> { DateTime.Now };
         var result = await ProcessAndCommitAsync (async () => {
             // 要求
-            var list = items.ToList ();
+            var list = items.ToList ().ConvertAll (i => new IdVersion { Id = i.Id, Version = i.Version, });
             // 既存
             var ivSql = new List<string> ();
             for (var i = 0; i < list.Count; i++) {
                 ivSql.Add ($"(@Id_{i}, @Version_{i})");
             }
-            var param = GetParamDictionary<T1, T2> (items, withId: true);
-            var sql = $"select * from {table} where (Id, Version) in ({string.Join (',', ivSql)})";
-            time.Add (DateTime.Now);
             var entries = await database.FetchAsync<IdVersion> (
-                sql,
-                param
+                $"select * from {table} where (Id, Version) in ({string.Join (',', ivSql)})",
+                GetParamDictionary (list, withId: true)
             );
-            time.Add (DateTime.Now);
             // 一致
             var targets = entries.ConvertAll (i => i.Id);
-            time.Add (DateTime.Now);
             // 実行と結果
             status = targets.Count < entries.Count () ? Status.VersionMismatch : (entries.Count () < list.Count ? Status.MissingEntry : Status.Success);
             return await database.ExecuteAsync (
@@ -564,13 +550,6 @@ public sealed class ExLibrisDataSet {
                 new { Ids = targets }
             );
         });
-        time.Add (DateTime.Now);
-        var lastTime = time [0];
-        System.Diagnostics.Debug.Write ($"{string.Join (',', time.ConvertAll (t => {
-            var result = t - lastTime;
-            lastTime = t;
-            return result;
-        }))}");
         // ロード済みから除去
         var allItems = GetAll<T1> ();
         foreach (var item in items) {
