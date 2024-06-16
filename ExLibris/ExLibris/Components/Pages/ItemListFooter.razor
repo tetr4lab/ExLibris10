@@ -1,0 +1,38 @@
+﻿@typeparam TItem1 where TItem1 : ExLibrisBaseModel<TItem1, TItem2>, IExLibrisModel, new()
+@typeparam TItem2 where TItem2 : ExLibrisBaseModel<TItem2, TItem1>, IExLibrisModel, new()
+
+<MudAppBar Class="backdrop-blur pb-2" Color="Color.Transparent" Dense Bottom="true" Fixed="true">
+    <MudTooltip Text="一括削除" Duration="1000">
+        <MudSwitch Disabled="!DisableSwitch" ValueChanged="OnChangeSwitch" LabelPosition="LabelPosition.Start" Color="Color.Primary"><MudIcon Class="mt-3" Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever"></MudIcon></MudSwitch>
+    </MudTooltip>
+    @if (AllowDeleteItems) {
+        <MudTooltip Text="@($"チェックされた{TItem1.TableLabel}を一括削除")" Duration="1000">
+            <MudFab Disabled="DisableDelete" OnClick="OnDeleteItems" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Warning" Size="Size.Small" Class="ml-5" />
+        </MudTooltip>
+        @if (!DisableSwitch) {
+            <MudText Class="ml-2" Typo="Typo.body2">複数の利用者がいる場合は使用できません。</MudText>
+        }
+        <MudDivider Vertical FlexItem Class="mx-5" />
+    }
+    <MudSpacer />
+    <MudTooltip Text="@($"{TItem1.TableLabel}を追加")" Duration="1000">
+        <MudFab Disabled="DisableAdd" OnClick="OnAddItem" StartIcon="@Icons.Material.Outlined.Add" Color="Color.Success" Size="Size.Small" />
+    </MudTooltip>
+</MudAppBar>
+
+@code {
+    /// <summary>削除ボタンを表示する条件</summary>
+    [Parameter] public bool AllowDeleteItems { get; set; }
+    /// <summary>切り替えボタンが押せない条件</summary>
+    [Parameter] public bool DisableSwitch { get; set; }
+    /// <summary>切り替えボタンが押された</summary>
+    [Parameter] public EventCallback<bool> OnChangeSwitch { get; set; }
+    /// <summary>削除ボタンが押せない条件</summary>
+    [Parameter] public bool DisableDelete { get; set; }
+    /// <summary>削除ボタンが押された</summary>
+    [Parameter] public EventCallback OnDeleteItems { get; set; }
+    /// <summary>追加ボタンが押せない条件</summary>
+    [Parameter] public bool DisableAdd { get; set; }
+    /// <summary>追加ボタンが押された</summary>
+    [Parameter] public EventCallback OnAddItem { get; set; }
+}
