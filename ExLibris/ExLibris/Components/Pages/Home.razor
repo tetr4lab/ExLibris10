@@ -130,7 +130,7 @@
                 var cancel = update (progressValue, [$"取得中 双方 {progressMessage}"]);
                 if (cancel || !isDownloading) { break; }
                 // 取得
-                using (var comics = new ComicsData (HttpClient, date)) {
+                await using (var comics = new ComicsData (HttpClient, date)) {
                     // 取得完了を待つ
                     if (!await comics.LoadAsync () || comics.Count <= 0) {
                         // データが無いのでスキップ

@@ -33,7 +33,7 @@ public class Comic {
 }
 
 /// <summary>コミックデータ</summary>
-public sealed class ComicsData : IDisposable, IEnumerable {
+public sealed class ComicsData : IAsyncDisposable, IEnumerable {
 
     private HttpClient httpClient;
 
@@ -112,7 +112,7 @@ public sealed class ComicsData : IDisposable, IEnumerable {
     }
 
     /// <summary>破棄</summary>
-    public async void Dispose () {
+    public async ValueTask DisposeAsync () {
         await TaskEx.DelayWhile (() => isLoading);
         rawData = null;
         Comics.Clear ();
