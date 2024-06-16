@@ -6,7 +6,7 @@ namespace ExLibris.Data;
 
 [TableName ("Authors")]
 public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
-    [Column, StringLength (255)] public string Name { get; set; } = "";
+    [Column, StringLength (255), Required] public string Name { get; set; } = "";
     [Column, StringLength (255)] public string AdditionalName { get; set; } = "";
     [Column] public string? Description { get; set; }
 
