@@ -545,10 +545,10 @@ public sealed class ExLibrisDataSet {
             var targets = entries.ConvertAll (i => i.Id);
             // 実行と結果
             status = targets.Count < entries.Count () ? Status.VersionMismatch : (entries.Count () < list.Count ? Status.MissingEntry : Status.Success);
-            return await database.ExecuteAsync (
+            return targets.Count > 0 ? await database.ExecuteAsync (
                 $"delete from {table} where Id in (@Ids)",
                 new { Ids = targets }
-            );
+            ) : 0;
         });
         // ロード済みから除去
         var allItems = GetAll<T1> ();
