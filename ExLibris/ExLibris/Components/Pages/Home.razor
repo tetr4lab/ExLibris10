@@ -113,6 +113,7 @@
         // 取得の開始
         dialogResult = await DialogService.Progress(async update => {
             var lastTime = DateTime.MinValue;
+            var done = new List<DateTime> ();
             var notFounds = new List<DateTime> ();
             var errors = new List<string> ();
             var count = 0;
@@ -205,6 +206,8 @@
                             }
                         } else if (result.Value < books.Count) {
                             errors.Add ($"{month}:登録できない書籍({result.Value:N0}/{books.Count:N0})");
+                        } else {
+                            done.Add (date);
                         }
                     }
                 }
@@ -212,8 +215,10 @@
             }
             update (ProgressDialog.Acceptable, [
                 $"更新を{(count < missings.Count ? "中断" : "完了")}しました。",
+                count < missings.Count ? $"以下のデータを取得しました。" : null,
+                count < missings.Count ? string.Join (',', done.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}")) : null,
                 notFounds.Count > 0 ? $"ただし、「{string.Join (',', notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
-            errors.Count > 0 ? $"以下、{errors.Count:N0}件のエラーがありました。" : null,
+                errors.Count > 0 ? $"以下、{errors.Count:N0}件のエラーがありました。" : null,
                 errors.Count > 0 ? string.Join (',', errors) : null,
            ]);
         }, title: "更新中", message: "データを更新中です。アプリを終了しないでください。", cancellationLabel: "Stop", maxWidth: MaxWidth.Medium);
