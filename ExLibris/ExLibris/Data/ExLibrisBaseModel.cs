@@ -36,7 +36,7 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
     public abstract string? [] SearchTargets { get; }
 
     /// <summary>ユニーク識別子</summary>
-    public string UniqueKey => string.Join ("-", UniqueKeys);
+    public string UniqueKey => string.Join ('-', UniqueKeys);
 
     /// <summary>ユニーク識別子群</summary>
     public abstract string [] UniqueKeys { get; }
