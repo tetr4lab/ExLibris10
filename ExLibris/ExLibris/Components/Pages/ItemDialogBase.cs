@@ -141,7 +141,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     /// <summary>エントリが重複した</summary>
     private async Task DuplicateEntry (string operation) {
         await DataSet.LoadAsync ();
-        var existence = DataSet.GetItemByName<TItem1, TItem2> (Item);
+        var existence = DataSet.GetOtherItemByName<TItem1, TItem2> (Item);
         var messages = new [] {
             $"編集を{operation}できませんでした。",
             $"名前「{Item.UniqueKey}」が重複しています。",
