@@ -2,6 +2,9 @@
 using ExLibris.Services;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using PetaPoco;
 using Tetr4lab;
 using static ExLibris.Services.ExLibrisDataSet;
 
@@ -215,12 +218,39 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
         }
     }
 
+   /// <summary>エラー</summary>
+    protected virtual bool IsError => !string.IsNullOrEmpty (ErrorReport);
+
+    /// <summary>エラー報告</summary>
+    protected virtual string ErrorReport {
+        get {
+            // ToDo: required
+            foreach (var property in typeof (TItem1).GetProperties (BindingFlags.Instance | BindingFlags.Public) ?? []) {
+                if (property.GetCustomAttribute<RequiredAttribute> () != null && property.GetCustomAttribute<ColumnAttribute> () != null) {
+                    var value = property.GetValue (Item);
+                    if (value == default || (value is string str && string.IsNullOrEmpty (str))) {
+                        return "必須項目を入力してください。";
+                    }
+                }
+            }
+            if (DataSet.ExistsOtherByName<TItem1, TItem2> (Item)) {
+                return $"同じ{TItem1.TableLabel}が存在します。";
+            } else {
+                return string.Empty;
+            }
+        }
+    }
+
     /// <summary>セーブ中</summary>
     protected bool isSaving = false;
 
     /// <summary>セーブして編集を終了</summary>
-    protected async void SaveAsync () {
+    protected virtual async void SaveAsync () {
         if (isSaving || _backupItem == null) { return; }
+        if (IsError) {
+            Snackbar.Add ("保存するためにはエラーの解消が必要です。");
+            return;
+        }
         isSaving = true;
         var updated = Updated;
         var endEdit = false;

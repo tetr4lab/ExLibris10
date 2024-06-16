@@ -89,6 +89,12 @@
     </DialogContent>
     <DialogActions>
         @if (OnEdit) {
+            @if (IsError) {
+                <MudItem xs="4">
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-1">@ErrorReport</MudAlert>
+                </MudItem>
+                <MudSpacer />
+            }
             <MudButton OnClick="CancelEdit" StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large">Cancel</MudButton>
             <MudButton OnClick="SaveAsync" Disabled="@(!Updated || isSaving)" StartIcon="@Icons.Material.Filled.Save" Size="Size.Large" Color="Color.Success">Save</MudButton>
         } else {

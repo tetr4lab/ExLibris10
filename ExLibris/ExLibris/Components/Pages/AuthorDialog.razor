@@ -19,11 +19,6 @@
                                 <MudItem xs="6">
                                     <MudTextField MaxLength="@(Item.GetMaxLength ("AdditionalName"))" @bind-Value="Item.AdditionalName" Label="AdditionalName" Variant="Variant.Text" FullWidth />
                                 </MudItem>
-                                @if (IsError) {
-                                    <MudItem xs="12">
-                                        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-1">@ErrorReport</MudAlert>
-                                    </MudItem>
-                                }
                             </MudGrid>
                         } else {
                             <span>@Item.Name</span>
@@ -64,6 +59,12 @@
     </DialogContent>
     <DialogActions>
         @if (OnEdit) {
+            @if (IsError) {
+                <MudItem xs="4">
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true" Class="my-1">@ErrorReport</MudAlert>
+                </MudItem>
+                <MudSpacer />
+            }
             <MudButton OnClick="CancelEdit" StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large">Cancel</MudButton>
             <MudButton OnClick="SaveAsync" Disabled="@(IsError || !Updated || isSaving)" StartIcon="@Icons.Material.Filled.Save" Size="Size.Large" Color="Color.Success">Save</MudButton>
         } else {
@@ -80,33 +81,3 @@
         }
     </DialogActions>
 </MudDialog>
-
-@code {
-
-    /// <summary>項目一覧</summary>
-    protected List<Author> authors => DataSet.Authors!;
-
-    /// <summary>エラー</summary>
-    protected bool IsError => !string.IsNullOrEmpty (ErrorReport);
-
-    /// <summary>エラー報告</summary>
-    protected string ErrorReport {
-        get {
-            if (DataSet.ExistsOtherByName<Author, Book> (Item)) {
-                return "同じ名前が存在します。";
-            } else {
-                return string.Empty;
-            }
-        }
-    }
-
-    /// <summary>セーブして編集を終了</summary>
-    protected new void SaveAsync () {
-        if (IsError) {
-            Snackbar.Add ("保存するためにはエラーの解消が必要です。");
-        } else {
-            base.SaveAsync();
-        }
-    }
-
-}
