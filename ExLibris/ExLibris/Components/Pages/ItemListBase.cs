@@ -38,9 +38,12 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     /// <summary>複数選択項目</summary>
     protected HashSet<TItem1> selectedItems { get; set; } = new HashSet<TItem1> ();
 
+    /// <summary>単一セッション</summary>
+    protected bool isSingleSession => SessionCounter.Count <= 1;
+
     /// <summary>複数選択可否</summary>
-    protected bool allowMultiSelection {
-        get => _allowMultiSelection && SessionCounter.Count <= 1;
+    protected bool allowDeleteItems {
+        get => _allowMultiSelection;
         set {
             if (_allowMultiSelection != value) {
                 selectedItems = new ();
@@ -77,7 +80,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>項目詳細・編集</summary>
     protected async void EditItem (TItem1 item) {
-        if (!allowMultiSelection) {
+        if (!allowDeleteItems) {
             await OpenDialog (item);
         }
     }
@@ -108,7 +111,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     protected bool _isAdding;
 
     /// <summary>項目一括削除</summary>
-    protected async void DeleteItem () {
+    protected async void DeleteItems () {
         if (SessionCounter.Count > 1) {
             Snackbar.Add ("複数の利用者がいる場合は使用できません。");
             return;
@@ -116,7 +119,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         if (_isDeleting) { return; }
         _isDeleting = true;
         await StateHasChangedAsync ();
-        if (allowMultiSelection && selectedItems.Count > 0) {
+        if (allowDeleteItems && selectedItems.Count > 0) {
             // 確認ダイアログ
             var targetCount = selectedItems.Count;
             var contents = selectedItems.ToList () [..Math.Min (MaxListingNumber, selectedItems.Count)]

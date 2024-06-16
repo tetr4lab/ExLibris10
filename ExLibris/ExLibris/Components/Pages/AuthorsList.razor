@@ -14,18 +14,18 @@
             SortLabel="⇅"
             AllowUnsorted=true
             @bind-SelectedItem="selectedItem"
-            @bind-SelectedItems="selectedItems" MultiSelection="@allowMultiSelection">
+            @bind-SelectedItems="selectedItems" MultiSelection="@(allowDeleteItems && isSingleSession)">
             <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<Author, object>(x=>x.Id)">@(Author.Label[nameof(Author.Id)])</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Author, string?>(x=>x.Name)">@(Author.Label [nameof (Author.Name)])</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.AdditionalName)">/</MudTableSortLabel></MudTh>
-            <MudTh><MudTableSortLabel SortBy="@(new Func<Author, string?>(x=>string.Join(',', x.RelatedIds.ConvertAll(i=>$"{i:D5}"))))">@(Author.Label[nameof(Author.Books)])</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Author, object>(x=>x.Id)">@(Author.Label[nameof(Author.Id)])</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Author, string?>(x=>x.Name)">@(Author.Label [nameof (Author.Name)])</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Author, string?>(x=>x.AdditionalName)">/</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="@(new Func<Author, string?>(x=>string.Join(',', x.RelatedIds.ConvertAll(i=>$"{i:D5}"))))">@(Author.Label[nameof(Author.Books)])</MudTableSortLabel></MudTh>
             </HeaderContent>
             <RowTemplate>
-            <MudTd Class="align-right text-nowrap" DataLabel="@(Author.Label[nameof(Author.Id)])">@context.Id</MudTd>
-            <MudTd DataLabel="@(Author.Label[nameof(Author.Name)])">@context.Name</MudTd>
-            <MudTd DataLabel="@(Author.Label[nameof(Author.AdditionalName)])">@context.AdditionalName</MudTd>
-            <MudTd DataLabel="@(Author.Label[nameof(Author.Books)])">@(string.Join (", ", context.Books.OrderBy (a => a.Id).ToList ().ConvertAll (a => a.Title)))</MudTd>
+                <MudTd Class="align-right text-nowrap" DataLabel="@(Author.Label[nameof(Author.Id)])">@context.Id</MudTd>
+                <MudTd DataLabel="@(Author.Label[nameof(Author.Name)])">@context.Name</MudTd>
+                <MudTd DataLabel="@(Author.Label[nameof(Author.AdditionalName)])">@context.AdditionalName</MudTd>
+                <MudTd DataLabel="@(Author.Label[nameof(Author.Books)])">@(string.Join (", ", context.Books.OrderBy (a => a.Id).ToList ().ConvertAll (a => a.Title)))</MudTd>
             </RowTemplate>
             <PagerContent>
                 <MudTablePager PageSizeOptions="_pageSizeOptions" InfoFormat="{first_item}-{last_item} / {all_items}" RowsPerPageString="行/頁:" />
@@ -40,13 +40,13 @@
     }
     <MudAppBar Class="backdrop-blur pb-2" Color="Color.Transparent" Dense Bottom="true" Fixed="true">
         <MudTooltip Text="一括削除" Duration="1000">
-            <MudSwitch @bind-Value="_allowMultiSelection" LabelPosition="LabelPosition.Start" Color="Color.Primary"><MudIcon Class="mt-3" Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever"></MudIcon></MudSwitch>
+            <MudSwitch Disabled="!isSingleSession" @bind-Value="allowDeleteItems" LabelPosition="LabelPosition.Start" Color="Color.Primary"><MudIcon Class="mt-3" Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever"></MudIcon></MudSwitch>
         </MudTooltip>
-        @if (_allowMultiSelection) {
-                <MudTooltip Text="チェックされた項目を一括削除" Duration="1000">
-                    <MudFab Disabled="@(_isDeleting || !allowMultiSelection || selectedItems.Count <= 0 || SessionCounter.Count > 1)" OnClick="DeleteItem" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Warning" Size="Size.Small" Class="ml-5" />
-                </MudTooltip>
-            @if (!allowMultiSelection) {
+        @if (allowDeleteItems) {
+            <MudTooltip Text="チェックされた項目を一括削除" Duration="1000">
+                <MudFab Disabled="@(_isDeleting || !allowDeleteItems || !isSingleSession || selectedItems.Count <= 0)" OnClick="DeleteItems" StartIcon="@Icons.Material.Filled.DeleteSweep" Color="Color.Warning" Size="Size.Small" Class="ml-5" />
+            </MudTooltip>
+            @if (!isSingleSession) {
                 <MudText Class="ml-2" Typo="Typo.body2">複数の利用者がいる場合は使用できません。</MudText>
             }
             <MudDivider Vertical FlexItem Class="mx-5" />
