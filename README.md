@@ -1,8 +1,8 @@
 ﻿---
-title: .NET 8 / Blazor Web App / PetaPoco+MySqlConnector で MySQL/MariaDB を使う
-tags: Blazor ASP.NET PetaPoco MySQL MariaDB
+title: .NET 8 / Blazor Web App / MudBlazor / PetaPoco+MySqlConnector で MySQL/MariaDB を使う
+tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
 ---
-# .NET 8 / Blazor Web App / PetaPoco+MySqlConnector で MySQL/MariaDB を使う
+# .NET 8 / Blazor Web App / MudBlazor / PetaPoco+MySqlConnector で MySQL/MariaDB を使う
 
 ## はじめに
 - この記事では、.NET 8.0で、シンプルなBlazor Web Appを作ってみます。
@@ -24,6 +24,8 @@ tags: Blazor ASP.NET PetaPoco MySQL MariaDB
   - MudBlazorの使い方
   - PetaPocoの使い方
   - ツール類の使用方法
+- ドキュメントとコードが異なる場合は、コードが優先されます。
+  - コードの更新に対して、ドキュメントが適切に更新されていない場合があります。
 
 ### 環境
 - Windows 11 Pro 22H2
@@ -337,7 +339,7 @@ builder.Services.AddScoped (_ => (Database) new MySqlDatabase (connectionString,
 builder.Services.AddScoped<ExLibrisDataSet> ();
 ```
 
-## ページの構成
+## ページとコンポーネントの構成
 ### レイアウト
 - レイアウト(`ExLibris/Components/Layout/MainLayout.razor`)に記述することで、全ページで共有します。
   - ナビゲーションバーはレイアウトに直接記述せず、独立したコンポーネントにします。
