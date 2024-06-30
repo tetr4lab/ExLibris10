@@ -2,7 +2,7 @@
 
 <MudDialog>
     <DialogContent>
-        <MudSimpleTable Dense Striped Breakpoint="Breakpoint.Xs">
+        <MudSimpleTable Dense Striped>
             <tbody>
                 <tr>
                     <th class="align-end">@Book.Label[nameof(Item.Id)]:</th>
@@ -68,7 +68,7 @@
                     <th class="align-end">@Book.Label[nameof(Item.PublishDate)]:</th>
                     <td class="align-end">
                         @if (OnEdit) {
-                            <MudDatePicker @bind-Date="Item.PublishDate" Clearable Label="Publish Date" DisableToolbar="true" AutoClose />
+                            <MudDatePicker @bind-Date="Item.PublishDate" Clearable Label="Publish Date" ShowToolbar="false" AutoClose />
                         } else {
                             @Item.PublishDate?.ToShortDateString()
                         }

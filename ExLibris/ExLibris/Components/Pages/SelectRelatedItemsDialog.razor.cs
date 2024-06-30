@@ -49,14 +49,14 @@ public partial class SelectRelatedItemsDialog<TItems, TItem>
         if (!sw && autoCompleteSelected != null) {
             // 選択されて閉じた
             selected.Add (autoCompleteSelected);
-            autoComplete.Clear ();
+            autoComplete.ClearAsync ();
             StateHasChanged ();
         }
     }
 
     /// <summary>キーワードを含む関連アイテムを探す</summary>
-    protected async Task<IEnumerable<TItems>?> SearchItems (string keyword)
-        => await Task.FromResult (string.IsNullOrWhiteSpace (keyword) ? new List<TItems> () : items?.FindAll (i => i.UniqueKey.Contains (keyword)));
+    protected async Task<IEnumerable<TItems>> SearchItems (string keyword, CancellationToken token)
+        => await Task.FromResult (string.IsNullOrWhiteSpace (keyword) || items == null ? new List<TItems> () : items.FindAll (i => i.UniqueKey.Contains (keyword)));
 
     /// <summary>除去ボタンが押された</summary>
     protected void OnRemove (TItems item) {
@@ -88,10 +88,10 @@ public partial class SelectRelatedItemsDialog<TItems, TItem>
 public static class SelectRelatedItemsDialogHelper {
 
     /// <summary>関係アイテムの編集ダイアログ</summary>
-    public static async Task<DialogResult> SelectRelated<TItems, TItem> (this IDialogService dialogService, TItem item, Action action)
+    public static async Task<DialogResult?> SelectRelated<TItems, TItem> (this IDialogService dialogService, TItem item, Action action)
         where TItems : ExLibrisBaseModel<TItems, TItem>, IExLibrisModel, new()
         where TItem : ExLibrisBaseModel<TItem, TItems>, IExLibrisModel, new() {
-        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, DisableBackdropClick = true, };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, BackdropClick = false, };
         var parameters = new DialogParameters {
             ["Item"] = item,
         };

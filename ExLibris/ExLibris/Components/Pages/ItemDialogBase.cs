@@ -59,7 +59,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
             if (_onEdit != value) {
                 MudDialog.Options.CloseButton = !value;
                 MudDialog.Options.CloseOnEscapeKey = !value;
-                MudDialog.Options.DisableBackdropClick = value;
+                MudDialog.Options.BackdropClick = !value;
                 MudDialog.SetTitle (value ? editorTitle : originalTitle);
                 MudDialog.SetOptions (MudDialog.Options);
                 _onEdit = value;
@@ -118,7 +118,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
             $"{(onDelete ? "対象" : "編集")}: {Item}",
             onDelete ? null : "編集を破棄します。",
         };
-        var dialgResult = await DialogService.Confirmation (messages, acceptionColor: Color.Warning, cancellationLabel: "");
+        var dialogResult = await DialogService.Confirmation (messages, acceptionColor: Color.Warning, cancellationLabel: "");
         if (!onDelete) {
             Snackbar.Add ("編集を破棄しました。");
         }
@@ -135,7 +135,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
             original != null ? $"競合: {original}" : null,
             onDelete ? null : "編集を破棄します。",
         };
-        var dialgResult = await DialogService.Confirmation (messages, acceptionColor: Color.Warning, cancellationLabel: "");
+        var dialogResult = await DialogService.Confirmation (messages, acceptionColor: Color.Warning, cancellationLabel: "");
         if (!onDelete) {
             Snackbar.Add ("編集を破棄しました。");
         }
@@ -151,7 +151,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
             $"編集: {Item}",
             $"競合: {existence}",
         };
-        var dialgResult = await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, cancellationLabel: "");
+        var dialogResult = await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, cancellationLabel: "");
     }
 
     /// <summary>関係先が保存できなかった</summary>
@@ -187,7 +187,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
         // 確認
         var contents = new [] { $"この{TItem1.TableLabel}を完全に削除します。", $"「{Item.Id}: {Item.RowLabel}」" };
         var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}削除", position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error);
-        if (!dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
+        if (dialogResult != null && !dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
             // 実際の削除
             var result = await DataSet.RemoveAsync<TItem1, TItem2> (Item);
             var close = false;
@@ -328,8 +328,8 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
                     "編集内容が失われます。",
                     "編集を破棄しますか?",
                 };
-                var dialgResult = await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, acceptionLabel: "Discard Editing", acceptionColor: Color.Warning);
-                if (dialgResult.Canceled) {
+                var dialogResult = await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, acceptionLabel: "Discard Editing", acceptionColor: Color.Warning);
+                if (dialogResult == null || dialogResult.Canceled) {
                     // 破棄を取り消し
                     return;
                 }
@@ -357,7 +357,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     /// <summary>初期化</summary>
     protected override void OnInitialized () {
         base.OnInitialized ();
-        originalTitle = MudDialog.Title;
+        originalTitle = MudDialog.Title ?? "";
         DataSet = Item.DataSet;
         if (IsNewItem) {
             // 新規なら編集モードへ

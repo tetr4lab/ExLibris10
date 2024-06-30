@@ -29,10 +29,10 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
 
 ### 環境
 - Windows 11 Pro 22H2
-  - VisualStudio 2022 17.10.2
+  - VisualStudio 2022 17.10.3
   - PetaPoco 6.0.677
   - MySqlConnector 2.3.7
-  - MudBlazor 6.20.0
+  - MudBlazor 6.20.0 → 7.0.0
   - Ubuntu 20.04 (wsl2)
     - MySql 8.0.36
 - Debian 12.5

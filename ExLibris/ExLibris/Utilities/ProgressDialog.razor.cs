@@ -85,8 +85,8 @@ public partial class ProgressDialog {
 public static class ProgressDialogHelper {
 
     /// <summary>汎用のプログレスダイアログ</summary>
-    public static async Task<DialogResult> Progress (this IDialogService dialogService, Action<Func<int, IEnumerable<string?>, bool>>? operation = null, string? message = null, string? title = null, bool indeterminate = false, Color color = Color.Info, MaxWidth maxWidth = MaxWidth.Small, string acceptionLabel = "Ok", Color acceptionColor = Color.Success, string cancellationLabel = "", Color cancellationColor = Color.Default) {
-        var options = new DialogOptions { MaxWidth = maxWidth, FullWidth = true, DisableBackdropClick = true, };
+    public static async Task<DialogResult?> Progress (this IDialogService dialogService, Action<Func<int, IEnumerable<string?>, bool>>? operation = null, string? message = null, string? title = null, bool indeterminate = false, Color color = Color.Info, MaxWidth maxWidth = MaxWidth.Small, string acceptionLabel = "Ok", Color acceptionColor = Color.Success, string cancellationLabel = "", Color cancellationColor = Color.Default) {
+        var options = new DialogOptions { MaxWidth = maxWidth, FullWidth = true, BackdropClick = false, };
         var parameters = new DialogParameters {
             ["Content"] = message ?? "待機しています。",
             ["Color"] = color,

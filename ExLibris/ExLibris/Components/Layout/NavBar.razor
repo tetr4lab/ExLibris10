@@ -32,7 +32,7 @@
     <MudSpacer />
     @if (RevisionInfo.Valid) {
         <MudItem Class="mr-4 align-self-end">
-            <MudText Typo="Typo.body2" Style="@($"color:{Colors.Grey.Lighten3};")">@($"revision: {RevisionInfo.Branch} - {RevisionInfo.Id}")</MudText>
+            <MudText Typo="Typo.body2" Style="@($"color:{Colors.Gray.Lighten3};")">@($"revision: {RevisionInfo.Branch} - {RevisionInfo.Id}")</MudText>
         </MudItem>
     }
     <MudItem>
@@ -41,7 +41,7 @@
             OnBlur="OnClick"
             OnAdornmentClick="OnClick" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
             OnClearButtonClick="OnClick" Clearable 
-            Label="Search" Class="white" Margin="Margin.Dense" Variant="Variant.Outlined" DisableUnderLine />
+            Label="Search" Class="white" Margin="Margin.Dense" Variant="Variant.Outlined" Underline="false" />
     </MudItem>
 }
 

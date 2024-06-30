@@ -109,7 +109,7 @@
             missings.Count > 0 ? string.Join(", ", missings.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}")) : null,
         };
         var dialogResult = await DialogService.Confirmation (messages, width: missings.Count > 0 ? MaxWidth.Medium : MaxWidth.Small, cancellationLabel: missings.Count > 0 ? "Cancel" : "");
-        if (missings.Count <= 0 || dialogResult.Canceled) { return; }
+        if (missings.Count <= 0 || dialogResult == null || dialogResult.Canceled) { return; }
         // 取得の開始
         dialogResult = await DialogService.Progress(async update => {
             var lastTime = DateTime.MinValue;

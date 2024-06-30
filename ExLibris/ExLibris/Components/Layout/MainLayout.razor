@@ -7,7 +7,7 @@
         <Authorized>
             <nav>
                 <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
-                    <MudFab Class="fixed ma-2 z-100" Style="right: 0px;" Color="Color.Transparent" DisableRipple StartIcon="@Icons.Material.Filled.Menu" Size="Size.Small" OnClick="@(() => _drawerOpen = true)" />
+                    <MudFab Class="fixed ma-2 z-100" Style="right: 0px;" Color="Color.Transparent" Ripple="false" StartIcon="@Icons.Material.Filled.Menu" Size="Size.Small" OnClick="@(() => _drawerOpen = true)" />
                     <MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.Top" Elevation="1" Variant="@DrawerVariant.Temporary">
                         <MudNavMenu Dense Color="Color.Dark" Class="px-4 my-2">
                             <NavBar OnClickSearchButton="SetFilterText" />
@@ -51,6 +51,7 @@
     </AuthorizeView>
 </div>
 <MudThemeProvider />
+<MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 

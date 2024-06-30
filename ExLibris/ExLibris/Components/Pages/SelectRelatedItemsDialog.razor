@@ -8,7 +8,7 @@
         <MudStack Spacing="0">
             <MudAutocomplete @ref="autoComplete"
                 T="TItems"
-                IsOpenChanged="OnOpenChanged"
+                OpenChanged="OnOpenChanged"
                 ResetValueOnEmptyText="true"
                 @bind-Value="autoCompleteSelected"
                 Label="@TItem.RelatedListName"

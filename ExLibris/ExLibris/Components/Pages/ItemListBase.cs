@@ -79,8 +79,8 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     protected void Update () { }// `=> StateHasChanged();`の処理は、コールバックを受けた時点で内部的に呼ばれているため、明示的な呼び出しは不要
 
     /// <summary>項目詳細・編集</summary>
-    protected async void EditItem (TItem1 item) {
-        if (!allowDeleteItems) {
+    protected async void EditItem (TItem1? item) {
+        if (item != null && !allowDeleteItems) {
             await OpenDialog (item);
         }
     }
@@ -129,7 +129,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
             }
             contents.Insert (0, $"以下の{TItem1.TableLabel}({targetCount:N0}{TItem1.Unit})を完全に削除します。");
             var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}一括削除", position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error);
-            if (!dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
+            if (dialogResult != null && !dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
                 var resetAutoIncrement = new Result<int> (Status.Unknown, 0);
                 // プログレスダイアログ
                 dialogResult = await DialogService.Progress (async update => {
