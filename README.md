@@ -58,7 +58,6 @@ https://zenn.dev/tetr4lab/articles/ad947ade600764#os%E5%B0%8E%E5%85%A5
 #### UIフレームワーク
 - MudBlazorを使用します。
   - いくつか見たのですが、JSに触らずに済ませたい私には、MudBlazor以外にありませんでした。
-  - 今後、Ver.7の破壊的変更に対応しなければならないのが面倒ではあります。
 
 https://mudblazor.com/docs/overview
 
