@@ -32,12 +32,12 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
   - VisualStudio 2022 17.10.3
   - PetaPoco 6.0.677
   - MySqlConnector 2.3.7
-  - MudBlazor 6.20.0 → 7.0.0
+  - MudBlazor 6.20.0 → 7.1.0
   - Ubuntu 20.04 (wsl2)
-    - MySql 8.0.36
+    - MySql 8.0.37
 - Debian 12.5
-  - Microsoft.AspNetCore.App 8.0.6
-  - Microsoft.NETCore.App 8.0.6
+  - Microsoft.AspNetCore.App 8.0.7
+  - Microsoft.NETCore.App 8.0.7
   - MariaDB 15.1
 
 ### 仕様
