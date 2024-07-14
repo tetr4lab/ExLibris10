@@ -36,18 +36,27 @@
         </MudItem>
     }
     <MudItem>
-        <MudTextField @bind-Value="_filterText" @ref="searchField"
-            OnKeyUp="OnKeyUp"
-            OnBlur="OnClick"
-            OnAdornmentClick="OnClick" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
-            OnClearButtonClick="OnClick" Clearable 
-            Label="Search" Margin="Margin.Dense" Variant="Variant.Outlined" Underline="false" />
+        <MudStack Row>
+            <MudTextField @bind-Value="_filterText" @ref="searchField"
+                OnKeyUp="OnKeyUp"
+                OnBlur="OnClick"
+                OnAdornmentClick="OnClick" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                OnClearButtonClick="OnClick" Clearable 
+                Label="Search" Margin="Margin.Dense" Variant="Variant.Outlined" Underline="false" />
+            @if (!OnClickChangeModeButton.Equals (EventCallback.Empty)) {
+                <MudIconButton Icon="@(IsDarkMode ? @Icons.Material.Filled.LightMode : @Icons.Material.Filled.DarkMode)" OnClick="(async () => await OnClickChangeModeButton.InvokeAsync ())" />
+            }
+        </MudStack>
     </MudItem>
 }
 
 @code {
     /// <summary>サーチボタンが押されたときの処理</summary>
     [Parameter] public EventCallback<string?> OnClickSearchButton { get; set; } = EventCallback<string?>.Empty;
+    /// <summary>ダークモード</summary>
+    [Parameter] public bool IsDarkMode { get; set; }
+    /// <summary>モード切替ボタンが押されたときの処理</summary>
+    [Parameter] public EventCallback OnClickChangeModeButton { get; set; } = EventCallback.Empty;
 
     /// <summary>
     /// ホームページの判定
