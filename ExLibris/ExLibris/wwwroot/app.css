@@ -1,32 +1,20 @@
-
-/* 基本ホバー ホーム */
-/*main a.mud-nav-link:hover {
-    background-color: #c0c0c0;
-}
-*/
-/* 基本ホバー ナビ */
-/*nav div.mud-nav-item:hover {
-    color: #666666;
-    background-color: #FCFCFC;
-}
-*/
 /* 選択済みでフォーカスなし/あり */
-/*nav a.mud-nav-link.active, nav a.mud-nav-link.active:focus {
-    color: #888888;
-    background-color: whitesmoke;
+nav a.mud-nav-link.active, nav a.mud-nav-link.active:focus {
+    color: var(--mud-palette-action-default);
+    background-color: var(--mud-palette-background-gray);
 }
-*/
+
 /* ホバー 選択済みでフォーカスなし/あり */
-/*nav a.mud-nav-link.active:hover, nav a.mud-nav-link.active:focus:hover {
-    color: #666666;
-    background-color: #F0F0F0;
+nav a.mud-nav-link.active:hover, nav a.mud-nav-link.active:focus:hover {
+    color: var(--mud-palette-text-primary);
+    background-color: var(--mud-palette-action-disabled-background);
 }
-*/
+
 /* ナビ背景 */
-/*nav .mud-appbar.mud-theme-transparent:has(.mud-nav-link) {
+nav .mud-appbar.mud-theme-transparent:has(.mud-nav-link) {
     backdrop-filter: blur(10px);
 }
-*/
+
 /*****************************************************************************/
 
 /* ぼやけた背景 */
