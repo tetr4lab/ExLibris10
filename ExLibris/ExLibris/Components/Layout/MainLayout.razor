@@ -30,6 +30,7 @@
                 </MudHidden>
                 <MudStack Row Class="px-4" Justify="Justify.SpaceBetween">
                     <MudText Typo="Typo.h5">@_sectionTitle</MudText>
+                    <MudIconButton Icon="@(_isDarkMode ? @Icons.Material.Filled.LightMode : @Icons.Material.Filled.DarkMode)" OnClick="() => _isDarkMode = !_isDarkMode" />
                     <SessionCounter />
                 </MudStack>
                 <article class="content px-4">
@@ -50,12 +51,26 @@
         </NotAuthorized>
     </AuthorizeView>
 </div>
-<MudThemeProvider />
+<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-    @code {
+@code {
+
+    /// <summary>テーマプロバイダへの参照</summary>
+    protected MudThemeProvider _mudThemeProvider = default!;
+    /// <summary>ダークモード</summary>
+    protected bool _isDarkMode;
+
+    /// <summary>システムのテーマモードで初期化</summary>
+    protected override async Task OnAfterRenderAsync (bool firstRender) {
+        if (firstRender) {
+            // ToDo: なぜか`GetSystemPreference()`が常に`false`を返す
+            _isDarkMode = await _mudThemeProvider.GetSystemPreference ();
+            StateHasChanged ();
+        }
+     }
 
     /// <summary>ドロワーの状態</summary>
     protected bool _drawerOpen = false;
