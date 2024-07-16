@@ -16,6 +16,12 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     /// <summary>著者一覧</summary>
     public List<Author> Authors => RelatedItems;
 
+    /// <summary>関心程度</summary>
+    public int InterestValue => Authors.ConvertAll (a => (int) a.InterestValue).Max ();
+
+    /// <summary>関心</summary>
+    public string Interest => Author.Interests [InterestValue];
+
     /// <inheritdoc/>
     public static string TableLabel => "書籍";
 
@@ -32,6 +38,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         { nameof (Publisher), "出版社" },
         { nameof (Series), "叢書" },
         { nameof (Price), "価格" },
+        { nameof (Interest), "関心" },
     };
 
     /// <inheritdoc/>
