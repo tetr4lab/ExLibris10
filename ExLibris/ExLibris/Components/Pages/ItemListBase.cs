@@ -202,10 +202,36 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
             return true;
         }
         return false;
-        // 対象文字列のどれかがキーワードを含んでいれば真を返す
+        // 対象カラムのどれかが検索語に適合すれば真を返す
         bool Any (IEnumerable<string?> targets, string word) {
+            var eq = word.StartsWith ('=');
+            word = word [(eq ? 1 : 0)..];
+            var or = word.Split ('|');
             foreach (var target in targets) {
-                if (!string.IsNullOrEmpty (target) && target.Contains (word)) { return true; }
+                if (!string.IsNullOrEmpty (target)) {
+                    if (eq) {
+                        // 検索語が'='で始まる場合は、以降がカラムと完全一致する場合に真を返す
+                        if (or.Length > 1) {
+                            // 検索語が'|'を含む場合は、'|'で分割したいずれかの部分と一致する場合に真を返す
+                            foreach (var wd in or) {
+                                if (target == wd) { return true; }
+                            }
+                        } else {
+                            if (target == word) { return true; }
+                        }
+                    }
+                    else {
+                        // 検索語がカラムに含まれる場合に真を返す
+                        if (or.Length > 1) {
+                            // 検索語が'|'を含む場合は、'|'で分割したいずれかの部分がカラムに含まれる場合に真を返す
+                            foreach (var wd in or) {
+                                if (target.Contains (wd)) { return true; }
+                            }
+                        } else {
+                            if (target.Contains (word)) { return true; }
+                        }
+                    }
+                }
             }
             return false;
         }
