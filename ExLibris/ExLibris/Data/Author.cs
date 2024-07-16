@@ -9,9 +9,16 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     [Column, StringLength (255), Required] public string Name { get; set; } = "";
     [Column, StringLength (255)] public string AdditionalName { get; set; } = "";
     [Column] public string? Description { get; set; }
+    [Column, StringLength (50)] public string? Interest { get; set; }
 
     /// <summary>著書一覧</summary>
     public List<Book> Books => RelatedItems;
+
+    /// <summary>関心</summary>
+    public static List<string> Interests = ["", "古", "微", "小", "中", "確認", "購入",];
+
+    /// <summary>関心程度</summary>
+    public object InterestValue => string.IsNullOrEmpty (Interest) ? 0 : Interests.IndexOf (Interest);
 
     /// <inheritdoc/>
     public static string TableLabel => "著者";
@@ -25,6 +32,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         { nameof (Name), "著者名" },
         { nameof (AdditionalName), "補助名" },
         { nameof (Description), "説明" },
+        { nameof (Interest), "関心" },
         { nameof (Books), "著書" },
     };
 
@@ -35,7 +43,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     }
 
     /// <inheritdoc/>
-    public override string? [] SearchTargets => [Id.ToString (), Name, AdditionalName, Description, _relatedIds,];
+    public override string? [] SearchTargets => [Id.ToString (), Name, AdditionalName, Description, Interest, _relatedIds,];
 
     /// <inheritdoc/>
     public static string RelatedListName => nameof (Books);
@@ -64,6 +72,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         destination.Name = string.IsNullOrEmpty (Name) ? "" : new (Name);
         destination.AdditionalName = string.IsNullOrEmpty (AdditionalName) ? "" : new (AdditionalName);
         destination.Description = string.IsNullOrEmpty (Description) ? null : new (Description);
+        destination.Interest = string.IsNullOrEmpty (Interest) ? null : new (Interest);
         return destination;
     }
 
@@ -74,6 +83,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         && Name == other.Name
         && AdditionalName == other.AdditionalName
         && Description == other.Description
+        && Interest == other.Interest
         && RelatedIds.ContainsEquals (other.RelatedIds)
     ;
 
@@ -81,6 +91,6 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public override int GetHashCode () => HashCode.Combine (Id, Name, AdditionalName, Description, _relatedIds);
 
     /// <inheritdoc/>
-    public override string ToString () => $"{TableLabel} {Id}: {Name}{(string.IsNullOrEmpty (AdditionalName) ? "" : $"-{AdditionalName}")} \"{Description}\" [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (b => $"{b.Id}:{b.Title}"))}}}";
+    public override string ToString () => $"{TableLabel} {Id}: {Name}{(string.IsNullOrEmpty (AdditionalName) ? "" : $"-{AdditionalName}")} \"{Description}\" {Interest} [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (b => $"{b.Id}:{b.Title}"))}}}";
 
 }

@@ -187,6 +187,7 @@ CREATE TABLE `Authors` (
   `Name` varchar(255) NOT NULL,
   `AdditionalName` varchar(255) NOT NULL,
   `Description` longtext DEFAULT NULL,
+  `Interest` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`Id`),
   UNIQUE KEY `IX_Authors_Name_AdditionalName` (`Name`,`AdditionalName`)
 ) ENGINE=InnoDB AUTO_INCREMENT=88754 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
