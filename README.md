@@ -200,6 +200,8 @@ CREATE TABLE `Books` (
   `Publisher` varchar(255) DEFAULT NULL,
   `Series` varchar(255) DEFAULT NULL,
   `Price` int(11) NOT NULL,
+  `Action` varchar(50) DEFAULT NULL,
+  `Result` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`Id`)
   UNIQUE KEY `IX_Books_Title_Publisher_Series_PublishDate` (`Title`,`Publisher`,`Series`,`PublishDate`)
 ) ENGINE=InnoDB AUTO_INCREMENT=601181 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
