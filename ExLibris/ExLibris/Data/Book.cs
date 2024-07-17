@@ -12,6 +12,8 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     [Column, StringLength (255)] public string Publisher { get; set; } = "";
     [Column, StringLength (255)] public string Series { get; set; } = "";
     [Column] public decimal Price { get; set; }
+    [Column, StringLength (50)] public string? Action { get; set; }
+    [Column, StringLength (50)] public string? Result { get; set; }
 
     /// <summary>著者一覧</summary>
     public List<Author> Authors => RelatedItems;
@@ -21,6 +23,18 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
 
     /// <summary>関心</summary>
     public string Interest => Author.Interests [InterestValue];
+
+    /// <summary>行動</summary>
+    public static List<string> Actions = ["", "調査", "探索", "確認", "購入",];
+
+    /// <summary>行動値</summary>
+    public int ActionValue => string.IsNullOrEmpty (Action) ? 0 : Array.ConvertAll (Action.Split (','), a => 1 << Math.Max (0, Actions.IndexOf (a))).Sum ();
+
+    /// <summary>結果</summary>
+    public static List<string> Results = ["","絶版", "確認済", "購入済",];
+
+    /// <summary>結果値</summary>
+    public int ResultValue => string.IsNullOrEmpty (Result) ? 0 : Array.ConvertAll (Result.Split (','), a => 1 << Math.Max (0, Results.IndexOf (a))).Sum ();
 
     /// <inheritdoc/>
     public static string TableLabel => "書籍";
@@ -39,6 +53,8 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         { nameof (Series), "叢書" },
         { nameof (Price), "価格" },
         { nameof (Interest), "関心" },
+        { nameof (Action), "行動" },
+        { nameof (Result), "結果" },
     };
 
     /// <inheritdoc/>
@@ -48,7 +64,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     }
 
     /// <inheritdoc/>
-    public override string? [] SearchTargets => [Id.ToString (), Title, Description, PublishDate?.ToShortDateString (), Publisher, Series, $"¥{Price:#,0}", _relatedIds,];
+    public override string? [] SearchTargets => [Id.ToString (), Title, Description, PublishDate?.ToShortDateString (), Publisher, Series, $"¥{Price:#,0}", Action, Result, _relatedIds,];
 
     /// <inheritdoc/>
     public static string RelatedListName => nameof (Authors);
@@ -87,6 +103,8 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         destination.Publisher = string.IsNullOrEmpty (Publisher) ? "" : new (Publisher);
         destination.Series = string.IsNullOrEmpty (Series) ? "" : new (Series);
         destination.Price = Price;
+        destination.Action = string.IsNullOrEmpty (Action) ? "" : new (Action);
+        destination.Result = string.IsNullOrEmpty (Result) ? "" : new (Result);
         return destination;
     }
 
@@ -100,6 +118,8 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         && Publisher == other.Publisher
         && Series == other.Series
         && Price == other.Price
+        && Action == other.Action
+        && Result == other.Result
         && RelatedIds.ContainsEquals (other.RelatedIds)
     ;
 
@@ -107,5 +127,5 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public override int GetHashCode () => HashCode.Combine (Id, Title, Description, PublishDate, Publisher, Series, Price, _relatedIds);
 
     /// <inheritdoc/>
-    public override string ToString () => $"{TableLabel} {Id}: {Title} \"{Description}\" {Publisher} {Series} {PublishDate?.ToShortDateString ()} [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (a => $"{a.Id}:{a.Name}"))}}}";
+    public override string ToString () => $"{TableLabel} {Id}: {Title} \"{Description}\" {Publisher} {Series} {PublishDate?.ToShortDateString ()} {Action} {Result} [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (a => $"{a.Id}:{a.Name}"))}}}";
 }

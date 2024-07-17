@@ -17,7 +17,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     /// <summary>関心</summary>
     public static List<string> Interests = ["", "古", "微", "小", "中", "確認", "購入",];
 
-    /// <summary>関心程度</summary>
+    /// <summary>関心値</summary>
     public object InterestValue => string.IsNullOrEmpty (Interest) ? 0 : Interests.IndexOf (Interest);
 
     /// <inheritdoc/>

@@ -20,6 +20,8 @@
                 <MudTh><MudTableSortLabel SortBy="new Func<Book, string?>(x=>x.Title)">@Book.Label[nameof(Book.Title)]</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="@(new Func<Book, string?>(x=>string.Join(',',x.RelatedIds.ConvertAll(i=>$"{i:D5}"))))">@(Book.Label [nameof (Book.Authors)])</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<Book, object>(x=>x.InterestValue)">@(Book.Label [nameof (Book.Interest)])</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Book, object>(x=>x.ActionValue)">@(Book.Label [nameof (Book.Action)])</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Book, object>(x=>x.ResultValue)">@(Book.Label [nameof (Book.Result)])</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel InitialDirection="SortDirection.Descending" SortBy="new Func<Book, object>(x=>x.PublishDate ?? new DateTime ())">@(Book.Label [nameof (Book.PublishDate)])</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<Book, string?>(x=>x.Publisher)">@(Book.Label[nameof(Book.Publisher)])</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortBy="new Func<Book, string?>(x=>x.Series)">@(Book.Label[nameof(Book.Series)])</MudTableSortLabel></MudTh>
@@ -30,6 +32,8 @@
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Title)])">@context.Title</MudTd>
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Authors)])">@(string.Join (", ", context.Authors.OrderBy (a => a.Id).ToList ().ConvertAll (a => a.Name)))</MudTd>
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Interest)])">@context.Interest</MudTd>
+                <MudTd DataLabel="@(Book.Label[nameof(Book.Action)])">@context.Action</MudTd>
+                <MudTd DataLabel="@(Book.Label[nameof(Book.Result)])">@context.Result</MudTd>
                 <MudTd Class="text-nowrap" DataLabel="@(Book.Label[nameof(Book.PublishDate)])">@(context.PublishDate?.ToShortDateString ())</MudTd>
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Publisher)])">@context.Publisher</MudTd>
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Series)])">@context.Series</MudTd>

@@ -75,6 +75,38 @@
                     </td>
                 </tr>
                 <tr>
+                    <th class="align-end">@Book.Label[nameof(Item.Action)]/@Book.Label[nameof(Item.Result)]:</th>
+                    <td>
+                        @if (OnEdit) {
+                            <MudGrid Spacing="0">
+                                <MudItem xs="6">
+                                    <MudSelect @bind-Value="Item.Action" T="string" Label="Action" Variant="Variant.Text">
+                                        @foreach (var item in Book.Actions) {
+                                            <MudSelectItem Value="item" />
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudSelect @bind-Value="Item.Result" T="string" Label="Result" Variant="Variant.Text">
+                                        @foreach (var item in Book.Results) {
+                                            <MudSelectItem Value="item" />
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            </MudGrid>
+                        } else {
+                            <MudGrid Spacing="0">
+                                <MudItem xs="6">
+                                    <MudText Style="white-space: pre-wrap;">@Item.Action</MudText>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudText Style="white-space: pre-wrap;">@Item.Result</MudText>
+                                </MudItem>
+                            </MudGrid>
+                        }
+                    </td>
+                </tr>
+                <tr>
                     <th class="align-end">@Book.Label[nameof(Item.Description)]:</th>
                     <td>
                         @if (OnEdit) {
