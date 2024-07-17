@@ -18,8 +18,8 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     /// <summary>著者一覧</summary>
     public List<Author> Authors => RelatedItems;
 
-    /// <summary>関心程度</summary>
-    public int InterestValue => Authors.ConvertAll (a => (int) a.InterestValue).Max ();
+    /// <summary>関心値</summary>
+    public int InterestValue => Authors.Count > 0 ? Authors.ConvertAll (a => (int) a.InterestValue).Max () : 0;
 
     /// <summary>関心</summary>
     public string Interest => Author.Interests [InterestValue];
