@@ -1,5 +1,6 @@
 ﻿using ExLibris.Services;
 using PetaPoco;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 
 namespace ExLibris.Data;
@@ -15,7 +16,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public List<Book> Books => RelatedItems;
 
     /// <summary>関心</summary>
-    public static List<string?> InterestOptions = [null, "古", "微", "小", "中", "確認", "購入",];
+    public static readonly ImmutableList<string?> InterestOptions = [null, "古", "微", "小", "中", "確認", "購入",];
 
     /// <summary>関心値</summary>
     public int InterestValue => Math.Max (0, InterestOptions.IndexOf (Interest));

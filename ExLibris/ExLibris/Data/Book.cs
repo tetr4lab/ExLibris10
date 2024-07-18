@@ -1,5 +1,6 @@
 ﻿using ExLibris.Services;
 using PetaPoco;
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 
 namespace ExLibris.Data;
@@ -25,7 +26,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public string? Interest => Author.InterestOptions [InterestValue];
 
     /// <summary>行動</summary>
-    public static List<string> ActionOptions = ["調査", "探索", "確認", "購入",];
+    public static readonly ImmutableList<string> ActionOptions = ["調査", "探索", "確認", "購入",];
 
     /// <summary>行動値</summary>
     public int ActionValue => string.IsNullOrEmpty (Action) ? 0 : Array.ConvertAll (Action.Split (','), a => 1 << Math.Max (0, ActionOptions.IndexOf (a))).Sum ();
@@ -37,7 +38,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     }
 
     /// <summary>結果</summary>
-    public static List<string> ResultOptions = ["絶版", "確認済", "購入済",];
+    public static readonly ImmutableList<string> ResultOptions = ["絶版", "確認済", "購入済",];
 
     /// <summary>結果値</summary>
     public int ResultValue => string.IsNullOrEmpty (Result) ? 0 : Array.ConvertAll (Result.Split (','), a => 1 << Math.Max (0, ResultOptions.IndexOf (a))).Sum ();
