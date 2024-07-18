@@ -56,7 +56,8 @@
             <MudTooltip Text="今月" Duration="1000">
                 <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.CalendarMonth" OnClick="@(() => {
                     var month = $"{DateTime.Now.Year:D4}/{DateTime.Now.Month:D2}/";
-                    OnClickSearchButton.InvokeAsync (_filterText = _filterText == month ? "" : month);
+                    _filterText = _filterText == month ? "" : month;
+                    OnClick ();
                 })" />
             </MudTooltip>
             @if (!OnClickChangeModeButton.Equals (EventCallback.Empty)) {
