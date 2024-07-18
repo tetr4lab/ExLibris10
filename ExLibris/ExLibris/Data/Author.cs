@@ -15,10 +15,10 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public List<Book> Books => RelatedItems;
 
     /// <summary>関心</summary>
-    public static List<string> Interests = ["", "古", "微", "小", "中", "確認", "購入",];
+    public static List<string?> InterestOptions = [null, "古", "微", "小", "中", "確認", "購入",];
 
     /// <summary>関心値</summary>
-    public object InterestValue => string.IsNullOrEmpty (Interest) ? 0 : Interests.IndexOf (Interest);
+    public int InterestValue => Math.Max (0, InterestOptions.IndexOf (Interest));
 
     /// <inheritdoc/>
     public static string TableLabel => "著者";
@@ -71,8 +71,8 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     private Author CopyDerivedMembers (Author destination) {
         destination.Name = string.IsNullOrEmpty (Name) ? "" : new (Name);
         destination.AdditionalName = string.IsNullOrEmpty (AdditionalName) ? "" : new (AdditionalName);
-        destination.Description = string.IsNullOrEmpty (Description) ? null : new (Description);
-        destination.Interest = string.IsNullOrEmpty (Interest) ? null : new (Interest);
+        destination.Description = Description == null ? null : new (Description);
+        destination.Interest = Interest == null ? null : new (Interest);
         return destination;
     }
 

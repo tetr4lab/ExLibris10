@@ -80,15 +80,15 @@
                         @if (OnEdit) {
                             <MudGrid Spacing="0">
                                 <MudItem xs="6">
-                                    <MudSelect @bind-Value="Item.Action" T="string" Label="Action" Variant="Variant.Text">
-                                        @foreach (var item in Book.Actions) {
+                                    <MudSelect @bind-SelectedValues="Item.Actions" T="string" MultiSelection="true" Label="Action" Variant="Variant.Text">
+                                        @foreach (var item in Book.ActionOptions) {
                                             <MudSelectItem Value="item" />
                                         }
                                     </MudSelect>
                                 </MudItem>
                                 <MudItem xs="6">
-                                    <MudSelect @bind-Value="Item.Result" T="string" Label="Result" Variant="Variant.Text">
-                                        @foreach (var item in Book.Results) {
+                                    <MudSelect @bind-SelectedValues="Item.Results" T=" string" MultiSelection="true" Label="Result" Variant="Variant.Text">
+                                        @foreach (var item in Book.ResultOptions) {
                                             <MudSelectItem Value="item" />
                                         }
                                     </MudSelect>

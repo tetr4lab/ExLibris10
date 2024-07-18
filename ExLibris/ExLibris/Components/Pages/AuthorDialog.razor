@@ -43,8 +43,8 @@
                     <td>
                         @if (OnEdit) {
                             <MudSelect @bind-Value="Item.Interest" T="string" Label="Interest" Variant="Variant.Text">
-                                @foreach (var item in Author.Interests) {
-                                    <MudSelectItem Value="item" />
+                                @foreach (var item in Author.InterestOptions) {
+                                    <MudSelectItem Value="item">@(item ?? "　")</MudSelectItem>
                                 }
                             </MudSelect>
                         } else {

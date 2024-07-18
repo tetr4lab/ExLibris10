@@ -19,22 +19,34 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public List<Author> Authors => RelatedItems;
 
     /// <summary>関心値</summary>
-    public int InterestValue => Authors.Count > 0 ? Authors.ConvertAll (a => (int) a.InterestValue).Max () : 0;
+    public int InterestValue => Authors.Count > 0 ? Authors.ConvertAll (a => a.InterestValue).Max () : 0;
 
     /// <summary>関心</summary>
-    public string Interest => Author.Interests [InterestValue];
+    public string? Interest => Author.InterestOptions [InterestValue];
 
     /// <summary>行動</summary>
-    public static List<string> Actions = ["", "調査", "探索", "確認", "購入",];
+    public static List<string> ActionOptions = ["調査", "探索", "確認", "購入",];
 
     /// <summary>行動値</summary>
-    public int ActionValue => string.IsNullOrEmpty (Action) ? 0 : Array.ConvertAll (Action.Split (','), a => 1 << Math.Max (0, Actions.IndexOf (a))).Sum ();
+    public int ActionValue => string.IsNullOrEmpty (Action) ? 0 : Array.ConvertAll (Action.Split (','), a => 1 << Math.Max (0, ActionOptions.IndexOf (a))).Sum ();
+
+    /// <summary>行動の展開と集約</summary>
+    public IEnumerable<string> Actions {
+        get => string.IsNullOrEmpty (Action) ? [] : Action.Split (',');
+        set => Action = value.Count () == 0 ? null : string.Join (',', value);
+    }
 
     /// <summary>結果</summary>
-    public static List<string> Results = ["","絶版", "確認済", "購入済",];
+    public static List<string> ResultOptions = ["絶版", "確認済", "購入済",];
 
     /// <summary>結果値</summary>
-    public int ResultValue => string.IsNullOrEmpty (Result) ? 0 : Array.ConvertAll (Result.Split (','), a => 1 << Math.Max (0, Results.IndexOf (a))).Sum ();
+    public int ResultValue => string.IsNullOrEmpty (Result) ? 0 : Array.ConvertAll (Result.Split (','), a => 1 << Math.Max (0, ResultOptions.IndexOf (a))).Sum ();
+
+    /// <summary>結果の展開と集約</summary>
+    public IEnumerable<string> Results {
+        get => string.IsNullOrEmpty (Result) ? [] : Result.Split (',');
+        set => Result = value.Count () == 0 ? null : string.Join (',', value);
+    }
 
     /// <inheritdoc/>
     public static string TableLabel => "書籍";
@@ -98,13 +110,13 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     /// <summary>派生メンバーだけをコピー</summary>
     private Book CopyDerivedMembers (Book destination) {
         destination.Title = string.IsNullOrEmpty (Title) ? "" : new (Title);
-        destination.Description = string.IsNullOrEmpty (Description) ? null : new (Description);
+        destination.Description = Description == null ? null : new (Description);
         destination.PublishDate = PublishDate;
         destination.Publisher = string.IsNullOrEmpty (Publisher) ? "" : new (Publisher);
         destination.Series = string.IsNullOrEmpty (Series) ? "" : new (Series);
         destination.Price = Price;
-        destination.Action = string.IsNullOrEmpty (Action) ? "" : new (Action);
-        destination.Result = string.IsNullOrEmpty (Result) ? "" : new (Result);
+        destination.Action = Action == null ? null : new (Action);
+        destination.Result = Result == null ? null : new (Result);
         return destination;
     }
 
