@@ -36,7 +36,7 @@
         </MudItem>
     }
     <MudItem>
-        <MudStack Row>
+        <MudStack Row Class="align-center">
             <MudTooltip Duration="1000">
                 <ChildContent>
                     <MudTextField @bind-Value="_filterText" @ref="searchField"
@@ -53,8 +53,14 @@
                     <MudText Typo="Typo.body2" Align="Align.Left">'|'で区切られた部分はいずれか一つで適合します。</MudText>
                 </TooltipContent>
             </MudTooltip>
+            <MudTooltip Text="今月" Duration="1000">
+                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.CalendarMonth" OnClick="@(() => {
+                    var month = $"{DateTime.Now.Year:D4}/{DateTime.Now.Month:D2}/";
+                    OnClickSearchButton.InvokeAsync (_filterText = _filterText == month ? "" : month);
+                })" />
+            </MudTooltip>
             @if (!OnClickChangeModeButton.Equals (EventCallback.Empty)) {
-                <MudIconButton Icon="@(IsDarkMode ? @Icons.Material.Filled.LightMode : @Icons.Material.Filled.DarkMode)" OnClick="(async () => await OnClickChangeModeButton.InvokeAsync ())" />
+                <MudIconButton Size="Size.Small" Icon="@(IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" OnClick="(async () => await OnClickChangeModeButton.InvokeAsync ())" />
             }
         </MudStack>
     </MudItem>
