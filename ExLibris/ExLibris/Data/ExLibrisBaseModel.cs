@@ -29,6 +29,9 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
     where T1 : ExLibrisBaseModel<T1, T2>, new()
     where T2 : ExLibrisBaseModel<T2, T1>, new() {
 
+    /// <summary>ストアURL</summary>
+    public virtual string StoreURL => "https://www.amazon.co.jp/gp/search/ref=nb_ss_gw/?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&url=search-alias%3Dstripbooks&field-keywords=";
+
     /// <summary>行の名前 (代表的なカラムを参照)</summary>
     public abstract string? RowLabel { get; set; }
 

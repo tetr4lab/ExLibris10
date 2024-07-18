@@ -49,6 +49,9 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     }
 
     /// <inheritdoc/>
+    public override string StoreURL => $"{base.StoreURL}\"{Title}\"%20{string.Join("%20", Authors.ConvertAll (a => a.Name))}";
+
+    /// <inheritdoc/>
     public static string TableLabel => "書籍";
 
     /// <inheritdoc/>

@@ -135,8 +135,12 @@
                     <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.DeleteForever" OnClick="Delete" />
                 </MudTooltip>
                 <MudDivider Class="mx-5" Vertical FlexItem />
-                <MudSpacer />
             }
+            <MudSpacer />
+            <MudTooltip Text="ストアで検索" Duration="1000">
+                <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.Search" Href="@Item.StoreURL" Target="_blank" />
+            </MudTooltip>
+            <MudSpacer />
             <MudTooltip Text="書籍を編集" Duration="1000">
                 <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" OnClick="StartEdit" />
             </MudTooltip>

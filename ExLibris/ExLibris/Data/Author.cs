@@ -21,6 +21,9 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public int InterestValue => Math.Max (0, InterestOptions.IndexOf (Interest));
 
     /// <inheritdoc/>
+    public override string StoreURL => $"{base.StoreURL}\"{Name}\"%20{AdditionalName}";
+
+    /// <inheritdoc/>
     public static string TableLabel => "著者";
 
     /// <inheritdoc/>
