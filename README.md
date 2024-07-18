@@ -35,7 +35,7 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
   - MudBlazor 7.3.0
   - Ubuntu 20.04 (wsl2)
     - MySql 8.0.37
-- Debian 12.5
+- Debian 12.6
   - Microsoft.AspNetCore.App 8.0.7
   - Microsoft.NETCore.App 8.0.7
   - MariaDB 15.1
