@@ -68,7 +68,6 @@
     /// <summary>システムのテーマモードで初期化</summary>
     protected override async Task OnAfterRenderAsync (bool firstRender) {
         if (firstRender) {
-            // ToDo: なぜか'Google Chrome'だと`GetSystemPreference()`が常に`false`を返す, Edgeでは正常、他は未確認
             _isDarkMode = await _mudThemeProvider.GetSystemPreference ();
             StateHasChanged ();
         }
