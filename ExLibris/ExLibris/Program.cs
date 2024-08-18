@@ -43,11 +43,17 @@ builder.Services.AddAuthentication (options => {
 builder.Services.AddAuthorization (options => {
     // ŠÇ—ŽÒ
     options.AddPolicy ("Admin", policyBuilder => {
-        policyBuilder.RequireClaim (ClaimTypes.Email, builder.Configuration ["Identity:Claims:EmailAddress:Admin:0"]!);
+        policyBuilder.RequireClaim (ClaimTypes.Email, 
+            builder.Configuration ["Identity:Claims:EmailAddress:Admin:0"]!
+        );
     });
     // ˆê”Êƒ†[ƒU (ŠÇ—ŽÒ‚ðŠÜ‚Þ)
     options.AddPolicy ("Users", policyBuilder => {
-        policyBuilder.RequireClaim (ClaimTypes.Email, builder.Configuration ["Identity:Claims:EmailAddress:Admin:0"]!, builder.Configuration ["Identity:Claims:EmailAddress:User:0"]!, builder.Configuration ["Identity:Claims:EmailAddress:User:1"]!);
+        policyBuilder.RequireClaim (ClaimTypes.Email, 
+            builder.Configuration ["Identity:Claims:EmailAddress:Admin:0"]!, 
+            builder.Configuration ["Identity:Claims:EmailAddress:User:0"]!, 
+            builder.Configuration ["Identity:Claims:EmailAddress:User:1"]!
+        );
     });
 });
 
