@@ -73,6 +73,12 @@ app.UseRequestLocalization (new RequestLocalizationOptions ()
     .AddSupportedCultures (["ja-JP",])
     .AddSupportedUICultures (["ja-JP",]));
 
+// Application Base Path
+var basePath = builder.Configuration ["AppBasePath"];
+if (!string.IsNullOrEmpty (basePath)) {
+    app.UsePathBase (basePath);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment ()) {
     app.UseWebAssemblyDebugging ();

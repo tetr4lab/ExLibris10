@@ -52,6 +52,7 @@ https://complex.matrix.jp/comics/
 #### ホスティングモデル
 - プロジェクトはHybridですが、サーバ側レンダリングのみを使用します。
 - オンプレミスな ASP.NET Core対応サーバを使います。
+- 構成マネージャから取り込んだパスを`UsePathBase`へ渡して、ビルドし直さずにサブディレクトリにデプロイできるようにします。
 
 https://zenn.dev/tetr4lab/articles/ad947ade600764#os%E5%B0%8E%E5%85%A5
 
