@@ -28,8 +28,15 @@ public sealed class ExLibrisDataSet {
     /// <summary>初期化</summary>
     public async Task InitializeAsync() {
         if (!IsInitialized) {
-            await LoadAsync ();
-            IsInitialized = true;
+            try {
+                await LoadAsync ();
+                IsInitialized = true;
+            }
+            catch (Exception e) {
+                System.Diagnostics.Debug.WriteLine (e);
+                isLoading = false;
+                IsUnavailable = true;
+            }
         }
     }
 
@@ -38,6 +45,9 @@ public sealed class ExLibrisDataSet {
 
     /// <summary>初期化が済み、ロード中でない</summary>
     public bool IsReady => IsInitialized && !isLoading;
+
+    /// <summary>初期化に失敗</summary>
+    public bool IsUnavailable {  get; private set; }
 
     /// <summary>(再)読み込み</summary>
     /// <remarks>既に読み込み中なら単に完了を待って戻る、再読み込み中でも以前のデータが有効</remarks>

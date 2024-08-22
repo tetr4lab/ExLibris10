@@ -4,7 +4,9 @@
 
 <PageTitle>ExLibris Authors</PageTitle>
 
-@if (items == null) {
+@if (DataSet.IsUnavailable) {
+    <MudAlert Severity="Severity.Error" Elevation="3">Unable to connect to any of the specified database management hosts.</MudAlert>
+} else if (!DataSet.IsReady || items == null) {
     <MudProgressCircular Indeterminate="true" />
 } else {
     if (items.Count > 0) {

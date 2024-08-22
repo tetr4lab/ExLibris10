@@ -11,7 +11,9 @@
 
 <PageTitle>ExLibris Home</PageTitle>
 
-@if (!DataSet.IsReady) {
+@if (DataSet.IsUnavailable) {
+    <MudAlert Severity="Severity.Error" Elevation="3">データベースに接続できませんでした。</MudAlert>
+} else if (!DataSet.IsReady) {
     <MudStack Row Spacing="4">
         <MudProgressCircular Indeterminate="true" />
         <MudText Class="d-flex align-center gap-1" Typo="Typo.body1">データの読み込み中です。</MudText>
