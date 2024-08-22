@@ -182,37 +182,43 @@ https://zenn.dev/tetr4lab/articles/ad947ade600764#%E5%B1%95%E9%96%8B%E3%81%AE%E8
 
 ```sql:MariaDB
 CREATE TABLE `AuthorBook` (
-  `AuthorsId` bigint(20) NOT NULL,
-  `BooksId` bigint(20) NOT NULL,
-  PRIMARY KEY (`AuthorsId`,`BooksId`),
-  KEY `IX_AuthorBook_BooksId` (`BooksId`),
-  CONSTRAINT `FK_AuthorBook_Authors_AuthorsId` FOREIGN KEY (`AuthorsId`) REFERENCES `Authors` (`Id`) ON DELETE CASCADE,
-  CONSTRAINT `FK_AuthorBook_Books_BooksId` FOREIGN KEY (`BooksId`) REFERENCES `Books` (`Id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+	`AuthorsId` BIGINT(20) NOT NULL,
+	`BooksId` BIGINT(20) NOT NULL,
+	`Created` DATETIME NOT NULL DEFAULT current_timestamp(),
+	`Modefied` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`AuthorsId`, `BooksId`) USING BTREE,
+	INDEX `IX_AuthorBook_BooksId` (`BooksId`) USING BTREE,
+	CONSTRAINT `FK_AuthorBook_Authors_AuthorsId` FOREIGN KEY (`AuthorsId`) REFERENCES `Authors` (`Id`) ON UPDATE RESTRICT ON DELETE CASCADE,
+	CONSTRAINT `FK_AuthorBook_Books_BooksId` FOREIGN KEY (`BooksId`) REFERENCES `Books` (`Id`) ON UPDATE RESTRICT ON DELETE CASCADE
+) ENGINE=InnoDB COLLATE='utf8mb4_bin';
 CREATE TABLE `Authors` (
-  `Id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `Version` int(11) NOT NULL DEFAULT 0,
-  `Name` varchar(255) NOT NULL,
-  `AdditionalName` varchar(255) NOT NULL,
-  `Description` longtext DEFAULT NULL,
-  `Interest` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`Id`),
-  UNIQUE KEY `IX_Authors_Name_AdditionalName` (`Name`,`AdditionalName`)
-) ENGINE=InnoDB AUTO_INCREMENT=88754 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+	`Id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`Version` INT(11) NOT NULL DEFAULT '0',
+	`Name` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_bin',
+	`AdditionalName` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_bin',
+	`Description` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`Interest` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`Created` DATETIME NOT NULL DEFAULT current_timestamp(),
+	`Modefied` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`Id`) USING BTREE,
+	UNIQUE INDEX `IX_Authors_Name_AdditionalName` (`Name`, `AdditionalName`) USING BTREE
+) ENGINE=InnoDB COLLATE='utf8mb4_bin';
 CREATE TABLE `Books` (
-  `Id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `Version` int(11) NOT NULL DEFAULT 0,
-  `Title` varchar(255) NOT NULL DEFAULT '',
-  `Description` longtext DEFAULT NULL,
-  `PublishDate` datetime(6) DEFAULT NULL,
-  `Publisher` varchar(255) DEFAULT NULL,
-  `Series` varchar(255) DEFAULT NULL,
-  `Price` int(11) NOT NULL,
-  `Action` varchar(50) DEFAULT NULL,
-  `Result` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`Id`)
-  UNIQUE KEY `IX_Books_Title_Publisher_Series_PublishDate` (`Title`,`Publisher`,`Series`,`PublishDate`)
-) ENGINE=InnoDB AUTO_INCREMENT=601181 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+	`Id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`Version` INT(11) NOT NULL DEFAULT '0',
+	`Title` VARCHAR(255) NOT NULL DEFAULT '' COLLATE 'utf8mb4_bin',
+	`Description` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`PublishDate` DATETIME(6) NULL DEFAULT NULL,
+	`Publisher` VARCHAR(255) NOT NULL DEFAULT '' COLLATE 'utf8mb4_bin',
+	`Series` VARCHAR(255) NOT NULL DEFAULT '' COLLATE 'utf8mb4_bin',
+	`Price` INT(11) NOT NULL,
+	`Action` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`Result` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
+	`Created` DATETIME NOT NULL DEFAULT current_timestamp(),
+	`Modefied` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+	PRIMARY KEY (`Id`) USING BTREE,
+	UNIQUE INDEX `IX_Books_Title_Publisher_Series_PublishDate` (`Title`, `Publisher`, `Series`, `PublishDate`) USING BTREE
+) ENGINE=InnoDB COLLATE='utf8mb4_bin';
 ```
 
 #### トリガー
