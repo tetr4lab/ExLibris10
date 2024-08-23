@@ -24,6 +24,8 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
   - MudBlazorの使い方
   - PetaPocoの使い方
   - ツール類の使用方法
+- MySQLでは検証さなくなりました。
+  - 開発時にUbuntu(WSL)でMySQLを使わなくなりました。
 - ドキュメントとコードが異なる場合は、コードが優先されます。
   - コードの更新に対して、ドキュメントが適切に更新されていない場合があります。
 
@@ -34,7 +36,7 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
   - MySqlConnector 2.3.7
   - MudBlazor 7.6.0
   - Ubuntu 20.04 (wsl2)
-    - MySql 8.0.37
+    - MariaDB 15.1
 - Debian 12.6
   - Microsoft.AspNetCore.App 8.0.7
   - Microsoft.NETCore.App 8.0.7
