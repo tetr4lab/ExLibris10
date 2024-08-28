@@ -36,11 +36,11 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
   - MySqlConnector 2.3.7
   - MudBlazor 7.6.0
   - Ubuntu 20.04 (wsl2)
-    - MariaDB 15.1
+    - MariaDB 10.6
 - Debian 12.6
   - Microsoft.AspNetCore.App 8.0.7
   - Microsoft.NETCore.App 8.0.7
-  - MariaDB 15.1
+  - MariaDB 10.11
 
 ### 仕様
 #### 題材と機能
