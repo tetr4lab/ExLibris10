@@ -20,9 +20,18 @@ public sealed class ExLibrisDataSet {
     /// <summary>PetaPocoをDI</summary>
     private Database database { get; set; }
 
+    /// <summary>データベース名</summary>
+    private string databaseName;
+
     /// <summary>コンストラクタ</summary>
     public ExLibrisDataSet (Database database) {
         this.database = database;
+        var words = database.ConnectionString.Split (['=', ';']);
+        var index = Array.IndexOf (words, "database");
+        if (index < 0 || index > words.Length) {
+            throw new InvalidOperationException ("The database name could not be determined.");
+        }
+        databaseName = words [index + 1];
     }
 
     /// <summary>初期化</summary>
@@ -434,7 +443,7 @@ public sealed class ExLibrisDataSet {
                 }
                 // 次の自動更新値の取得
                 Id = await database.SingleAsync<long> (
-                    $"select AUTO_INCREMENT from information_schema.tables where TABLE_NAME='{GetSqlName<T> ()}';"
+                    $"select AUTO_INCREMENT from information_schema.tables where TABLE_SCHEMA='{databaseName}' and TABLE_NAME='{GetSqlName<T> ()}';"
                 );
             }
             finally {
