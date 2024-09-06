@@ -402,9 +402,10 @@ public sealed class ExLibrisDataSet {
         }
         if (result.IsFailure) {
             item.Id = default;
+        } else {
+            // ロード済みに追加
+            GetAll<T1> ().Add (item);
         }
-        // ロード済みに追加
-        GetAll<T1> ().Add (item);
         return new (result.Status, item);
     }
 
@@ -504,8 +505,10 @@ public sealed class ExLibrisDataSet {
             }
             return result;
         });
-        // ロード済みに追加
-        GetAll<T1> ().AddRange (items);
+        if (result.IsSuccess) {
+            // ロード済みに追加 (リロード推奨)
+            GetAll<T1> ().AddRange (items);
+        }
         return result;
     }
 
@@ -531,8 +534,10 @@ public sealed class ExLibrisDataSet {
         if (result.IsSuccess && result.Value <= 0) {
             result.Status = Status.MissingEntry;
         }
-        // ロード済みから除去
-        GetAll<T1> ().Remove (item);
+        if (result.IsSuccess) {
+            // ロード済みから除去
+            GetAll<T1> ().Remove (item);
+        }
         return result;
     }
 
@@ -569,10 +574,12 @@ public sealed class ExLibrisDataSet {
                 new { Ids = targets }
             ) : 0;
         });
-        // ロード済みから除去
-        var allItems = GetAll<T1> ();
-        foreach (var item in items) {
-            allItems.Remove (item);
+        if (result.IsSuccess) {
+            // ロード済みから除去 (成否に拠らずリロードを推奨)
+            var allItems = GetAll<T1> ();
+            foreach (var item in items) {
+                allItems.Remove (item);
+            }
         }
         return new (status, result.Value);
     }
