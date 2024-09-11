@@ -32,7 +32,9 @@
     <MudSpacer />
     @if (RevisionInfo.Valid) {
         <MudItem Class="mr-4 align-self-end">
-            <MudText Typo="Typo.body2">@($"revision: {RevisionInfo.Branch} - {RevisionInfo.Id}")</MudText>
+            <MudText Style="font-size:var(--mud-typography-caption-size); color:var(--mud-palette-action-disabled);">
+                @($"revision: {RevisionInfo.Branch} - {RevisionInfo.Id}")
+            </MudText>
         </MudItem>
     }
     <MudItem>
@@ -47,10 +49,12 @@
                         Label="Search" Margin="Margin.Dense" Variant="Variant.Outlined" Underline="false" />
                 </ChildContent>
                 <TooltipContent>
-                    <MudText Typo="Typo.body2" Align="Align.Left">検索文字列</MudText>
-                    <MudText Typo="Typo.body2" Align="Align.Left">空白文字で区切られた部分が全て含まれると適合します。</MudText>
-                    <MudText Typo="Typo.body2" Align="Align.Left">'='が先行する部分は一致すると適合します。</MudText>
-                    <MudText Typo="Typo.body2" Align="Align.Left">'|'で区切られた部分はいずれか一つで適合します。</MudText>
+                    <MudText Typo="Typo.inherit" Align="Align.Left">
+                        <p>検索文字列</p>
+                        <p>空白文字で区切られた部分が全て含まれると適合します。</p>
+                        <p>'='が先行する部分は一致すると適合します。</p>
+                        <p>'|'で区切られた部分はいずれか一つで適合します。</p>
+                    </MudText>
                 </TooltipContent>
             </MudTooltip>
             <MudTooltip Text="今月" Duration="1000">
