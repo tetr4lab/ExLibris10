@@ -10,14 +10,18 @@
                     <MudFab Class="fixed ma-2 z-100" Style="right: 0px;" Color="Color.Transparent" Ripple="false" StartIcon="@Icons.Material.Filled.Menu" Size="Size.Small" OnClick="@(() => _drawerOpen = true)" />
                     <MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.Top" Elevation="1" Variant="@DrawerVariant.Temporary">
                         <MudNavMenu Dense Color="Color.Dark" Class="px-4 my-2">
-                            <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeMode" />
+                            <CascadingValue Value="@_filterText" Name="Filter">
+                                <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeMode" />
+                            </CascadingValue>
                         </MudNavMenu>
                     </MudDrawer>
                 </MudHidden>
                 <MudHidden Breakpoint="Breakpoint.Xs">
                     <MudAppBar Color="Color.Transparent" Dense Fixed="true">
                         <MudGrid Class="align-center flex-nowrap" Spacing="0">
-                            <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeMode" />
+                            <CascadingValue Value="@_filterText" Name="Filter">
+                                <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeMode" />
+                            </CascadingValue>
                         </MudGrid>
                     </MudAppBar>
                 </MudHidden>

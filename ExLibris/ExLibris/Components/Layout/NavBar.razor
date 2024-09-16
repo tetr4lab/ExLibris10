@@ -80,6 +80,8 @@
     [Parameter] public bool IsDarkMode { get; set; }
     /// <summary>モード切替ボタンが押されたときの処理</summary>
     [Parameter] public EventCallback OnClickChangeModeButton { get; set; } = EventCallback.Empty;
+    /// <summary>検索文字列</summary>
+    [CascadingParameter (Name = "Filter")] protected string FilterText { get; set; } = string.Empty;
 
     /// <summary>
     /// ホームページの判定
@@ -101,6 +103,15 @@
     protected void OnKeyUp (KeyboardEventArgs eventArgs) {
         if (eventArgs.Key == "Enter") {
             OnClick();
+        }
+    }
+
+    /// <summary>パラメータが更新された</summary>
+    protected override void OnParametersSet () {
+        base.OnParametersSet ();
+        if (_filterText != FilterText) {
+            _lastFilterText = _filterText;
+            _filterText = FilterText;
         }
     }
 
