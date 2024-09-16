@@ -205,35 +205,36 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         // 対象カラムのどれかが検索語に適合すれば真を返す
         bool Any (IEnumerable<string?> targets, string word) {
             var eq = word.StartsWith ('=');
-            word = word [(eq ? 1 : 0)..];
+            var notEq = word.StartsWith ('!');
+            var not = !notEq && word.StartsWith ('^');
+            word = word [(not || eq || notEq ? 1 : 0)..];
             var or = word.Split ('|');
             foreach (var target in targets) {
                 if (!string.IsNullOrEmpty (target)) {
-                    if (eq) {
-                        // 検索語が'='で始まる場合は、以降がカラムと完全一致する場合に真を返す
+                    if (eq || notEq) {
+                        // 検索語が'='で始まる場合は、以降がカラムと完全一致する場合に真/偽を返す
                         if (or.Length > 1) {
-                            // 検索語が'|'を含む場合は、'|'で分割したいずれかの部分と一致する場合に真を返す
+                            // 検索語が'|'を含む場合は、'|'で分割したいずれかの部分と一致する場合に真/偽を返す
                             foreach (var wd in or) {
-                                if (target == wd) { return true; }
+                                if (target == wd) { return eq; }
                             }
                         } else {
-                            if (target == word) { return true; }
+                            if (target == word) { return eq; }
                         }
-                    }
-                    else {
-                        // 検索語がカラムに含まれる場合に真を返す
+                    } else {
+                        // 検索語がカラムに含まれる場合に真/偽を返す
                         if (or.Length > 1) {
-                            // 検索語が'|'を含む場合は、'|'で分割したいずれかの部分がカラムに含まれる場合に真を返す
+                            // 検索語が'|'を含む場合は、'|'で分割したいずれかの部分がカラムに含まれる場合に真/偽を返す
                             foreach (var wd in or) {
-                                if (target.Contains (wd)) { return true; }
+                                if (target.Contains (wd)) { return !not; }
                             }
                         } else {
-                            if (target.Contains (word)) { return true; }
+                            if (target.Contains (word)) { return !not; }
                         }
                     }
                 }
             }
-            return false;
+            return notEq || not ? true : false;
         }
     }
 
