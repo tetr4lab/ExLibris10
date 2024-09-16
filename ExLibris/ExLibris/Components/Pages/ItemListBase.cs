@@ -204,6 +204,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         return false;
         // 対象カラムのどれかが検索語に適合すれば真を返す
         bool Any (IEnumerable<string?> targets, string word) {
+            word = word.Replace ('\xA0', ' ').Replace ('␣', ' ');
             var eq = word.StartsWith ('=');
             var notEq = word.StartsWith ('!');
             var not = !notEq && word.StartsWith ('^');
