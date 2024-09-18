@@ -23,6 +23,9 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     /// <summary>検索文字列</summary>
     [CascadingParameter (Name = "Filter")] protected string? FilterText { get; set; }
 
+    /// <summary>検索文字列設定</summary>
+    [CascadingParameter (Name = "SetFilter")] protected EventCallback<string> SetFilterText { get; set; }
+
     /// <summary>セクションラベル設定</summary>
     [CascadingParameter (Name = "Section")] protected EventCallback<string> SetSectionTitle { get; set; }
 
@@ -87,11 +90,11 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
 
     /// <summary>ダイアログを開く</summary>
     protected async Task OpenDialog (TItem1 item)
-        => await (await DialogService.OpenItemDialog<TItem1, TItem2> (item, OpenRelationDialog, Update)).Result;
+        => await (await DialogService.OpenItemDialog<TItem1, TItem2> (item, OpenRelationDialog, Update, SetFilterText)).Result;
 
     /// <summary>関係ダイアログを開く</summary>
     protected async Task OpenRelationDialog (TItem2 item)
-        => await (await DialogService.OpenItemDialog<TItem2, TItem1> (item, OpenDialog, Update)).Result;
+        => await (await DialogService.OpenItemDialog<TItem2, TItem1> (item, OpenDialog, Update, SetFilterText)).Result;
 
     /// <summary>表示の更新と反映待ち</summary>
     protected async Task StateHasChangedAsync () {
@@ -104,7 +107,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         if (_isAdding) { return; }
         _isAdding = true;
         await StateHasChangedAsync ();
-        await (await DialogService.OpenItemDialog<TItem1, TItem2> (new TItem1 { DataSet = DataSet, }, OpenRelationDialog, Update)).Result;
+        await (await DialogService.OpenItemDialog<TItem1, TItem2> (new TItem1 { DataSet = DataSet, }, OpenRelationDialog, Update, SetFilterText)).Result;
         _isAdding = false;
         StateHasChanged ();
     }

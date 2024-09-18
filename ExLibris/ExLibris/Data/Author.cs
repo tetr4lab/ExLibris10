@@ -47,7 +47,14 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     }
 
     /// <inheritdoc/>
-    public override string? [] SearchTargets => [Id.ToString (), Name, AdditionalName, Description, Interest, _relatedIds,];
+    public override string? [] SearchTargets => [
+        $"a{Id}.",
+        Name, 
+        AdditionalName, 
+        Description, 
+        Interest,
+        string.Join (",", RelatedIds.ConvertAll (i => $"b{i}.")),
+    ];
 
     /// <inheritdoc/>
     public static string RelatedListName => nameof (Books);

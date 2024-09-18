@@ -31,6 +31,9 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     /// <summary>対象アイテムの切り替えを親に伝える</summary>
     [Parameter] public EventCallback<TItem2> OnChangeDialog { get; set; }
 
+    /// <summary>検索文字列設定</summary>
+    [Parameter] public EventCallback<string> SetFilterText { get; set; }
+
     /// <summary>エディットモードの初期フォーカス対象 (@refで指定)</summary>
     protected MudTextField<string>? FocusTarget { get; set; }
 
@@ -346,6 +349,13 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
                 MudDialog.Cancel ();
             }
         }
+    }
+
+    //// <summary>絞りこんで関係先ページを表示</summary>
+    protected async Task FilterAndNavigate (string mark, string uri) {
+        var filter = string.Join ("|", Item.RelatedItems.ConvertAll (i => $"{mark}{i.Id}."));
+        await SetFilterText.InvokeAsync (filter);
+        NavManager.NavigateTo (uri);
     }
 
     /// <summary>元のタイトル</summary>

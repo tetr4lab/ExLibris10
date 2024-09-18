@@ -89,8 +89,14 @@
                 <MudDivider Class="mx-5" Vertical FlexItem />
             }
             <MudSpacer />
+            <MudTooltip Text="著書を一覧" Duration="1000">
+                <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.LibraryBooks" OnClick="@(async () => await FilterAndNavigate ("b", "books"))" />
+            </MudTooltip>
+            <MudTooltip Text="著書の関係者を一覧" Duration="1000">
+                <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.People" OnClick="@(async () => await FilterAndNavigate ("b", "authors"))" />
+            </MudTooltip>
             <MudTooltip Text="著者をストアで検索" Duration="1000">
-                <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.Search" Href="@Item.StoreURL" Target="_blank" />
+                <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.ShoppingCart" Href="@Item.StoreURL" Target="_blank" />
             </MudTooltip>
             <MudSpacer />
             <MudTooltip Text="著者を編集" Duration="1000">

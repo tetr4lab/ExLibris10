@@ -97,9 +97,6 @@
     /// <summary>検索文字列</summary>
     private string _filterText = string.Empty;
 
-    /// <summary>前回の検索文字列</summary>
-    private string _lastFilterText = string.Empty;
-
     /// <summary>検索フィールドでキーが押された</summary>
     protected void OnKeyUp (KeyboardEventArgs eventArgs) {
         if (eventArgs.Key == "Enter") {
@@ -111,16 +108,14 @@
     protected override void OnParametersSet () {
         base.OnParametersSet ();
         if (_filterText != FilterText) {
-            _lastFilterText = _filterText;
             _filterText = FilterText;
         }
     }
 
     /// <summary>検索ボタン(またはフィールドクリアボタン)が押された</summary>
     public void OnClick () {
-        if (_lastFilterText != _filterText) {
+        if (FilterText != _filterText) {
             OnClickSearchButton.InvokeAsync(_filterText);
-            _lastFilterText = _filterText;
             searchField.BlurAsync();
         }
     }

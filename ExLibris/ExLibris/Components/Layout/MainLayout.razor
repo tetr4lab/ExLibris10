@@ -8,7 +8,7 @@
             <nav>
                 <MudHidden Breakpoint="Breakpoint.Xs" Invert="true">
                     <MudFab Class="fixed ma-2 z-100" Style="right: 0px;" Color="Color.Transparent" Ripple="false" StartIcon="@Icons.Material.Filled.Menu" Size="Size.Small" OnClick="@(() => _drawerOpen = true)" />
-                    <MudDrawer @bind-Open="@_drawerOpen" Anchor="Anchor.Top" Elevation="1" Variant="@DrawerVariant.Temporary">
+                    <MudDrawer Class="fixed" @bind-Open="@_drawerOpen" Anchor="Anchor.Top" Elevation="1" Variant="@DrawerVariant.Temporary">
                         <MudNavMenu Dense Color="Color.Dark" Class="px-4 my-2">
                             <CascadingValue Value="@_filterText" Name="Filter">
                                 <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeMode" />
@@ -38,8 +38,10 @@
                 </MudStack>
                 <article class="content px-4">
                     <CascadingValue Value="@_filterText" Name="Filter">
-                        <CascadingValue Value="@(EventCallback.Factory.Create<string> (this, SetSectionTitle))" Name="Section">
-                            @Body
+                        <CascadingValue Value="@(EventCallback.Factory.Create<string> (this, SetFilterText))" Name="SetFilter">
+                            <CascadingValue Value="@(EventCallback.Factory.Create<string> (this, SetSectionTitle))" Name="Section">
+                                @Body
+                            </CascadingValue>
                         </CascadingValue>
                     </CascadingValue>
                 </article>
@@ -75,7 +77,7 @@
             _isDarkMode = await _mudThemeProvider.GetSystemPreference ();
             StateHasChanged ();
         }
-     }
+    }
 
     /// <summary>ドロワーの状態</summary>
     protected bool _drawerOpen = false;
