@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.8" />
     <PackageReference Include="MudBlazor" Version="7.8.0" />
     <PackageReference Include="MySqlConnector" Version="2.3.7" />
-    <PackageReference Include="PetaPoco.Compiled" Version="6.0.677" />
+    <PackageReference Include="PetaPoco.Compiled" Version="6.0.683" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
