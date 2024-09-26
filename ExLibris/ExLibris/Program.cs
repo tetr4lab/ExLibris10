@@ -69,9 +69,7 @@ builder.Services.AddScoped<ExLibrisDataSet> ();
 var app = builder.Build ();
 
 // Application level Culture
-app.UseRequestLocalization (new RequestLocalizationOptions ()
-    .AddSupportedCultures (["ja-JP",])
-    .AddSupportedUICultures (["ja-JP",]));
+app.UseRequestLocalization (new RequestLocalizationOptions ().SetDefaultCulture ("ja-JP"));
 
 // Application Base Path
 var basePath = builder.Configuration ["AppBasePath"];
