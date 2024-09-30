@@ -70,6 +70,9 @@ public sealed class ComicsData : IAsyncDisposable, IEnumerable {
     /// <summary>行数</summary>
     public int Count => Comics.Count;
 
+    /// <summary>最終確認日時</summary>
+    public static DateTime LastCheckedDateTime { get; private set; }
+
     /// <summary>コンストラクタ</summary>
     public ComicsData (HttpClient httpClient) {
         this.httpClient = httpClient;
@@ -78,6 +81,17 @@ public sealed class ComicsData : IAsyncDisposable, IEnumerable {
     /// <summary>コンストラクタ</summary>
     public ComicsData (HttpClient httpClient, DateTime date) : this (httpClient) {
         Date = date;
+    }
+
+    /// <summary>データ確認</summary>
+    public async Task<bool> CheckAsync () {
+        LastCheckedDateTime = DateTime.Now;
+        using (var request = new HttpRequestMessage (HttpMethod.Head, tsvUri)) {
+            if (await httpClient.GetStatusCodeAsync (tsvUri) == System.Net.HttpStatusCode.OK) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>データ取得</summary>

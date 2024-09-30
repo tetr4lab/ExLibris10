@@ -112,14 +112,19 @@
         };
         var dialogResult = await DialogService.Confirmation (messages, width: missings.Count > 0 ? MaxWidth.Medium : MaxWidth.Small, cancellationLabel: missings.Count > 0 ? "Cancel" : "");
         if (missings.Count <= 0 || dialogResult == null || dialogResult.Canceled) { return; }
-        // 取得の開始
-        dialogResult = await DialogService.Progress(async update => {
+        // 取得
+        await GetComicsAsync (missings);
+    }
+
+    /// <summary>データの取得</summary>
+    protected async Task GetComicsAsync (List<DateTime> months) {
+        var dialogResult = await DialogService.Progress(async update => {
             var lastTime = DateTime.MinValue;
             var done = new List<DateTime> ();
             var notFounds = new List<DateTime> ();
             var errors = new List<string> ();
             var count = 0;
-            foreach (var date in missings) {
+            foreach (var date in months) {
                 var now = DateTime.Now;
                 var elapsedTime = now - lastTime;
                 if (elapsedTime < AccessIntervalTime) {
@@ -128,8 +133,8 @@
                 lastTime = now;
                 var month = $"{date.Date.Year:D4}/{date.Date.Month:D2}";
                 // 取得進行状況表示と中断受付
-                var progressValue = count * 100 / missings.Count;
-                var progressMessage = $"\"{month}\" {count:D4}/{missings.Count:D4}";
+                var progressValue = count * 100 / months.Count;
+                var progressMessage = $"\"{month}\" {count:D4}/{months.Count:D4}";
                 var cancel = update (progressValue, [$"取得中 双方 {progressMessage}"]);
                 if (cancel || !isDownloading) { break; }
                 // 取得
@@ -216,14 +221,42 @@
                 count++;
             }
             update (ProgressDialog.Acceptable, [
-                $"更新を{(count < missings.Count ? "中断" : "完了")}しました。",
-                count < missings.Count ? $"以下のデータを取得しました。" : null,
-                count < missings.Count ? string.Join (',', done.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}")) : null,
+                $"更新を{(count < months.Count ? "中断" : "完了")}しました。",
+                count < months.Count ? $"以下のデータを取得しました。" : null,
+                count < months.Count ? string.Join (',', done.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}")) : null,
                 notFounds.Count > 0 ? $"ただし、「{string.Join (',', notFounds.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}"))}」は見つかりませんでした。" : null,
                 errors.Count > 0 ? $"以下、{errors.Count:N0}件のエラーがありました。" : null,
                 errors.Count > 0 ? string.Join (',', errors) : null,
-           ]);
+            ]);
         }, title: "更新中", message: "データを更新中です。アプリを終了しないでください。", cancellationLabel: "Stop", maxWidth: MaxWidth.Medium);
+    }
+
+    /// <summary>最新データの検出と取得</summary>
+    protected async Task CheckAndGetAsync () {
+        if (DataSet?.Books == null || DataSet?.Authors == null) { return; }
+        // 最新データの検出
+        var books = DataSet.Books;
+        var now = DateTime.Now;
+        var lastMonth = new DateTime (now.Year, now.Month + (now.Day < LateMonthDay ? 0 : 1), 1);
+        if (books.Exists (book => book.PublishDate?.Year == lastMonth.Year && book.PublishDate?.Month == lastMonth.Month)) {
+            return;
+        }
+        await using (var comics = new ComicsData (HttpClient, lastMonth)) {
+            if (!await comics.CheckAsync ()) {
+                return;
+            }
+        }
+        // 確認
+        var dialogResult = await DialogService.Confirmation ([$"{lastMonth.Year}年{lastMonth.Month}月のデータが存在します。", "取得しますか?",], width: MaxWidth.Small, acceptionLabel: "取得", cancellationLabel: "Cancel");
+        if (dialogResult == null || dialogResult.Canceled) { return; }
+        // 取得
+        isDownloading = true;
+        await GetComicsAsync ([lastMonth,]);
+        isDownloading = false;
+        _ = DataSet.LoadAsync ();
+        StateHasChanged ();
+        await DataSet.LoadAsync ();
+        StateHasChanged ();
     }
 
     /// <summary>初期化</summary>
@@ -250,6 +283,10 @@
             await DataSet.InitializeAsync ();
             var endTime = DateTime.Now;
             ElapsedTime = endTime - startTime;
+            // 更新チェック
+            if (ComicsData.LastCheckedDateTime == default || (ComicsData.LastCheckedDateTime - DateTime.Now).Days > 0) {
+                await CheckAndGetAsync ();
+            }
             StateHasChanged ();
         }
     }
