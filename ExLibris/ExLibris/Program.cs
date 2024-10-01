@@ -57,6 +57,11 @@ builder.Services.AddAuthorization (options => {
     });
 });
 
+#if NET8_0_OR_GREATER
+// ページにカスケーディングパラメータ`Task<AuthenticationState>`を提供
+builder.Services.AddCascadingAuthenticationState ();
+#endif
+
 // PetaPoco with MySqlConnector
 builder.Services.AddScoped (_ => (Database) new MySqlDatabase (connectionString, "MySqlConnector"));
 

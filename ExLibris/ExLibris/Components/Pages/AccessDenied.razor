@@ -20,5 +20,5 @@
 @code {
     [CascadingParameter] protected Task<AuthenticationState> AuthState { get; set; } = null!;
     private System.Security.Principal.IIdentity? identity = null;
-    protected override async Task OnInitializedAsync () => identity = (AuthState != null) ? (await AuthState).User?.Identity : null;
+    protected override async Task OnInitializedAsync () => identity = (AuthState is not null) ? (await AuthState).User?.Identity : null;
 }
