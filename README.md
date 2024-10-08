@@ -92,9 +92,41 @@ https://github.com/CollaboratingPlatypus/PetaPoco/wiki
 #### アカウント管理
 - このプロジェクトではアカウント管理を行いません。
   - 認証としてGoogle OAuthを使用します。
+  - あらかじめ用意されているデータベースに格納されたユーザを認可します。
 - ローカルネットワーク内で、数人で使うことを想定しています。
 
 https://zenn.dev/tetr4lab/articles/1946ec08aec508
+
+##### アカウント管理データベース
+
+```sql:accounts
+CREATE TABLE `assigns` (
+  `users_id` bigint(20) NOT NULL,
+  `policies_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`users_id`,`policies_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE `policies` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `key` varchar(50) NOT NULL,
+  `name` longtext NOT NULL,
+  `description` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`key`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+CREATE TABLE `users` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `email` varchar(50) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `common_name` varchar(50) NOT NULL,
+  `description` longtext DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+```
+
+- `users.email`は、Google Accountです。
+- `policies.key`は、`AuthorizeView`の`Policy`です。
+  - `Administrator`,`Editor`,`Family`,`Guest`,`Manager`,`Private`,`User`の存在を想定しています。
 
 ## プロジェクトの構成
 - VisualStudioで新規「Blazor Web App」プロジェクトを以下の想定で作ります。
@@ -182,7 +214,7 @@ https://zenn.dev/tetr4lab/articles/ad947ade600764#%E5%B1%95%E9%96%8B%E3%81%AE%E8
 - collationは、C#での比較に合わせてutf8mb4_binを使います。
 - この記事では、DBの設計や操作は扱いません。
 
-```sql:MariaDB
+```sql:exlibris
 CREATE TABLE `AuthorBook` (
 	`AuthorsId` BIGINT(20) NOT NULL,
 	`BooksId` BIGINT(20) NOT NULL,
@@ -226,7 +258,7 @@ CREATE TABLE `Books` (
 #### トリガー
 - 主テーブルへの更新時に行バージョンの不整合を検出してエラーにするトリガーです。
 
-```sql:MariaDB
+```sql:exlibris
 delimiter //
 create trigger Version_Check_Before_Update_On_Authors
 before update on Authors
