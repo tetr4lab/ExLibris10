@@ -8,27 +8,12 @@
         <Authorized><MudAlert Severity="Severity.Info" Elevation="3">@(identity?.Name ?? "World")さん、こんにちは</MudAlert></Authorized>
         <NotAuthorized><MudAlert Severity="Severity.Warning" Elevation="3">Googleアカウントに<a href="https://accounts.google.com/ServiceLogin" target="_blank">ログイン</a>してください。</MudAlert></NotAuthorized>
     </AuthorizeView>
-    <AuthorizeView Policy="Private">
-        <Authorized><MudAlert Severity="Severity.Info" Elevation="3">あなたは、個人です。</MudAlert></Authorized>
-    </AuthorizeView>
-    <AuthorizeView Policy="Family">
-        <Authorized><MudAlert Severity="Severity.Info" Elevation="3">あなたは、家族です。</MudAlert></Authorized>
-    </AuthorizeView>
-    <AuthorizeView Policy="Guest">
-        <Authorized><MudAlert Severity="Severity.Info" Elevation="3">あなたは、ゲストです。</MudAlert></Authorized>
-    </AuthorizeView>
-    <AuthorizeView Policy="User">
+    <AuthorizeView Policy="Users">
         <Authorized><MudAlert Severity="Severity.Success" Elevation="3">あなたは、承認されたユーザです。</MudAlert></Authorized>
         <NotAuthorized><MudAlert Severity="Severity.Error" Elevation="3">残念ながら、あなたは、承認されていません。</MudAlert></NotAuthorized>
     </AuthorizeView>
-    <AuthorizeView Policy="Editor">
-        <Authorized><MudAlert Severity="Severity.Info" Elevation="3">あなたは、編集者です。</MudAlert></Authorized>
-    </AuthorizeView>
-    <AuthorizeView Policy="Manager">
+    <AuthorizeView Policy="Admin">
         <Authorized><MudAlert Severity="Severity.Info" Elevation="3">あなたは、管理者です。</MudAlert></Authorized>
-    </AuthorizeView>
-    <AuthorizeView Policy="Administrator">
-        <Authorized><MudAlert Severity="Severity.Info" Elevation="3">あなたは、システム管理者です。</MudAlert></Authorized>
     </AuthorizeView>
 </MudStack>
 

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using MudBlazor;
 using MudBlazor.Services;
 using PetaPoco;
@@ -50,12 +51,16 @@ group by policies.id
 ;");
     if (result.IsSuccess) {
         builder.Services.AddAuthorization (options => {
-            foreach (var account in result.Value) {
-                if (!string.IsNullOrEmpty (account.Key) && !string.IsNullOrEmpty (account.Emails)) {
-                    options.AddPolicy (account.Key, policyBuilder => policyBuilder.RequireClaim (ClaimTypes.Email, account.Emails.Split (',')));
-                }
-            }
+            AddPolicy (options, "Admin", result.Value.Find (i => i.Key == "Administrator"));
+            AddPolicy (options, "Users", result.Value.Find (i => i.Key == "Private"));
         });
+    }
+}
+
+// ƒ|ƒŠƒV[‚Ö‚Ì“o˜^
+void AddPolicy (AuthorizationOptions options, string key, Account? account) {
+    if (!string.IsNullOrEmpty (key) && !string.IsNullOrEmpty (account?.Emails)) {
+        options.AddPolicy (key, policyBuilder => policyBuilder.RequireClaim (ClaimTypes.Email, account.Emails.Split (',')));
     }
 }
 

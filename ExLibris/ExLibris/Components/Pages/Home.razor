@@ -28,7 +28,7 @@
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
                 <MudText Class="d-flex align-center gap-1" Typo="Typo.body2">データを更新中です。アプリを終了しないでください。</MudText>
             } else {
-                <AuthorizeView Policy="Administrator">
+                <AuthorizeView Policy="Admin">
                     <Authorized>
                         <MudTooltip Text="@(SessionCounter.Count > 1 ? "複数の利用者がいる場合は使用できません。" : "")">
                             <MudButton Disabled="isDownloading || SessionCounter.Count > 1" OnClick="Update" StartIcon="@Icons.Material.Filled.CloudDownload" Variant="Variant.Outlined" Size="Size.Small">Get New Release</MudButton>
