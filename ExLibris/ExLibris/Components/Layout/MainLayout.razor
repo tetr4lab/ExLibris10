@@ -1,4 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage Storage
+
+@inherits LayoutComponentBase
 
 <PageTitle>ExLibris</PageTitle>
 
@@ -11,7 +14,7 @@
                     <MudDrawer Class="fixed" @bind-Open="@_drawerOpen" Anchor="Anchor.Top" Elevation="1" Variant="@DrawerVariant.Temporary">
                         <MudNavMenu Dense Color="Color.Dark" Class="px-4 my-2">
                             <CascadingValue Value="@_filterText" Name="Filter">
-                                <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeMode" />
+                                <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeModeAsync" />
                             </CascadingValue>
                         </MudNavMenu>
                     </MudDrawer>
@@ -20,7 +23,7 @@
                     <MudAppBar Color="Color.Transparent" Dense Fixed="true">
                         <MudGrid Class="align-center flex-nowrap" Spacing="0">
                             <CascadingValue Value="@_filterText" Name="Filter">
-                                <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeMode" />
+                                <NavBar OnClickSearchButton="SetFilterText" IsDarkMode="_isDarkMode" OnClickChangeModeButton="ChangeModeAsync" />
                             </CascadingValue>
                         </MudGrid>
                     </MudAppBar>
@@ -62,6 +65,8 @@
 <MudSnackbarProvider />
 
 @code {
+    /// <summary>テーマ ストレージキー</summary>
+    protected const string DarkModeStorageKey = "IsDarkTheme";
 
     /// <summary>テーマプロバイダへの参照</summary>
     protected MudThemeProvider _mudThemeProvider = default!;
@@ -69,12 +74,17 @@
     protected bool _isDarkMode;
 
     /// <summary>モード切替ボタンが押された</summary>
-    protected void ChangeMode () => _isDarkMode = !_isDarkMode;
+    protected async Task ChangeModeAsync () {
+        _isDarkMode = !_isDarkMode;
+        await Storage.SetAsync (DarkModeStorageKey, _isDarkMode);
+    }
 
     /// <summary>システムのテーマモードで初期化</summary>
     protected override async Task OnAfterRenderAsync (bool firstRender) {
         if (firstRender) {
-            _isDarkMode = await _mudThemeProvider.GetSystemPreference ();
+            var isDarkMode = await Storage.GetAsync<bool> (DarkModeStorageKey);
+            _isDarkMode = isDarkMode.Success ? isDarkMode.Value : await _mudThemeProvider.GetSystemPreference();
+            await Storage.SetAsync (DarkModeStorageKey, _isDarkMode);
             StateHasChanged ();
         }
     }
