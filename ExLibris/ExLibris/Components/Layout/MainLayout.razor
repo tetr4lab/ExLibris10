@@ -43,7 +43,11 @@
                     <CascadingValue Value="@_filterText" Name="Filter">
                         <CascadingValue Value="@(EventCallback.Factory.Create<string> (this, SetFilterText))" Name="SetFilter">
                             <CascadingValue Value="@(EventCallback.Factory.Create<string> (this, SetSectionTitle))" Name="Section">
-                                @Body
+                                <CascadingValue Value="@_rowsPerPage" Name="RowsPerPage">
+                                    <CascadingValue Value="@(EventCallback.Factory.Create<int> (this, SetRowsPerPage))" Name="SetRowsPerPage">
+                                        @Body
+                                    </CascadingValue>
+                                </CascadingValue>
                             </CascadingValue>
                         </CascadingValue>
                     </CascadingValue>
@@ -68,10 +72,20 @@
     /// <summary>テーマ ストレージキー</summary>
     protected const string DarkModeStorageKey = "IsDarkTheme";
 
+    /// <summary>ページ行数 ストレージキー</summary>
+    protected const string RowsPerPageStorageKey = "RowsPerPage";
+
+    /// <summary>デフォルトページ行数</summary>
+    protected const int RowsPerPageDefault = 20;
+
     /// <summary>テーマプロバイダへの参照</summary>
     protected MudThemeProvider _mudThemeProvider = default!;
+
     /// <summary>ダークモード</summary>
     protected bool _isDarkMode;
+
+    /// <summary>ページ行数</summary>
+    protected int _rowsPerPage;
 
     /// <summary>モード切替ボタンが押された</summary>
     protected async Task ChangeModeAsync () {
@@ -79,12 +93,24 @@
         await Storage.SetAsync (DarkModeStorageKey, _isDarkMode);
     }
 
-    /// <summary>システムのテーマモードで初期化</summary>
+    /// <summary>ページ行数が変更された</summary>
+    protected async Task SetRowsPerPage (int rowsPerPage) {
+        if (_rowsPerPage != rowsPerPage) {
+            _rowsPerPage = rowsPerPage;
+            await Storage.SetAsync (RowsPerPageStorageKey, _rowsPerPage);
+        }
+    }
+
+    /// <summary>遅延初期化</summary>
     protected override async Task OnAfterRenderAsync (bool firstRender) {
         if (firstRender) {
+            // テーマ
             var isDarkMode = await Storage.GetAsync<bool> (DarkModeStorageKey);
             _isDarkMode = isDarkMode.Success ? isDarkMode.Value : await _mudThemeProvider.GetSystemPreference();
             await Storage.SetAsync (DarkModeStorageKey, _isDarkMode);
+            // ページ行数
+            var rowsPerPage = await Storage.GetAsync<int> (RowsPerPageStorageKey);
+            await SetRowsPerPage (rowsPerPage.Success ? rowsPerPage.Value : RowsPerPageDefault);
             StateHasChanged ();
         }
     }

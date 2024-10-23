@@ -15,6 +15,7 @@
             Filter="new Func<Author, bool>(FilterFunc)"
             SortLabel="⇅"
             AllowUnsorted=true
+            @bind-RowsPerPage="_rowsPerPage"
             @bind-SelectedItem="selectedItem"
             @bind-SelectedItems="selectedItems" MultiSelection="@(allowDeleteItems && isSingleSession)">
             <HeaderContent>

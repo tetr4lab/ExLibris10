@@ -32,6 +32,12 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     /// <summary>セッション数の更新</summary>
     [CascadingParameter (Name = "Session")] protected EventCallback<int> UpdateSessionCount { get; set; }
 
+    /// <summary>保存されたページ行数</summary>
+    [CascadingParameter (Name = "RowsPerPage")] protected int RowsPerPage { get; set; }
+
+    /// <summary>ページ行数設定</summary>
+    [CascadingParameter (Name = "SetRowsPerPage")] protected EventCallback<int> SetRowsPerPage { get; set; }
+
     /// <summary>項目一覧</summary>
     protected List<TItem1>? items => DataSet.IsReady ? DataSet.GetAll<TItem1> () : null;
 
@@ -62,6 +68,8 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         await SetSectionTitle.InvokeAsync ($"{typeof (TItem1).Name}s");
         // セッション数の変化を購読
         SessionCounter.Subscribe (this, () => InvokeAsync (StateHasChanged));
+        // ページ行数
+        _rowsPerPage = RowsPerPage;
     }
 
     /// <summary>破棄</summary>
@@ -184,17 +192,22 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     protected bool _isDeleting;
 
     /// <summary>デフォルト項目数の設定</summary>
-    protected override Task OnAfterRenderAsync (bool firstRender) {
-        if (_table != null && !_inited) {
-            _inited = true;
-            _table.SetRowsPerPage (_pageSizeOptions [1]);
+    protected override async Task OnAfterRenderAsync (bool firstRender) {
+        await base.OnAfterRenderAsync (firstRender);
+        if (RowsPerPage != _rowsPerPage) {
+            await SetRowsPerPage.InvokeAsync (_rowsPerPage);
+            StateHasChanged ();
         }
-        return base.OnAfterRenderAsync (firstRender);
     }
-    protected bool _inited;
+
+    /// <summary>テーブルインスタンス</summary>
     protected MudTable<TItem1>? _table;
+
+    /// <summary>テーブルのページ行数</summary>
+    protected int _rowsPerPage;
+
     /// <summary>項目数の選択肢</summary>
-    protected int [] _pageSizeOptions = new [] { 10, 20, 25, 50, 100, 200, MaxListingNumber, };
+    protected int [] _pageSizeOptions = { 10, 20, 25, 50, 100, 200, MaxListingNumber, };
 
     /// <summary>全ての検索語に対して対象列のどれかが真であれば真を返す</summary>
     protected bool FilterFunc (TItem1 item) {
