@@ -29,6 +29,12 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
 - ドキュメントとコードが異なる場合は、コードが優先されます。
   - コードの更新に対して、ドキュメントが適切に更新されていない場合があります。
 
+### 必要なリソース
+- 下記のリポジトリから、2個のnugetパッケージ(.nupkg)を導入する必要があります。
+  - `Nuget`や`GitHub Packages`には公開されていません。
+
+https://github.com/tetr4lab/Tetr4labNugetPackages
+
 ### 環境
 - Windows 11 Pro 22H2
   - VisualStudio 2022 17.10.5
@@ -45,7 +51,7 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
 ### 仕様
 #### 題材と機能
 - 書籍と著者のテーブルを閲覧、編集、追加、削除可能なアプリを作ります。
-    - 書籍と著者は多対多の関係で、中間テーブルを使います。
+  - 書籍と著者は多対多の関係で、中間テーブルを使います。
 - 公開されているコミックス発売日情報(tsv)を取り込めるようにします。
   - このサイトでは、月毎に発売される予定のコミックスの情報が個別のtsvファイルで公開されています。
 
