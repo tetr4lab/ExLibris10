@@ -29,9 +29,10 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
 - ドキュメントとコードが異なる場合は、コードが優先されます。
   - コードの更新に対して、ドキュメントが適切に更新されていない場合があります。
 
-### 必要なリソース
-- 下記のリポジトリから、2個のnugetパッケージ(.nupkg)を導入する必要があります。
-  - `Nuget`や`GitHub Packages`には公開されていません。
+### 必要なパッケージ
+- 下記のリポジトリから、2個のパッケージ(.nupkg)を導入する必要があります。
+  - `NuGet`や`GitHub Packages`では公開されていません。
+- ダウンロードしたフォルダをパッケージソースに登録するなどしてください。
 
 https://github.com/tetr4lab/Tetr4labNugetPackages
 
