@@ -110,7 +110,7 @@
             missings.Count > 0 ? "以下のデータを更新します。" : "データは最新です。",
             missings.Count > 0 ? string.Join(", ", missings.ConvertAll (d => $"{d.Year:D4}/{d.Month:D2}")) : null,
         };
-        var dialogResult = await DialogService.Confirmation (messages, width: missings.Count > 0 ? MaxWidth.Medium : MaxWidth.Small, cancellationLabel: missings.Count > 0 ? "Cancel" : "");
+        var dialogResult = await DialogService.Confirmation (messages, width: missings.Count > 0 ? MaxWidth.Medium : MaxWidth.Small, acceptionIcon: Icons.Material.Filled.Refresh, cancellationLabel: missings.Count > 0 ? "Cancel" : "");
         if (missings.Count <= 0 || dialogResult == null || dialogResult.Canceled) { return; }
         // 取得
         await GetComicsAsync (missings);
@@ -247,7 +247,7 @@
             }
         }
         // 確認
-        var dialogResult = await DialogService.Confirmation ([$"{lastMonth.Year}年{lastMonth.Month}月のデータが存在します。", "取得しますか?",], width: MaxWidth.Small, acceptionLabel: "取得", cancellationLabel: "Cancel");
+        var dialogResult = await DialogService.Confirmation ([$"{lastMonth.Year}年{lastMonth.Month}月のデータが存在します。", "取得しますか?",], width: MaxWidth.Small, acceptionLabel: "取得", acceptionIcon: Icons.Material.Filled.Download, cancellationLabel: "Cancel");
         if (dialogResult == null || dialogResult.Canceled) { return; }
         // 取得
         isDownloading = true;

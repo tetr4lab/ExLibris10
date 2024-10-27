@@ -30,15 +30,16 @@ public static class MudDialogServiceHelper {
 
     /// <summary>リロードの確認</summary>
     public static async Task<DialogResult?> ReloadConfirmation (this IDialogService dialogService, IEnumerable<string?> message, string cancellationLabel = "")
-        => await Confirmation (dialogService, message, title: "リロードの確認", acceptionLabel: "Reload", acceptionColor: Color.Success, cancellationLabel: cancellationLabel);
+        => await Confirmation (dialogService, message, title: "リロードの確認", acceptionLabel: "Reload", acceptionColor: Color.Success, acceptionIcon: Icons.Material.Filled.Refresh, cancellationLabel: cancellationLabel);
 
     /// <summary>汎用の確認</summary>
-    public static async Task<DialogResult?> Confirmation (this IDialogService dialogService, IEnumerable<string?> message, string? title = null, MaxWidth width = MaxWidth.Small, DialogPosition position = DialogPosition.Center, string acceptionLabel = "Ok", Color acceptionColor = Color.Success, string cancellationLabel = "Cancel", Color cancellationColor = Color.Default) {
+    public static async Task<DialogResult?> Confirmation (this IDialogService dialogService, IEnumerable<string?> message, string? title = null, MaxWidth width = MaxWidth.Small, DialogPosition position = DialogPosition.Center, string acceptionLabel = "Ok", Color acceptionColor = Color.Success, string? acceptionIcon = Icons.Material.Filled.Check, string cancellationLabel = "Cancel", Color cancellationColor = Color.Default) {
         var options = new DialogOptions { MaxWidth = width, FullWidth = true, Position = position, BackdropClick = false, };
         var parameters = new DialogParameters {
             ["Contents"] = message,
             ["AcceptionLabel"] = acceptionLabel,
             ["AcceptionColor"] = acceptionColor,
+            ["AcceptionIcon"] = acceptionIcon,
             ["CancellationLabel"] = cancellationLabel,
             ["CancellationColor"] = cancellationColor,
         };

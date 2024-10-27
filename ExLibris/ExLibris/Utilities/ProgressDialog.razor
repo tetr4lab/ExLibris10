@@ -23,6 +23,6 @@
         @if (CancellationLabel != "") {
             <MudButton Disabled="@(cancelRequest || ProgressValue < 0 || ProgressValue > 100)" OnClick="OnPushCancelButton" Color="CancellationColor" StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large">@CancellationLabel</MudButton>
         }
-        <MudButton Disabled="@(ProgressValue >= 0 && ProgressValue <= 100)" OnClick="@Accept" Color="@AcceptionColor" StartIcon="@Icons.Material.Filled.Save" Size="@Size.Large">@AcceptionLabel</MudButton>
+        <MudButton Disabled="@(ProgressValue >= 0 && ProgressValue <= 100)" OnClick="@Accept" Color="@AcceptionColor" StartIcon="@Icons.Material.Filled.Check" Size="@Size.Large">@AcceptionLabel</MudButton>
     </DialogActions>
 </MudDialog>

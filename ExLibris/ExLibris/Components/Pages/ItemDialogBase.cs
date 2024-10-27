@@ -189,7 +189,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     protected async void Delete () {
         // 確認
         var contents = new [] { $"この{TItem1.TableLabel}を完全に削除します。", $"「{Item.Id}: {Item.RowLabel}」" };
-        var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}削除", position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error);
+        var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}削除", position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error, acceptionIcon: Icons.Material.Filled.Delete);
         if (dialogResult != null && !dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
             // 実際の削除
             var result = await DataSet.RemoveAsync<TItem1, TItem2> (Item);
@@ -331,7 +331,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
                     "編集内容が失われます。",
                     "編集を破棄しますか?",
                 };
-                var dialogResult = await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, acceptionLabel: "Discard Editing", acceptionColor: Color.Warning);
+                var dialogResult = await DialogService.Confirmation (messages, position: DialogPosition.BottomCenter, acceptionLabel: "Discard Editing", acceptionIcon: Icons.Material.Filled.Delete, acceptionColor: Color.Warning);
                 if (dialogResult == null || dialogResult.Canceled) {
                     // 破棄を取り消し
                     return;
