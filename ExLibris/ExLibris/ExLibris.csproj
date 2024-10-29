@@ -23,6 +23,8 @@
     <PackageReference Include="MySqlConnector" Version="2.3.7" />
     <PackageReference Include="PetaPoco.Compiled" Version="6.0.683" />
     <PackageReference Include="Tetr4lab" Version="1.0.4" />
+    <PackageReference Include="Tetr4labAuth" Version="1.0.0" />
+    <PackageReference Include="Tetr4labDatabase" Version="1.0.27" />
     <PackageReference Include="Tetr4labRazor" Version="1.0.13" />
   </ItemGroup>
 

@@ -3,7 +3,7 @@ using ExLibris.Services;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Tetr4lab;
-using static ExLibris.Services.ExLibrisDataSet;
+using Status = ExLibris.Services.Status;
 
 namespace ExLibris.Components.Pages;
 
@@ -140,7 +140,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
             contents.Insert (0, $"以下の{TItem1.TableLabel}({targetCount:N0}{TItem1.Unit})を完全に削除します。");
             var dialogResult = await DialogService.Confirmation (contents, title: $"{TItem1.TableLabel}一括削除", position: DialogPosition.BottomCenter, acceptionLabel: "Delete", acceptionColor: Color.Error, acceptionIcon: Icons.Material.Filled.Delete);
             if (dialogResult != null && !dialogResult.Canceled && dialogResult.Data is bool ok && ok) {
-                var resetAutoIncrement = new Result<int> (Status.Unknown, 0);
+                var resetAutoIncrement = new Services.Result<int> (Status.Unknown, 0);
                 // プログレスダイアログ
                 dialogResult = await DialogService.Progress (async update => {
                     // 実際の削除

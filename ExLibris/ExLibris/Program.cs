@@ -7,6 +7,7 @@ using MudBlazor.Services;
 using PetaPoco;
 using ExLibris.Components;
 using ExLibris.Services;
+using Tetr4lab;
 
 var builder = WebApplication.CreateBuilder (args);
 var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}Allow User Variables=true;";
@@ -30,39 +31,16 @@ builder.Services.AddMudServices (config => {
 });
 
 // クッキーとグーグルの認証を構成
-builder.Services.AddAuthentication (options => {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-})
-    .AddCookie ()
-    .AddGoogle (options => {
-        options.ClientId = builder.Configuration ["Authentication:Google:ClientId"]!;
-        options.ClientSecret = builder.Configuration ["Authentication:Google:ClientSecret"]!;
-    });
+builder.AddAuthentication ();
 
 // メールアドレスを保持するクレームを要求する認可用のポリシーを構成
-using (var database = (Database) new MySqlDatabase ($"database=accounts;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}Allow User Variables=true;", "MySqlConnector")) {
-    var result = await database.GetListAsync<Account> (@"
-select policies.`key`, group_concat(users.email) as emails
-from policies
-left join assigns on assigns.policies_id = policies.id
-left join users on assigns.users_id = users.id
-group by policies.id
-;");
-    if (result.IsSuccess) {
-        builder.Services.AddAuthorization (options => {
-            AddPolicy (options, "Admin", result.Value.Find (i => i.Key == "Administrator"));
-            AddPolicy (options, "Users", result.Value.Find (i => i.Key == "Private"));
-        });
+await builder.Services.AddAuthorizationAsync (
+    $"database=accounts;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}Allow User Variables=true;",
+    new () {
+        { "Admin", "Administrator" },
+        { "Users", "Private" },
     }
-}
-
-// ポリシーへの登録
-void AddPolicy (AuthorizationOptions options, string key, Account? account) {
-    if (!string.IsNullOrEmpty (key) && !string.IsNullOrEmpty (account?.Emails)) {
-        options.AddPolicy (key, policyBuilder => policyBuilder.RequireClaim (ClaimTypes.Email, account.Emails.Split (',')));
-    }
-}
+);
 
 #if NET8_0_OR_GREATER
 // ページにカスケーディングパラメータ`Task<AuthenticationState>`を提供
@@ -116,9 +94,3 @@ app.MapRazorComponents<App> ()
 
 System.Diagnostics.Debug.WriteLine ("Initialized");
 app.Run ();
-
-/// <summary>アカウントクラス</summary>
-public class Account {
-    [Column ("key")] public string Key { get; set; } = "";
-    [Column ("emails")] public string Emails { get; set; } = "";
-}
