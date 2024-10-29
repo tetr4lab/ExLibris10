@@ -31,7 +31,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public static string Unit => "名";
 
     /// <inheritdoc/>
-    public static Dictionary<string, string> Label { get; } = new Dictionary<string, string> {
+    public static Dictionary<string, string> Label { get; } = new () {
         { nameof (Id), "ID" },
         { nameof (Name), "著者名" },
         { nameof (AdditionalName), "補助名" },

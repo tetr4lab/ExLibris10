@@ -59,7 +59,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public static string Unit => "冊";
 
     /// <inheritdoc/>
-    public static Dictionary<string, string> Label { get; } = new Dictionary<string, string> {
+    public static Dictionary<string, string> Label { get; } = new () {
         { nameof (Id), "ID" },
         { nameof (Title), "書名" },
         { nameof (Authors), "著者" },
