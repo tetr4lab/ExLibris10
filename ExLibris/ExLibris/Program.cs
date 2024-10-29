@@ -8,6 +8,7 @@ using PetaPoco;
 using ExLibris.Components;
 using ExLibris.Services;
 using Tetr4lab;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder (args);
 var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}Allow User Variables=true;";
@@ -31,7 +32,10 @@ builder.Services.AddMudServices (config => {
 });
 
 // クッキーとグーグルの認証を構成
-builder.AddAuthentication ();
+builder.Services.AddAuthentication (
+    builder.Configuration ["Authentication:Google:ClientId"]!,
+    builder.Configuration ["Authentication:Google:ClientSecret"]!
+);
 
 // メールアドレスを保持するクレームを要求する認可用のポリシーを構成
 await builder.Services.AddAuthorizationAsync (
