@@ -1,14 +1,9 @@
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authorization;
 using MudBlazor;
 using MudBlazor.Services;
 using PetaPoco;
 using ExLibris.Components;
 using ExLibris.Services;
 using Tetr4lab;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder (args);
 var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}Allow User Variables=true;";
