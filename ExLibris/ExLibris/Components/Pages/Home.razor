@@ -284,7 +284,7 @@
             var endTime = DateTime.Now;
             ElapsedTime = endTime - startTime;
             // 更新チェック
-            if (ComicsData.LastCheckedDateTime == default || (ComicsData.LastCheckedDateTime - DateTime.Now).Days > 0) {
+            if (SessionCounter.Count <= 1 && ComicsData.LastCheckedDateTime.Date != DateTime.Now.Date) {
                 await CheckAndGetAsync ();
             }
             StateHasChanged ();
