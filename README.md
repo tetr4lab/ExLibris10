@@ -24,29 +24,29 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
   - MudBlazorの使い方
   - PetaPocoの使い方
   - ツール類の使用方法
-- MySQLでは検証さなくなりました。
+- MySQLでは検証されなくなりました。
   - 開発時にUbuntu(WSL)でMySQLを使わなくなりました。
 - ドキュメントとコードが異なる場合は、コードが優先されます。
   - コードの更新に対して、ドキュメントが適切に更新されていない場合があります。
 
 ### 必要なパッケージ
-- 下記のリポジトリから、2個のパッケージ(.nupkg)を導入する必要があります。
+- 下記のリポジトリから、4個のパッケージ(.nupkg)を導入する必要があります。
   - `NuGet`や`GitHub Packages`では公開されていません。
 - ダウンロードしたフォルダをパッケージソースに登録するなどしてください。
 
-https://github.com/tetr4lab/Tetr4labNugetPackages
+https://github.com/tetr4lab/Tetr4labNugetPackages.git?path=/Packages
 
 ### 環境
 - Windows 11 Pro 22H2
   - VisualStudio 2022 17.10.5
-  - PetaPoco 6.0.677
+  - PetaPoco 6.0.683
   - MySqlConnector 2.3.7
-  - MudBlazor 7.6.0
+  - MudBlazor 7.15.0
   - Ubuntu 20.04 (wsl2)
     - MariaDB 10.6
 - Debian 12.6
-  - Microsoft.AspNetCore.App 8.0.7
-  - Microsoft.NETCore.App 8.0.7
+  - Microsoft.AspNetCore.App 8.0.10
+  - Microsoft.NETCore.App 8.0.10
   - MariaDB 10.11
 
 ### 仕様
