@@ -91,5 +91,5 @@ app.MapRazorComponents<App> ()
     .AddInteractiveWebAssemblyRenderMode ()
     .AddAdditionalAssemblies (typeof (ExLibris.Client._Imports).Assembly);
 
-System.Diagnostics.Debug.WriteLine ("Initialized");
+System.Diagnostics.Debug.WriteLine ($"Initialized {AppDomain.CurrentDomain.FriendlyName}");
 app.Run ();

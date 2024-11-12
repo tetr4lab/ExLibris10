@@ -91,14 +91,14 @@
     /// <summary>モード切替ボタンが押された</summary>
     protected async Task ChangeModeAsync () {
         _isDarkMode = !_isDarkMode;
-        await SetAsync (DarkModeStorageKey, _isDarkMode);
+        await Storage.SetValueAsync (DarkModeStorageKey, _isDarkMode);
     }
 
     /// <summary>ページ行数が変更された</summary>
     protected async Task SetRowsPerPage (int rowsPerPage) {
         if (_rowsPerPage != rowsPerPage) {
             _rowsPerPage = rowsPerPage;
-            await SetAsync (RowsPerPageStorageKey, _rowsPerPage);
+            await Storage.SetValueAsync (RowsPerPageStorageKey, _rowsPerPage);
         }
     }
 
@@ -106,21 +106,15 @@
     protected override async Task OnAfterRenderAsync (bool firstRender) {
         if (firstRender) {
             // テーマ
-            var isDarkMode = await GetAsync<bool> (DarkModeStorageKey);
+            var isDarkMode = await Storage.GetValueAsync<bool> (DarkModeStorageKey);
             _isDarkMode = isDarkMode.Success ? isDarkMode.Value : await _mudThemeProvider.GetSystemPreference();
-            await SetAsync (DarkModeStorageKey, _isDarkMode);
+            await Storage.SetValueAsync (DarkModeStorageKey, _isDarkMode);
             // ページ行数
-            var rowsPerPage = await GetAsync<int> (RowsPerPageStorageKey);
+            var rowsPerPage = await Storage.GetValueAsync<int> (RowsPerPageStorageKey);
             await SetRowsPerPage (rowsPerPage.Success ? rowsPerPage.Value : RowsPerPageDefault);
             StateHasChanged ();
         }
     }
-
-    /// <summary>ストレージから取得</summary>
-    protected async Task<ProtectedBrowserStorageResult<T>> GetAsync<T> (string key) where T : notnull => await Storage.GetAsync<T> ($"{Navi.BaseUri}|{key}");
-
-    /// <summary>ストレージへ保存</summary>
-    protected async Task SetAsync<T> (string key, T data) where T : notnull => await Storage.SetAsync ($"{Navi.BaseUri}|{key}", data);
 
     /// <summary>ドロワーの状態</summary>
     protected bool _drawerOpen = false;
