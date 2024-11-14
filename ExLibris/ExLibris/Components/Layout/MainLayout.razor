@@ -104,6 +104,7 @@
 
     /// <summary>遅延初期化</summary>
     protected override async Task OnAfterRenderAsync (bool firstRender) {
+        await base.OnAfterRenderAsync (firstRender);
         if (firstRender) {
             // テーマ
             var isDarkMode = await Storage.GetValueAsync<bool> (DarkModeStorageKey);

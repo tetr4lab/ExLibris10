@@ -68,7 +68,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         // セッション数の変化を購読
         SessionCounter.Subscribe (this, () => InvokeAsync (StateHasChanged));
         // ページ行数
-        _rowsPerPage = RowsPerPage;
+        _rowsPerPage = RowsPerPage != 0 ? RowsPerPage : _pageSizeOptions [1];
     }
 
     /// <summary>破棄</summary>
@@ -77,10 +77,15 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     }
 
     /// <summary>描画後処理</summary>
-    protected override async void OnAfterRender (bool firstRender) {
-        base.OnAfterRender (firstRender);
+    protected override async Task OnAfterRenderAsync (bool firstRender) {
+        await base.OnAfterRenderAsync (firstRender);
         if (firstRender) {
             await DataSet.InitializeAsync ();
+            StateHasChanged ();
+        }
+        // デフォルト項目数の設定
+        if (RowsPerPage != _rowsPerPage) {
+            await SetRowsPerPage.InvokeAsync (_rowsPerPage);
             StateHasChanged ();
         }
     }
@@ -189,15 +194,6 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         StateHasChanged ();
     }
     protected bool _isDeleting;
-
-    /// <summary>デフォルト項目数の設定</summary>
-    protected override async Task OnAfterRenderAsync (bool firstRender) {
-        await base.OnAfterRenderAsync (firstRender);
-        if (RowsPerPage != _rowsPerPage) {
-            await SetRowsPerPage.InvokeAsync (_rowsPerPage);
-            StateHasChanged ();
-        }
-    }
 
     /// <summary>テーブルインスタンス</summary>
     protected MudTable<TItem1>? _table;
