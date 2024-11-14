@@ -1,29 +1,29 @@
-/* ‘I‘ğÏ‚İ‚ÅƒtƒH[ƒJƒX‚È‚µ/‚ ‚è */
+ï»¿/* é¸æŠæ¸ˆã¿ã§ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ãªã—/ã‚ã‚Š */
 nav a.mud-nav-link.active, nav a.mud-nav-link.active:focus {
     color: var(--mud-palette-action-default);
     background-color: var(--mud-palette-background-gray);
 }
 
-/* ƒzƒo[ ‘I‘ğÏ‚İ‚ÅƒtƒH[ƒJƒX‚È‚µ/‚ ‚è */
+/* ãƒ›ãƒãƒ¼ é¸æŠæ¸ˆã¿ã§ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ãªã—/ã‚ã‚Š */
 nav a.mud-nav-link.active:hover, nav a.mud-nav-link.active:focus:hover {
     color: var(--mud-palette-text-primary);
     background-color: var(--mud-palette-action-disabled-background);
 }
 
-/* ƒiƒr”wŒi */
+/* ãƒŠãƒ“èƒŒæ™¯ */
 nav .mud-appbar.mud-theme-transparent:has(.mud-nav-link) {
     backdrop-filter: blur(10px);
 }
 
 /*****************************************************************************/
 
-/* ‚Ú‚â‚¯‚½”wŒi */
+/* ã¼ã‚„ã‘ãŸèƒŒæ™¯ */
 .backdrop-blur {
     backdrop-filter: blur(10px);
 }
 
 /*
-    ƒ_ƒCƒAƒƒO‚Ìƒ^ƒCƒgƒ‹‚ÆƒAƒNƒVƒ‡ƒ“‚ğŒÅ’è‚µAƒRƒ“ƒeƒ“ƒc‚¾‚¯‚ğƒXƒNƒ[ƒ‹‘ÎÛ‚É‚·‚é
+    ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®ã‚¿ã‚¤ãƒˆãƒ«ã¨ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’å›ºå®šã—ã€ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã ã‘ã‚’ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«å¯¾è±¡ã«ã™ã‚‹
     ref: https://github.com/MudBlazor/MudBlazor/issues/6704
 */
 .mud-dialog > .outline-none {

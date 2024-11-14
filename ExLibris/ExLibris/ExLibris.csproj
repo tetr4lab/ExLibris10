@@ -20,12 +20,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.10" />
     <PackageReference Include="MudBlazor" Version="7.15.0" />
-    <PackageReference Include="MySqlConnector" Version="2.3.7" />
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
     <PackageReference Include="PetaPoco.Compiled" Version="6.0.683" />
     <PackageReference Include="Tetr4lab" Version="1.0.8" />
     <PackageReference Include="Tetr4labAuth" Version="1.0.1" />
     <PackageReference Include="Tetr4labDatabase" Version="1.0.27" />
-    <PackageReference Include="Tetr4labRazor" Version="1.0.15" />
+    <PackageReference Include="Tetr4labRazor" Version="1.0.16" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
