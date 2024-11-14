@@ -3,9 +3,10 @@
 <MudDialog>
     <DialogContent>
         <MudSimpleTable Dense Striped>
-            <tbody>
+            <tbody style="border:1px solid #ddd;">
                 <tr>
-                    <th class="align-end">@Author.Label[nameof(Item.Id)]:</th>
+                    <ImageColumn TItem1="Author" TItem2="Book" Item="Item" OnEdit="OnEdit" RowSpan="5" Width="400" OnStateHasChanged="OnDataSetChanged" />
+                    <th class="align-end">@(Author.Label [nameof (Item.Id)]):</th>
                     <td class="align-end" style="width: 90%;">@(Item.Id > 0 ? Item.Id : "新規追加")</td>
                 </tr>
                 <tr>

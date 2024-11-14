@@ -50,6 +50,9 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
     /// <summary>バージョン</summary>
     [Column] public int Version { get; set; }
 
+    /// <summary>画像</summary>
+    [Column] public byte []? Image { get; set; }
+
     /// <summary>文字列によるIdリスト</summary>
     [Column, VirtualColumn]
     public string? _relatedIds { get; set; }
@@ -94,6 +97,7 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
             _relatedIds = new (_relatedIds),
             __relatedIds = default,
             __relatedItems = default,
+            Image = Image,
         };
 
     /// <summary>値のコピー</summary>
@@ -104,6 +108,7 @@ public abstract class ExLibrisBaseModel<T1, T2> : IEquatable<T1>
         destination._relatedIds = new (_relatedIds);
         destination.__relatedIds = default;
         destination.__relatedItems = default;
+        destination.Image = Image;
         return destination;
     }
 

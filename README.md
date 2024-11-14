@@ -117,6 +117,7 @@ CREATE TABLE `policies` (
   `key` varchar(50) NOT NULL,
   `name` longtext NOT NULL,
   `description` longtext DEFAULT NULL,
+  `image` longblob DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`key`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -126,6 +127,7 @@ CREATE TABLE `users` (
   `name` varchar(50) NOT NULL,
   `common_name` varchar(50) NOT NULL,
   `description` longtext DEFAULT NULL,
+  `image` longblob DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

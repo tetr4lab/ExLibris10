@@ -38,6 +38,7 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         { nameof (Description), "説明" },
         { nameof (Interest), "関心" },
         { nameof (Books), "著書" },
+        { nameof (Image), "画像" },
     };
 
     /// <inheritdoc/>
@@ -96,10 +97,11 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
         && Description == other.Description
         && Interest == other.Interest
         && RelatedIds.ContainsEquals (other.RelatedIds)
+        && Image == other.Image
     ;
 
     /// <inheritdoc/>
-    public override int GetHashCode () => HashCode.Combine (Id, Name, AdditionalName, Description, _relatedIds);
+    public override int GetHashCode () => HashCode.Combine (Id, Name, AdditionalName, Description, _relatedIds, Image);
 
     /// <inheritdoc/>
     public override string ToString () => $"{TableLabel} {Id}: {Name}{(string.IsNullOrEmpty (AdditionalName) ? "" : $"-{AdditionalName}")} \"{Description}\" {Interest} [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (b => $"{b.Id}:{b.Title}"))}}}";

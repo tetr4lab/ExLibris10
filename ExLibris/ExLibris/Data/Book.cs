@@ -71,6 +71,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         { nameof (Interest), "関心" },
         { nameof (Action), "行動" },
         { nameof (Result), "結果" },
+        { nameof (Image), "画像" },
     };
 
     /// <inheritdoc/>
@@ -148,10 +149,11 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
         && Action == other.Action
         && Result == other.Result
         && RelatedIds.ContainsEquals (other.RelatedIds)
+        && Image == other.Image
     ;
 
     /// <inheritdoc/>
-    public override int GetHashCode () => HashCode.Combine (Id, Title, Description, PublishDate, Publisher, Series, Price, _relatedIds);
+    public override int GetHashCode () => HashCode.Combine (Id, Title, Description, PublishDate, Publisher, Series, Price, HashCode.Combine (_relatedIds, Image));
 
     /// <inheritdoc/>
     public override string ToString () => $"{TableLabel} {Id}: {Title} \"{Description}\" {Publisher} {Series} {PublishDate?.ToShortDateString ()} {Action} {Result} [{RelatedIds.Count}]{{{string.Join (',', RelatedItems.ConvertAll (a => $"{a.Id}:{a.Name}"))}}}";
