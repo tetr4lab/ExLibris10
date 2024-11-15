@@ -25,6 +25,9 @@ public class Author : ExLibrisBaseModel<Author, Book>, IExLibrisModel {
     public override string StoreURL => $"{base.StoreURL}\"{Name}\"%20{AdditionalName}";
 
     /// <inheritdoc/>
+    public override string SearchURL => string.Format (base.SearchURL, "", Name, "");
+
+    /// <inheritdoc/>
     public static string TableLabel => "著者";
 
     /// <inheritdoc/>

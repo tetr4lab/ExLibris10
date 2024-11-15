@@ -1,0 +1,35 @@
+﻿@typeparam TItem1 where TItem1 : ExLibrisBaseModel<TItem1, TItem2>, IExLibrisModel, new()
+@typeparam TItem2 where TItem2 : ExLibrisBaseModel<TItem2, TItem1>, IExLibrisModel, new()
+
+@inject IJSRuntime JSRuntime
+
+<MudTooltip Text="@($"{TItem1.TableLabel}を国会図書館または店舗(+Ctrl)で検索")" Duration="1000">
+    @if (Fab) {
+        <MudFab StartIcon="@Icons.Material.Filled.Search" Size="Size.Small" OnClick="OnPressButtonAsync" />
+    } else {
+        <MudIconButton Class="mx-0" Icon="@Icons.Material.Outlined.Search" Size="Size.Small" OnClick="OnPressButtonAsync" />
+    }
+</MudTooltip>
+
+@code {
+
+    /// <summary>アイテム</summary>
+    [Parameter] public TItem1 Item { get; set; } = default!;
+
+    /// <summary>ボタン種別</summary>
+    [Parameter] public bool Fab { get; set; }
+
+    /// <summary>ボタンが押された</summary>
+    protected async Task OnPressButtonAsync () {
+        var keys = await JSRuntime.InvokeAsync<ModifierKeys> ("getModifierKeys");
+        var url = keys.Ctrl ? Item.StoreURL : Item.SearchURL;
+        await JSRuntime.InvokeAsync<object> ("openInNewTab", url);
+    }
+
+    /// <summary>モディファイアキー</summary>
+    public class ModifierKeys {
+        public bool Ctrl { get; set; }
+        public bool Alt { get; set; }
+        public bool Shift { get; set; }
+    }
+}

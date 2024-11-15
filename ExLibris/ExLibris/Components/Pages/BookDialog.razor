@@ -144,9 +144,7 @@
             <MudTooltip Text="著者を一覧" Duration="1000">
                 <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.People" OnClick="@(async () => await FilterAndNavigate ("a", "authors"))" />
             </MudTooltip>
-            <MudTooltip Text="書籍をストアで検索" Duration="1000">
-                <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.ShoppingCart" Href="@Item.StoreURL" Target="_blank" />
-            </MudTooltip>
+            <SearchButton TItem1="Book" TItem2="Author" Fab="true" Item="Item" />
             <MudSpacer />
             <MudTooltip Text="書籍を編集" Duration="1000">
                 <MudFab Size="Size.Small" StartIcon="@Icons.Material.Filled.Edit" OnClick="StartEdit" />

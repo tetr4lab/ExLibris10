@@ -34,7 +34,10 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd Class="align-right text-nowrap" DataLabel="@(Book.Label[nameof(Book.Id)])">@context.Id</MudTd>
-                <MudTd DataLabel="@(Book.Label[nameof(Book.Title)])">@(context.Title)<MudIconButton Href="@context.StoreURL" Target="_blank" Icon="@Icons.Material.Outlined.ShoppingCart" Size="Size.Small" /></MudTd>
+                <MudTd DataLabel="@(Book.Label[nameof(Book.Title)])">
+                    @(context.Title)
+                    <SearchButton TItem1="Book" TItem2="Author" Fab="false" Item="context" />
+                </MudTd>
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Authors)])">@(string.Join (", ", context.Authors.OrderBy (a => a.Id).ToList ().ConvertAll (a => a.Name)))</MudTd>
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Interest)])">@context.Interest</MudTd>
                 <MudTd DataLabel="@(Book.Label[nameof(Book.Action)])">@context.Action</MudTd>
