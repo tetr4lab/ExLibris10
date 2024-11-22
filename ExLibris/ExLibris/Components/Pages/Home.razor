@@ -275,8 +275,8 @@
     }
 
     /// <summary>描画後処理</summary>
-    protected override async void OnAfterRender (bool firstRender) {
-        base.OnAfterRender (firstRender);
+    protected override async Task OnAfterRenderAsync (bool firstRender) {
+        await base.OnAfterRenderAsync (firstRender);
         if (firstRender) {
             // 遅延読み込み
             var startTime = DateTime.Now;
