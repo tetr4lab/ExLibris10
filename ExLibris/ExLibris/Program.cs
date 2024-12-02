@@ -4,6 +4,7 @@ using PetaPoco;
 using ExLibris.Components;
 using ExLibris.Services;
 using Tetr4lab;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 
 var builder = WebApplication.CreateBuilder (args);
 var connectionString = $"database=exlibris;{builder.Configuration.GetConnectionString ("Host")}{builder.Configuration.GetConnectionString ("Account")}Allow User Variables=true;";
@@ -45,6 +46,9 @@ await builder.Services.AddAuthorizationAsync (
 // ページにカスケーディングパラメータ`Task<AuthenticationState>`を提供
 builder.Services.AddCascadingAuthenticationState ();
 #endif
+
+// 回路の閉鎖を検出するCircuitHandlerをセッション毎に使う
+builder.Services.AddScoped<CircuitHandler, CircuitClosureDetector> ();
 
 // PetaPoco with MySqlConnector
 builder.Services.AddScoped (_ => (Database) new MySqlDatabase (connectionString, "MySqlConnector"));

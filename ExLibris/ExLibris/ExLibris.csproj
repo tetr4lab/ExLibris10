@@ -25,8 +25,8 @@
     <PackageReference Include="Tetr4lab" Version="1.0.8" />
     <PackageReference Include="Tetr4labAuth" Version="1.0.3" />
     <PackageReference Include="Tetr4labDatabase" Version="1.0.27" />
-    <PackageReference Include="Tetr4labRazor" Version="1.0.17" />
-    <PackageReference Include="Tetr4labServer" Version="1.0.1" />
+    <PackageReference Include="Tetr4labRazor" Version="1.0.18" />
+    <PackageReference Include="Tetr4labServer" Version="1.0.2" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

@@ -1,13 +1,14 @@
 ﻿using ExLibris.Data;
 using ExLibris.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using MudBlazor;
 using Tetr4lab;
 using Status = ExLibris.Services.Status;
 
 namespace ExLibris.Components.Pages;
 
-public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
+public class ItemListBase<TItem1, TItem2> : ComponentBase
     where TItem1 : ExLibrisBaseModel<TItem1, TItem2>, IExLibrisModel, new()
     where TItem2 : ExLibrisBaseModel<TItem2, TItem1>, IExLibrisModel, new() {
 
@@ -18,6 +19,7 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
     [Inject] protected ExLibrisDataSet DataSet { get; set; } = null!;
     [Inject] protected IDialogService DialogService { get; set; } = null!;
     [Inject] protected ISnackbar Snackbar { get; set; } = null!;
+    [Inject] protected CircuitHandler CircuitHandler { get; set; } = null!;
 
     /// <summary>検索文字列</summary>
     [CascadingParameter (Name = "Filter")] protected string? FilterText { get; set; }
@@ -67,13 +69,12 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase, IDisposable
         await SetSectionTitle.InvokeAsync ($"{typeof (TItem1).Name}s");
         // セッション数の変化を購読
         SessionCounter.Subscribe (this, () => InvokeAsync (StateHasChanged));
+        // 切断検出
+        if (CircuitHandler is CircuitClosureDetector handler) {
+            handler.Disconnected += id => SessionCounter.Unsubscribe (this);
+        }
         // ページ行数
         _rowsPerPage = RowsPerPage != 0 ? RowsPerPage : _pageSizeOptions [1];
-    }
-
-    /// <summary>破棄</summary>
-    public void Dispose () {
-        SessionCounter.Unsubscribe (this);
     }
 
     /// <summary>描画後処理</summary>
