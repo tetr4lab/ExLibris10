@@ -1,7 +1,6 @@
 ﻿using ExLibris.Data;
 using ExLibris.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Server.Circuits;
 using MudBlazor;
 using Tetr4lab;
 using Status = ExLibris.Services.Status;
@@ -19,7 +18,6 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase
     [Inject] protected ExLibrisDataSet DataSet { get; set; } = null!;
     [Inject] protected IDialogService DialogService { get; set; } = null!;
     [Inject] protected ISnackbar Snackbar { get; set; } = null!;
-    [Inject] protected CircuitHandler CircuitHandler { get; set; } = null!;
 
     /// <summary>検索文字列</summary>
     [CascadingParameter (Name = "Filter")] protected string? FilterText { get; set; }
@@ -67,12 +65,6 @@ public class ItemListBase<TItem1, TItem2> : ComponentBase
     protected override async Task OnInitializedAsync () {
         await base.OnInitializedAsync ();
         await SetSectionTitle.InvokeAsync ($"{typeof (TItem1).Name}s");
-        // セッション数の変化を購読
-        SessionCounter.Subscribe (this, () => InvokeAsync (StateHasChanged));
-        // 切断検出
-        if (CircuitHandler is CircuitClosureDetector handler) {
-            handler.Disconnected += id => SessionCounter.Unsubscribe (this);
-        }
         // ページ行数
         _rowsPerPage = RowsPerPage != 0 ? RowsPerPage : _pageSizeOptions [1];
     }

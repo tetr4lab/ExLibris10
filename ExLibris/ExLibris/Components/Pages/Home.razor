@@ -1,5 +1,6 @@
 ﻿@using System.Net
 @using ComicsData
+@using Microsoft.AspNetCore.Components.Server.Circuits
 
 @page "/"
 
@@ -8,6 +9,7 @@
 @inject ExLibrisDataSet DataSet
 @inject HttpClient HttpClient
 @inject IDialogService DialogService
+@inject CircuitHandler CircuitHandler
 
 <PageTitle>ExLibris Home</PageTitle>
 
@@ -265,11 +267,14 @@
         await SetSectionTitle.InvokeAsync ("Home");
         // セッション数の変化を購読
         SessionCounter.Subscribe (this, () => InvokeAsync (StateHasChanged));
+        // 切断検出
+        if (CircuitHandler is CircuitClosureDetector handler) {
+            handler.Disconnected += id => SessionCounter.Unsubscribe (this);
+        }
     }
 
     /// <summary>破棄</summary>
     public void Dispose () {
-        SessionCounter.Unsubscribe (this);
         // ページ遷移に伴う更新キャンセル
         isDownloading = false;
     }
