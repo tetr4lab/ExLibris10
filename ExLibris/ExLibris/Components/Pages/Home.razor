@@ -239,7 +239,7 @@
         // 最新データの検出
         var books = DataSet.Books;
         var now = DateTime.Now;
-        var lastMonth = new DateTime (now.Year, now.Month + (now.Day < LateMonthDay ? 0 : 1), 1);
+        var lastMonth = new DateTime(now.Year, now.Month, 1).AddMonths (now.Day < LateMonthDay ? 0 : 1);
         if (books.Exists (book => book.PublishDate?.Year == lastMonth.Year && book.PublishDate?.Month == lastMonth.Month)) {
             return;
         }
