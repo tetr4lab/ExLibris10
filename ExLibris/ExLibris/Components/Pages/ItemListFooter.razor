@@ -3,7 +3,7 @@
 
 <MudAppBar Class="backdrop-blur pb-2" Color="Color.Transparent" Dense Bottom="true" Fixed="true">
     <MudTooltip Text="一括削除" Duration="1000">
-        <MudSwitch Disabled="!DisableSwitch" ValueChanged="OnChangeSwitch" LabelPosition="LabelPosition.Start" Color="Color.Primary"><MudIcon Class="mt-3" Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever"></MudIcon></MudSwitch>
+        <MudSwitch Disabled="!DisableSwitch" ValueChanged="OnChangeSwitch" LabelPlacement="Placement.Start" Color="Color.Primary"><MudIcon Class="mt-3" Size="Size.Medium" Icon="@Icons.Material.Filled.DeleteForever"></MudIcon></MudSwitch>
     </MudTooltip>
     @if (AllowDeleteItems) {
         <MudTooltip Text="@($"チェックされた{TItem1.TableLabel}を一括削除")" Duration="1000">

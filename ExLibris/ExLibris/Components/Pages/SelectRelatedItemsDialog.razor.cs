@@ -10,7 +10,7 @@ public partial class SelectRelatedItemsDialog<TItems, TItem>
     where TItem : ExLibrisBaseModel<TItem, TItems>, IExLibrisModel, new () {
 
     /// <summary>MudBlazorniに渡される自身のインスタンス(MudDialogInstance)</summary>
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = new MudDialogInstance ();
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>対象項目</summary>
     [Parameter] public TItem Item { get; set; } = new ();

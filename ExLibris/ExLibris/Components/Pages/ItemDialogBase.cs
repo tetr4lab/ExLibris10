@@ -18,7 +18,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
     [Inject] protected NavigationManager NavManager { get; set; } = null!;
     [Inject] protected IDialogService DialogService { get; set; } = null!;
     [Inject] protected ISnackbar Snackbar { get; set; } = null!;
-    [CascadingParameter] protected MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] protected IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>データセット</summary>
     protected ExLibrisDataSet DataSet { get; set; } = null!;
@@ -61,11 +61,13 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
         get => _onEdit;
         set {
             if (_onEdit != value) {
-                MudDialog.Options.CloseButton = !value;
-                MudDialog.Options.CloseOnEscapeKey = !value;
-                MudDialog.Options.BackdropClick = !value;
-                MudDialog.SetTitle (value ? editorTitle : originalTitle);
-                MudDialog.SetOptions (MudDialog.Options);
+                var options = MudDialog.Options with {
+                    CloseButton = !value,
+                    CloseOnEscapeKey = !value,
+                    BackdropClick = !value,
+                };
+                MudDialog.SetOptionsAsync (options);
+                MudDialog.SetTitleAsync (value ? editorTitle : originalTitle);
                 _onEdit = value;
                 _wasOnEditThisRanderFrame = value;
                 StateHasChanged ();
