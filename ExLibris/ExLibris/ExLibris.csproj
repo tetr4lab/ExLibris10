@@ -17,16 +17,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ExLibris.Client\ExLibris.Client.csproj" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.15" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.15" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.16" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.16" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.16" />
     <PackageReference Include="MudBlazor" Version="8.6.0" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
     <PackageReference Include="PetaPoco.Compiled" Version="6.0.683" />
-    <PackageReference Include="Tetr4lab" Version="1.0.8" />
-    <PackageReference Include="Tetr4labAuth" Version="1.0.6" />
-    <PackageReference Include="Tetr4labDatabase" Version="1.0.28" />
-    <PackageReference Include="Tetr4labRazor" Version="1.0.21" />
+    <PackageReference Include="Tetr4lab" Version="1.0.9" />
+    <PackageReference Include="Tetr4labAuth" Version="1.0.8" />
+    <PackageReference Include="Tetr4labDatabase" Version="1.0.32" />
+    <PackageReference Include="Tetr4labRazor" Version="1.0.22" />
     <PackageReference Include="Tetr4labServer" Version="1.0.3" />
   </ItemGroup>
 
