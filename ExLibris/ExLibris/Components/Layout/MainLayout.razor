@@ -108,7 +108,7 @@
         if (firstRender) {
             // テーマ
             var isDarkMode = await Storage.GetValueAsync<bool> (DarkModeStorageKey);
-            _isDarkMode = isDarkMode.Success ? isDarkMode.Value : await _mudThemeProvider.GetSystemPreference();
+            _isDarkMode = isDarkMode.Success ? isDarkMode.Value : await _mudThemeProvider.GetSystemDarkModeAsync ();
             await Storage.SetValueAsync (DarkModeStorageKey, _isDarkMode);
             // ページ行数
             var rowsPerPage = await Storage.GetValueAsync<int> (RowsPerPageStorageKey);
