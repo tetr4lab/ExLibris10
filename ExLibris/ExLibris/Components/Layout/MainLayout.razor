@@ -106,13 +106,19 @@
     protected override async Task OnAfterRenderAsync (bool firstRender) {
         await base.OnAfterRenderAsync (firstRender);
         if (firstRender) {
-            // テーマ
-            var isDarkMode = await Storage.GetValueAsync<bool> (DarkModeStorageKey);
-            _isDarkMode = isDarkMode.Success ? isDarkMode.Value : await _mudThemeProvider.GetSystemDarkModeAsync ();
+            try {
+                // テーマ
+                var isDarkMode = await Storage.GetValueAsync<bool> (DarkModeStorageKey);
+                _isDarkMode = isDarkMode.Success ? isDarkMode.Value : await _mudThemeProvider.GetSystemDarkModeAsync ();
+                // ページ行数
+                var rowsPerPage = await Storage.GetValueAsync<int> (RowsPerPageStorageKey);
+                _rowsPerPage = rowsPerPage.Success ? rowsPerPage.Value : RowsPerPageDefault;
+            }
+            catch (System.Security.Cryptography.CryptographicException ex) {
+                System.Diagnostics.Debug.WriteLine ($"CryptographicException: {ex.Message}\n{ex.StackTrace}");
+            }
             await Storage.SetValueAsync (DarkModeStorageKey, _isDarkMode);
-            // ページ行数
-            var rowsPerPage = await Storage.GetValueAsync<int> (RowsPerPageStorageKey);
-            await SetRowsPerPage (rowsPerPage.Success ? rowsPerPage.Value : RowsPerPageDefault);
+            await Storage.SetValueAsync (RowsPerPageStorageKey, _rowsPerPage);
             StateHasChanged ();
         }
     }
