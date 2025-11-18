@@ -5,7 +5,7 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
 # .NET 8 / Blazor Web App / MudBlazor / PetaPoco+MySqlConnector で MySQL/MariaDB を使う
 
 ## はじめに
-- この記事では、.NET 8.0で、シンプルなBlazor Web Appを作ってみます。
+- この記事では、.NET 10.0で、シンプルなBlazor Web Appを作ってみます。
   - PetaPocoとMySqlConnectorを使ってMySQL/MariaDBのデータを扱います。
     - EF Coreは使いません。
     - SQLビルダーは使わず、直にガリガリ書きます。
@@ -37,17 +37,17 @@ tags: Blazor ASP.NET MudBlazor PetaPoco MySQL MariaDB
 https://github.com/tetr4lab/Tetr4labNugetPackages.git?path=/Packages
 
 ### 環境
-- Windows 11 Pro 22H2
-  - VisualStudio 2022 17.10.5
+- Windows 11 Pro 24H2
+  - VisualStudio 2026 19.0.0
   - PetaPoco 6.0.683
-  - MySqlConnector 2.3.7
-  - MudBlazor 7.15.0
-  - Ubuntu 20.04 (wsl2)
-    - MariaDB 10.6
-- Debian 12.6
-  - Microsoft.AspNetCore.App 8.0.10
-  - Microsoft.NETCore.App 8.0.10
-  - MariaDB 10.11
+  - MySqlConnector 2.5.0
+  - MudBlazor 8.14.0
+  - Debian 13.2 (wsl2)
+    - MariaDB 11.8.3
+- Debian 12.12
+  - aspnetcore-runtime-10.0
+  - aspnetcore-runtime-8.0
+  - MariaDB 10.11.14
 
 ### 仕様
 #### 題材と機能
@@ -221,55 +221,82 @@ https://zenn.dev/tetr4lab/articles/ad947ade600764#%E5%B1%95%E9%96%8B%E3%81%AE%E8
 - 外部キー制約で中間テーブルの行が自動的に削除されるように構成します。
 - トリガーによって、行バージョンの不整合を検出してエラーにします。
 - collationは、C#での比較に合わせてutf8mb4_binを使います。
+- 主テーブルへの更新時に行バージョンの不整合を検出してエラーにするトリガーを用意します。
 - この記事では、DBの設計や操作は扱いません。
 
+<details>
+
+<summary>SQL</summary>
+
 ```sql:exlibris
+/*M!999999\- enable the sandbox mode */
+-- MariaDB dump 10.19  Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86_64)
+--
+-- Host: localhost    Database: exlibris
+-- ------------------------------------------------------
+-- Server version       10.11.14-MariaDB-0+deb12u2
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `AuthorBook`
+--
+
+DROP TABLE IF EXISTS `AuthorBook`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `AuthorBook` (
-	`AuthorsId` BIGINT(20) NOT NULL,
-	`BooksId` BIGINT(20) NOT NULL,
-	`Created` DATETIME NOT NULL DEFAULT current_timestamp(),
-	`Modefied` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-	PRIMARY KEY (`AuthorsId`, `BooksId`) USING BTREE,
-	INDEX `IX_AuthorBook_BooksId` (`BooksId`) USING BTREE,
-	CONSTRAINT `FK_AuthorBook_Authors_AuthorsId` FOREIGN KEY (`AuthorsId`) REFERENCES `Authors` (`Id`) ON UPDATE RESTRICT ON DELETE CASCADE,
-	CONSTRAINT `FK_AuthorBook_Books_BooksId` FOREIGN KEY (`BooksId`) REFERENCES `Books` (`Id`) ON UPDATE RESTRICT ON DELETE CASCADE
-) ENGINE=InnoDB COLLATE='utf8mb4_bin';
+  `AuthorsId` bigint(20) NOT NULL,
+  `BooksId` bigint(20) NOT NULL,
+  `Created` datetime NOT NULL DEFAULT current_timestamp(),
+  `Modefied` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`AuthorsId`,`BooksId`),
+  KEY `IX_AuthorBook_BooksId` (`BooksId`),
+  CONSTRAINT `FK_AuthorBook_Authors_AuthorsId` FOREIGN KEY (`AuthorsId`) REFERENCES `Authors` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_AuthorBook_Books_BooksId` FOREIGN KEY (`BooksId`) REFERENCES `Books` (`Id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `Authors`
+--
+
+DROP TABLE IF EXISTS `Authors`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Authors` (
-	`Id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-	`Version` INT(11) NOT NULL DEFAULT '0',
-	`Name` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_bin',
-	`AdditionalName` VARCHAR(255) NOT NULL COLLATE 'utf8mb4_bin',
-	`Description` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
-	`Interest` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
-	`Created` DATETIME NOT NULL DEFAULT current_timestamp(),
-	`Modefied` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-	PRIMARY KEY (`Id`) USING BTREE,
-	UNIQUE INDEX `IX_Authors_Name_AdditionalName` (`Name`, `AdditionalName`) USING BTREE
-) ENGINE=InnoDB COLLATE='utf8mb4_bin';
-CREATE TABLE `Books` (
-	`Id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-	`Version` INT(11) NOT NULL DEFAULT '0',
-	`Title` VARCHAR(255) NOT NULL DEFAULT '' COLLATE 'utf8mb4_bin',
-	`Description` LONGTEXT NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
-	`PublishDate` DATETIME(6) NULL DEFAULT NULL,
-	`Publisher` VARCHAR(255) NOT NULL DEFAULT '' COLLATE 'utf8mb4_bin',
-	`Series` VARCHAR(255) NOT NULL DEFAULT '' COLLATE 'utf8mb4_bin',
-	`Price` INT(11) NOT NULL,
-	`Action` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
-	`Result` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_bin',
-	`Created` DATETIME NOT NULL DEFAULT current_timestamp(),
-	`Modefied` DATETIME NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-	PRIMARY KEY (`Id`) USING BTREE,
-	UNIQUE INDEX `IX_Books_Title_Publisher_Series_PublishDate` (`Title`, `Publisher`, `Series`, `PublishDate`) USING BTREE
-) ENGINE=InnoDB COLLATE='utf8mb4_bin';
-```
-
-#### トリガー
-- 主テーブルへの更新時に行バージョンの不整合を検出してエラーにするトリガーです。
-
-```sql:exlibris
-delimiter //
-create trigger Version_Check_Before_Update_On_Authors
+  `Id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `Version` int(11) NOT NULL DEFAULT 0,
+  `Name` varchar(255) NOT NULL,
+  `AdditionalName` varchar(255) NOT NULL,
+  `Description` longtext DEFAULT NULL,
+  `Interest` varchar(50) DEFAULT NULL,
+  `Created` datetime NOT NULL DEFAULT current_timestamp(),
+  `Modefied` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `Image` longblob DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `IX_Authors_Name_AdditionalName` (`Name`,`AdditionalName`)
+) ENGINE=InnoDB AUTO_INCREMENT=46407 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 trigger Version_Check_Before_Update_On_Authors
 before update on Authors
 for each row
 begin
@@ -277,10 +304,48 @@ begin
         signal SQLSTATE '45000'
         set MESSAGE_TEXT = 'Version mismatch detected.';
     end if;
-end;//
--- delimiter ;
--- delimiter //
-create trigger Version_Check_Before_Update_On_Books
+end */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+
+--
+-- Table structure for table `Books`
+--
+
+DROP TABLE IF EXISTS `Books`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Books` (
+  `Id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `Version` int(11) NOT NULL DEFAULT 0,
+  `Title` varchar(255) NOT NULL DEFAULT '',
+  `Description` longtext DEFAULT NULL,
+  `PublishDate` datetime(6) DEFAULT NULL,
+  `Publisher` varchar(255) NOT NULL DEFAULT '',
+  `Series` varchar(255) NOT NULL DEFAULT '',
+  `Price` int(11) NOT NULL,
+  `Action` varchar(50) DEFAULT NULL,
+  `Result` varchar(50) DEFAULT NULL,
+  `Created` datetime NOT NULL DEFAULT current_timestamp(),
+  `Modefied` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `Image` longblob DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `IX_Books_Title_Publisher_Series_PublishDate` (`Title`,`Publisher`,`Series`,`PublishDate`)
+) ENGINE=InnoDB AUTO_INCREMENT=372140 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb3 */ ;
+/*!50003 SET character_set_results = utf8mb3 */ ;
+/*!50003 SET collation_connection  = utf8mb3_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 trigger Version_Check_Before_Update_On_Books
 before update on Books
 for each row
 begin
@@ -288,9 +353,26 @@ begin
         signal SQLSTATE '45000'
         set MESSAGE_TEXT = 'Version mismatch detected.';
     end if;
-end;//
-delimiter ;
+end */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-11-19  1:52:23
 ```
+
+</details>
 
 ### データベースの接続文字列
 - `secrets.json`に開発用データベースのアドレスとアカウントを追加します。
