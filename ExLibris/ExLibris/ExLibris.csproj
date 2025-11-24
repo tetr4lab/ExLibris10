@@ -20,12 +20,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0" />
-    <PackageReference Include="MudBlazor" Version="8.14.0" />
+    <PackageReference Include="MudBlazor" Version="8.15.0" />
     <PackageReference Include="MySqlConnector" Version="2.5.0" />
     <PackageReference Include="PetaPoco.Compiled" Version="6.0.683" />
     <PackageReference Include="Tetr4lab" Version="10.0.0" />
-    <PackageReference Include="Tetr4labAuth" Version="10.0.0" />
-    <PackageReference Include="Tetr4labDatabase" Version="10.0.0" />
+    <PackageReference Include="Tetr4labAuth" Version="10.0.1" />
+    <PackageReference Include="Tetr4labDatabase" Version="10.0.1" />
     <PackageReference Include="Tetr4labRazor" Version="10.0.0" />
     <PackageReference Include="Tetr4labServer" Version="10.0.0" />
   </ItemGroup>
