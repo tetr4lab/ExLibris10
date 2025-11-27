@@ -339,6 +339,9 @@ ASALocalRun/
 # Visual Studio Code folder
 .vscode/
 
+# Visual Studio Code dotnet tool folder
+.config/
+
 # revision info
 revision.info
 
