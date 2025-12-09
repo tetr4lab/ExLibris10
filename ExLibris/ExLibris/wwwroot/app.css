@@ -1,13 +1,13 @@
 ﻿/* 選択済みでフォーカスなし/あり */
 nav a.mud-nav-link.active, nav a.mud-nav-link.active:focus {
     color: var(--mud-palette-action-default);
-    background-color: var(--mud-palette-background-gray);
+    background-color: color-mix(in srgb, var(--mud-palette-background-gray) 100%, transparent 100%);
 }
 
 /* ホバー 選択済みでフォーカスなし/あり */
 nav a.mud-nav-link.active:hover, nav a.mud-nav-link.active:focus:hover {
     color: var(--mud-palette-text-primary);
-    background-color: var(--mud-palette-action-disabled-background);
+    background-color: color-mix(in srgb, var(--mud-palette-action-disabled-background) 100%, transparent 100%);
 }
 
 /* ナビ背景 */
