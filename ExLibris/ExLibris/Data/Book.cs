@@ -32,7 +32,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public int ActionValue => string.IsNullOrEmpty (Action) ? 0 : Array.ConvertAll (Action.Split (','), a => 1 << Math.Max (0, ActionOptions.IndexOf (a))).Sum ();
 
     /// <summary>行動の展開と集約</summary>
-    public IEnumerable<string> Actions {
+    public IReadOnlyCollection<string> Actions {
         get => string.IsNullOrEmpty (Action) ? [] : Action.Split (',');
         set => Action = value.Count () == 0 ? null : string.Join (',', value);
     }
@@ -44,7 +44,7 @@ public class Book : ExLibrisBaseModel<Book, Author>, IExLibrisModel {
     public int ResultValue => string.IsNullOrEmpty (Result) ? 0 : Array.ConvertAll (Result.Split (','), a => 1 << Math.Max (0, ResultOptions.IndexOf (a))).Sum ();
 
     /// <summary>結果の展開と集約</summary>
-    public IEnumerable<string> Results {
+    public IReadOnlyCollection<string> Results {
         get => string.IsNullOrEmpty (Result) ? [] : Result.Split (',');
         set => Result = value.Count () == 0 ? null : string.Join (',', value);
     }
