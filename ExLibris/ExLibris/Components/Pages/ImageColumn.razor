@@ -10,19 +10,13 @@
         @if (OnEdit) {
             <MudStack Row Spacing="1" Class="mx-1 mb-1">
                 <MudFileUpload T="IBrowserFile" Accept=".jpg, .jpeg" FilesChanged="UploadFileAsync">
-                    <ActivatorContent>
-                        <MudButton Color="Color.Tertiary" Disabled="@(isUploading)" Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Filled.CloudUpload">
-                            @if (Item.Image is null) {
-                                @("Upload JPEG Image")
-                            } else {
-                                <MudImage Width="Width - 80" Src="@($"data:image/jpeg;base64,{Convert.ToBase64String (Item.Image)}")" />
-                            }
-                        </MudButton>
-                    </ActivatorContent>
+                    <SelectedTemplate>
+                        @if (Item.Image is not null) {
+                            <MudImage Width="Width - 80" Src="@($"data:image/jpeg;base64,{Convert.ToBase64String (Item.Image)}")" />
+                            <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteForever" OnClick="DeleteFile" />
+                        }
+                    </SelectedTemplate>
                 </MudFileUpload>
-                @if (Item.Image is not null) {
-                    <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.DeleteForever" OnClick="DeleteFile" />
-                }
             </MudStack>
         }
     </td>

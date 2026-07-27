@@ -8,6 +8,7 @@ using PetaPoco;
 using Tetr4lab;
 using static ExLibris.Services.ExLibrisDataSet;
 using Status = ExLibris.Services.Status;
+using MudBlazor.Extensions;
 
 namespace ExLibris.Components.Pages;
 
@@ -388,7 +389,7 @@ public class ItemDialogBase<TItem1, TItem2> : ComponentBase, IDisposable
                 await TaskEx.DelayOneFrame;
             }
             // フォーカスをセット
-            if (FocusTarget != null && string.IsNullOrEmpty (FocusTarget.Value)) {
+            if (FocusTarget != null && string.IsNullOrEmpty (FocusTarget.GetState(x => x.Value))) {
                 await FocusTarget.FocusAsync ();
             }
         }
