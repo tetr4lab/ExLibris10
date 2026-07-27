@@ -23,10 +23,12 @@
     <PackageReference Include="MudBlazor" Version="9.7.0" />
     <PackageReference Include="MySqlConnector" Version="2.6.1" />
     <PackageReference Include="PetaPoco.Compiled" Version="6.0.683" />
-    <PackageReference Include="Tetr4lab" Version="10.0.0" />
-    <PackageReference Include="Tetr4labAuth" Version="10.0.7" />
-    <PackageReference Include="Tetr4labRazor" Version="10.0.10" />
-    <PackageReference Include="Tetr4labServer" Version="10.0.0" />
+    <PackageReference Include="Tetr4lab" Version="10.0.3" />
+    <PackageReference Include="Tetr4labAuth" Version="10.0.10" />
+    <PackageReference Include="Tetr4labDatabase" Version="10.0.11" />
+    <PackageReference Include="Tetr4labMySqlDatabase" Version="10.0.5" />
+    <PackageReference Include="Tetr4labRazor" Version="10.0.15" />
+    <PackageReference Include="Tetr4labServer" Version="10.0.1" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

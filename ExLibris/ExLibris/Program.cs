@@ -3,7 +3,8 @@ using MudBlazor.Services;
 using PetaPoco;
 using ExLibris.Components;
 using ExLibris.Services;
-using Tetr4lab;
+using Tetr4lab.Auth;
+using Tetr4lab.Server;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 
 var builder = WebApplication.CreateBuilder (args);
